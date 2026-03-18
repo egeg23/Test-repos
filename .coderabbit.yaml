@@ -1,99 +1,48 @@
 # CodeRabbit Configuration for Seller AI Bot
 # Docs: https://docs.coderabbit.ai/guides/configure-coderabbit
 
-language: "ru"  # Russian language for reviews
+language: "en"
+
+early_access: false
 
 reviews:
-  # General settings
-  profile: "chill"  # relaxed, balanced, or strict
+  profile: "chill"
   request_changes_workflow: false
   high_level_summary: true
-  poem: false  # disable poem generation
+  poem: false
   review_status: true
   collapse_walkthrough: false
-  auto_review:
-    enabled: true
-    drafts: false  # don't review draft PRs
-  
-  # Path filters
   path_filters:
     - "!**/venv/**"
     - "!**/__pycache__/**"
     - "!**/*.pyc"
     - "!**/logs/**"
     - "!**/tmp/**"
-    - "!**/clients/**"  # sensitive data
+    - "!**/clients/**"
     - "!**/*.token"
     - "!**/*.key"
     - "!**/*.enc"
-  
-  # Tools configuration
+  auto_review:
+    enabled: true
+    ignore_title_keywords:
+      - "WIP"
+      - "DO NOT MERGE"
+    drafts: false
+    base_branches:
+      - "main"
   tools:
-    # Python linting
     pylint:
       enabled: true
     ruff:
       enabled: true
-    
-    # Security scanning
     semgrep:
       enabled: true
-    
-    # Dependency scanning
-    deptry:
-      enabled: true
-    
-    # General suggestions
-    github_checks:
-      enabled: true
 
-# Chat settings
 chat:
   auto_reply: true
 
-# Knowledge base (optional)
 knowledge_base:
   learnings:
-    scope: "local"  # only this repo
+    scope: "local"
   issues:
     enabled: true
-
-# Custom review instructions
-review_instructions: |
-  ## Review Guidelines for Seller AI Bot
-  
-  ### Python Code Standards
-  - Use type hints where appropriate
-  - Follow PEP 8 style guide
-  - Add docstrings for public functions
-  - Handle exceptions properly with try/except
-  
-  ### Security Checks
-  - Never commit API tokens or passwords
-  - Validate all user inputs
-  - Use parameterized queries for SQL
-  - Check for hardcoded credentials
-  
-  ### Project-Specific Rules
-  - This is a Telegram bot for marketplace automation (Wildberries, Ozon, Avito)
-  - Async/await pattern is used throughout
-  - Modules are in the `modules/` directory
-  - Configuration goes in `settings/`
-  
-  ### What to Look For
-  1. API integration errors (WB, Ozon APIs change frequently)
-  2. Async/await mismatches
-  3. File path handling (Linux server paths)
-  4. Memory leaks in long-running processes
-  5. Proper error logging
-  
-  ### When to Request Changes
-  - Security vulnerabilities
-  - Breaking changes to existing API
-  - Missing error handling for external APIs
-  - Hardcoded credentials
-  
-  ### When to Approve with Comments
-  - Style issues (can be fixed later)
-  - Missing docstrings on private functions
-  - Minor optimization suggestions
