@@ -1,0 +1,731 @@
+{
+  "category": "cosmetics",
+  "updated_at": "2026-03-17T00:30:33.266357",
+  "patterns": [
+    {
+      "category": "cosmetics",
+      "pattern_name": "premium_default",
+      "colors": {
+        "primary": "#1a1a1a",
+        "accent": "#d4af37",
+        "background": "#0d0d0d",
+        "text": "#ffffff",
+        "text_secondary": "#b0b0b0",
+        "success": "#4caf50",
+        "warning": "#ff9800",
+        "danger": "#f44336"
+      },
+      "blocks": [
+        {
+          "type": "header",
+          "position": [
+            80,
+            80
+          ],
+          "size": [
+            1440,
+            120
+          ],
+          "font_size": 96,
+          "bold": true,
+          "color": "#ffffff",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "image",
+          "position": [
+            100,
+            280
+          ],
+          "size": [
+            700,
+            700
+          ],
+          "font_size": 48,
+          "bold": false,
+          "color": "#000000",
+          "icon": null,
+          "text": null,
+          "z_index": 1
+        },
+        {
+          "type": "price",
+          "position": [
+            1000,
+            1200
+          ],
+          "size": [
+            500,
+            200
+          ],
+          "font_size": 96,
+          "bold": true,
+          "color": "#1a1a1a",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "benefits",
+          "position": [
+            900,
+            300
+          ],
+          "size": [
+            600,
+            600
+          ],
+          "font_size": 48,
+          "bold": false,
+          "color": "#ffffff",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "badge",
+          "position": [
+            1300,
+            80
+          ],
+          "size": [
+            200,
+            80
+          ],
+          "font_size": 36,
+          "bold": false,
+          "color": "#0d0d0d",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "rating",
+          "position": [
+            80,
+            1400
+          ],
+          "size": [
+            400,
+            80
+          ],
+          "font_size": 36,
+          "bold": false,
+          "color": "#b0b0b0",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "delivery",
+          "position": [
+            550,
+            1400
+          ],
+          "size": [
+            600,
+            80
+          ],
+          "font_size": 36,
+          "bold": false,
+          "color": "#b0b0b0",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        }
+      ],
+      "triggers": [
+        "100% оригинал",
+        "Сертифицировано",
+        "Не тестируется на животных",
+        "Натуральный состав",
+        "Подарок при покупке"
+      ],
+      "success_rate": 0.85,
+      "style": "premium",
+      "created_at": "2026-03-17T00:30:33.266198"
+    },
+    {
+      "category": "cosmetics",
+      "pattern_name": "bright_default",
+      "colors": {
+        "primary": "#ff6b00",
+        "accent": "#ff1744",
+        "background": "#fff8e1",
+        "text": "#212121",
+        "text_secondary": "#757575",
+        "success": "#00e676",
+        "warning": "#ffea00",
+        "danger": "#ff1744"
+      },
+      "blocks": [
+        {
+          "type": "header",
+          "position": [
+            80,
+            80
+          ],
+          "size": [
+            1440,
+            120
+          ],
+          "font_size": 108,
+          "bold": true,
+          "color": "#212121",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "image",
+          "position": [
+            100,
+            280
+          ],
+          "size": [
+            700,
+            700
+          ],
+          "font_size": 48,
+          "bold": false,
+          "color": "#000000",
+          "icon": null,
+          "text": null,
+          "z_index": 1
+        },
+        {
+          "type": "price",
+          "position": [
+            1000,
+            1200
+          ],
+          "size": [
+            500,
+            200
+          ],
+          "font_size": 108,
+          "bold": true,
+          "color": "#ff6b00",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "benefits",
+          "position": [
+            900,
+            300
+          ],
+          "size": [
+            600,
+            600
+          ],
+          "font_size": 52,
+          "bold": false,
+          "color": "#212121",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "badge",
+          "position": [
+            1300,
+            80
+          ],
+          "size": [
+            200,
+            80
+          ],
+          "font_size": 40,
+          "bold": false,
+          "color": "#fff8e1",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "rating",
+          "position": [
+            80,
+            1400
+          ],
+          "size": [
+            400,
+            80
+          ],
+          "font_size": 40,
+          "bold": false,
+          "color": "#757575",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "delivery",
+          "position": [
+            550,
+            1400
+          ],
+          "size": [
+            600,
+            80
+          ],
+          "font_size": 40,
+          "bold": false,
+          "color": "#757575",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        }
+      ],
+      "triggers": [
+        "100% оригинал",
+        "Сертифицировано",
+        "Не тестируется на животных",
+        "Натуральный состав",
+        "Подарок при покупке"
+      ],
+      "success_rate": 0.92,
+      "style": "bright",
+      "created_at": "2026-03-17T00:30:33.266250"
+    },
+    {
+      "category": "cosmetics",
+      "pattern_name": "tech_default",
+      "colors": {
+        "primary": "#1565c0",
+        "accent": "#00b0ff",
+        "background": "#e3f2fd",
+        "text": "#0d47a1",
+        "text_secondary": "#546e7a",
+        "success": "#00c853",
+        "warning": "#ffd600",
+        "danger": "#dd2c00"
+      },
+      "blocks": [
+        {
+          "type": "header",
+          "position": [
+            80,
+            80
+          ],
+          "size": [
+            1440,
+            120
+          ],
+          "font_size": 88,
+          "bold": true,
+          "color": "#0d47a1",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "image",
+          "position": [
+            100,
+            280
+          ],
+          "size": [
+            700,
+            700
+          ],
+          "font_size": 48,
+          "bold": false,
+          "color": "#000000",
+          "icon": null,
+          "text": null,
+          "z_index": 1
+        },
+        {
+          "type": "price",
+          "position": [
+            1000,
+            1200
+          ],
+          "size": [
+            500,
+            200
+          ],
+          "font_size": 88,
+          "bold": true,
+          "color": "#1565c0",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "benefits",
+          "position": [
+            900,
+            300
+          ],
+          "size": [
+            600,
+            600
+          ],
+          "font_size": 44,
+          "bold": false,
+          "color": "#0d47a1",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "badge",
+          "position": [
+            1300,
+            80
+          ],
+          "size": [
+            200,
+            80
+          ],
+          "font_size": 32,
+          "bold": false,
+          "color": "#e3f2fd",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "rating",
+          "position": [
+            80,
+            1400
+          ],
+          "size": [
+            400,
+            80
+          ],
+          "font_size": 32,
+          "bold": false,
+          "color": "#546e7a",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "delivery",
+          "position": [
+            550,
+            1400
+          ],
+          "size": [
+            600,
+            80
+          ],
+          "font_size": 32,
+          "bold": false,
+          "color": "#546e7a",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        }
+      ],
+      "triggers": [
+        "100% оригинал",
+        "Сертифицировано",
+        "Не тестируется на животных",
+        "Натуральный состав",
+        "Подарок при покупке"
+      ],
+      "success_rate": 0.77,
+      "style": "tech",
+      "created_at": "2026-03-17T00:30:33.266271"
+    },
+    {
+      "category": "cosmetics",
+      "pattern_name": "lifestyle_default",
+      "colors": {
+        "primary": "#5d4037",
+        "accent": "#ff8a65",
+        "background": "#fbe9e7",
+        "text": "#3e2723",
+        "text_secondary": "#8d6e63",
+        "success": "#66bb6a",
+        "warning": "#ffb74d",
+        "danger": "#ef5350"
+      },
+      "blocks": [
+        {
+          "type": "header",
+          "position": [
+            80,
+            80
+          ],
+          "size": [
+            1440,
+            120
+          ],
+          "font_size": 92,
+          "bold": true,
+          "color": "#3e2723",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "image",
+          "position": [
+            100,
+            280
+          ],
+          "size": [
+            700,
+            700
+          ],
+          "font_size": 48,
+          "bold": false,
+          "color": "#000000",
+          "icon": null,
+          "text": null,
+          "z_index": 1
+        },
+        {
+          "type": "price",
+          "position": [
+            1000,
+            1200
+          ],
+          "size": [
+            500,
+            200
+          ],
+          "font_size": 92,
+          "bold": true,
+          "color": "#5d4037",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "benefits",
+          "position": [
+            900,
+            300
+          ],
+          "size": [
+            600,
+            600
+          ],
+          "font_size": 46,
+          "bold": false,
+          "color": "#3e2723",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "badge",
+          "position": [
+            1300,
+            80
+          ],
+          "size": [
+            200,
+            80
+          ],
+          "font_size": 36,
+          "bold": false,
+          "color": "#fbe9e7",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "rating",
+          "position": [
+            80,
+            1400
+          ],
+          "size": [
+            400,
+            80
+          ],
+          "font_size": 36,
+          "bold": false,
+          "color": "#8d6e63",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "delivery",
+          "position": [
+            550,
+            1400
+          ],
+          "size": [
+            600,
+            80
+          ],
+          "font_size": 36,
+          "bold": false,
+          "color": "#8d6e63",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        }
+      ],
+      "triggers": [
+        "100% оригинал",
+        "Сертифицировано",
+        "Не тестируется на животных",
+        "Натуральный состав",
+        "Подарок при покупке"
+      ],
+      "success_rate": 0.76,
+      "style": "lifestyle",
+      "created_at": "2026-03-17T00:30:33.266310"
+    },
+    {
+      "category": "cosmetics",
+      "pattern_name": "minimal_default",
+      "colors": {
+        "primary": "#000000",
+        "accent": "#424242",
+        "background": "#ffffff",
+        "text": "#000000",
+        "text_secondary": "#757575",
+        "success": "#212121",
+        "warning": "#616161",
+        "danger": "#000000"
+      },
+      "blocks": [
+        {
+          "type": "header",
+          "position": [
+            80,
+            80
+          ],
+          "size": [
+            1440,
+            120
+          ],
+          "font_size": 80,
+          "bold": true,
+          "color": "#000000",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "image",
+          "position": [
+            100,
+            280
+          ],
+          "size": [
+            700,
+            700
+          ],
+          "font_size": 48,
+          "bold": false,
+          "color": "#000000",
+          "icon": null,
+          "text": null,
+          "z_index": 1
+        },
+        {
+          "type": "price",
+          "position": [
+            1000,
+            1200
+          ],
+          "size": [
+            500,
+            200
+          ],
+          "font_size": 80,
+          "bold": true,
+          "color": "#000000",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "benefits",
+          "position": [
+            900,
+            300
+          ],
+          "size": [
+            600,
+            600
+          ],
+          "font_size": 42,
+          "bold": false,
+          "color": "#000000",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "badge",
+          "position": [
+            1300,
+            80
+          ],
+          "size": [
+            200,
+            80
+          ],
+          "font_size": 32,
+          "bold": false,
+          "color": "#ffffff",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "rating",
+          "position": [
+            80,
+            1400
+          ],
+          "size": [
+            400,
+            80
+          ],
+          "font_size": 32,
+          "bold": false,
+          "color": "#757575",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        },
+        {
+          "type": "delivery",
+          "position": [
+            550,
+            1400
+          ],
+          "size": [
+            600,
+            80
+          ],
+          "font_size": 32,
+          "bold": false,
+          "color": "#757575",
+          "icon": null,
+          "text": null,
+          "z_index": 0
+        }
+      ],
+      "triggers": [
+        "100% оригинал",
+        "Сертифицировано",
+        "Не тестируется на животных",
+        "Натуральный состав",
+        "Подарок при покупке"
+      ],
+      "success_rate": 0.84,
+      "style": "minimal",
+      "created_at": "2026-03-17T00:30:33.266328"
+    }
+  ]
+}
