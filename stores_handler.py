@@ -9,6 +9,13 @@ import json
 import os
 from pathlib import Path
 
+# Импорт клиента WB API (реальная интеграция)
+try:
+    from modules.wb_api_client import verify_wb_api_key, WildberriesAPIClient
+    WB_API_AVAILABLE = True
+except ImportError:
+    WB_API_AVAILABLE = False
+
 router = Router()
 
 # ============================================================================
@@ -290,10 +297,59 @@ async def wb_api_key_handler(message: Message, state: FSMContext):
     with open(creds_dir / 'credentials.json', 'w') as f:
         json.dump(creds, f, indent=2)
     
-    # TODO: Реальная проверка API
-    # Имитируем проверку
-    import asyncio
-    await asyncio.sleep(2)
+    # РЕАЛЬНАЯ проверка API ключа через WildberriesAPIClient
+    if not WB_API_AVAILABLE:
+        await status_msg.edit_text(
+            "❌ <b>Ошибка:</b> Модуль интеграции недоступен.\n"
+            "Обратитесь к администратору."
+        )
+        return
+    
+    try:
+        from modules.wb_api_client import verify_wb_api_key
+        
+        await status_msg.edit_text(
+            "⏳ <b>Проверка подключения...</b>\n"
+            "🔄 Проверка API ключа..."
+        )
+        
+        is_valid, message = await verify_wb_api_key(api_key)
+        
+        if not is_valid:
+            # Удаляем невалидные credentials
+            os.remove(creds_dir / 'credentials.json')
+            await status_msg.edit_text(
+                f"❌ <b>Ошибка подключения</b>\n\n{message}\n\n"
+                f"Проверьте ключ и попробуйте снова."
+            )
+            return
+        
+        await status_msg.edit_text(
+            "⏳ <b>Проверка подключения...</b>\n"
+            "✅ API ключ принят\n"
+            "🔄 Получение данных кабинета..."
+        )
+        
+        # Получаем список товаров для подтверждения
+        from modules.wb_api_client import get_wb_products
+        try:
+            products = await get_wb_products(api_key, limit=5)
+            products_count = len(products)
+        except Exception as e:
+            products_count = 0
+        
+    except Exception as e:
+        await status_msg.edit_text(
+            f"❌ <b>Ошибка при проверке:</b>\n{str(e)}\n\n"
+            f"Попробуйте позже или обратитесь в поддержку."
+        )
+        return
+    
+    # Проверка успешна - обновляем статус
+    creds['verified'] = True
+    creds['products_count'] = products_count
+    with open(creds_dir / 'credentials.json', 'w') as f:
+        json.dump(creds, f, indent=2)
     
     await status_msg.edit_text(
         "⏳ <b>Проверка подключения...</b>\n"
@@ -309,9 +365,9 @@ async def wb_api_key_handler(message: Message, state: FSMContext):
         json.dump(creds, f, indent=2)
     
     await status_msg.edit_text(
-        "✅ <b>Wildberries подключен!</b>\n\n"
-        "Магазин добавлен в систему.\n"
-        "Seller AI начинает анализ кабинета..."
+        f"✅ <b>Wildberries подключен!</b>\n\n"
+        f"📦 Найдено товаров: <b>{products_count}</b>\n"
+        f"Seller AI начинает анализ кабинета..."
     )
     
     # Запрашиваем себестоимость для P&L
