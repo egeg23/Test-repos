@@ -206,37 +206,72 @@ class FuckModeEngine:
         """Обрабатывает один кабинет"""
         logger.info(f"🔧 Processing cabinet: {cabinet.name} ({cabinet.platform})")
         
-        # 1. Получаем товары
-        products = await self._get_cabinet_products(cabinet)
+        # 1. Получаем товары через API
+        products = await self._get_cabinet_products(user_id, cabinet)
+        
+        if not products:
+            logger.warning(f"No products found for cabinet: {cabinet.name}")
+            return
+        
+        logger.info(f"Found {len(products)} products in cabinet: {cabinet.name}")
         
         # 2. Для каждого товара принимаем решения
-        for product in products:
-            await self._make_product_decisions(user_id, cabinet, product)
+        for product in products[:10]:  # Ограничиваем 10 товарами за цикл
+            try:
+                await self._make_product_decisions(user_id, cabinet, product)
+            except Exception as e:
+                logger.error(f"Error processing product {product.get('id')}: {e}")
+                continue
     
-    async def _get_cabinet_products(self, cabinet) -> List[Dict]:
-        """Получает список товаров кабинета через API"""
-        # Используем реальную логику получения товаров
-        # Временно возвращаем mock для безопасности
-        # TODO: Раскомментировать после тестирования
-        # return await fuck_mode_pricing.get_products_from_api(
-        #     user_id=self.current_user_id,  # Нужно передать user_id
-        #     cabinet=cabinet,
-        #     limit=50
-        # )
-        
-        # Пока mock для тестирования
-        return [
-            {
-                'id': '12345678',
-                'name': 'Тестовый товар 1',
-                'current_price': 1500,
-                'cost_price': 800,
-                'stock': 45,
-                'category': 'electronics',
-                'rating': 4.5,
-                'reviews': 120
-            }
-        ]
+    async def _get_cabinet_products(self, user_id: str, cabinet) -> List[Dict]:
+        """Получает список товаров кабинета через API (РЕАЛЬНЫЕ ВЫЗОВЫ)"""
+        try:
+            from .api_client_factory import api_client_factory
+            
+            if cabinet.platform == 'wb':
+                client = api_client_factory.get_wb_client(user_id, cabinet.id)
+                products = await client.get_products(limit=50)
+                
+                # Нормализуем формат
+                return [
+                    {
+                        'id': str(p.get('nmId') or p.get('id')),
+                        'name': p.get('name', 'Unknown'),
+                        'price': float(p.get('price', 0)) / 100 if p.get('price', 0) > 1000 else float(p.get('price', 0)),
+                        'cost_price': float(p.get('cost_price', 0)),
+                        'stock': int(p.get('stock', 0)),
+                        'rating': float(p.get('rating', 0)),
+                        'reviews': int(p.get('reviews', 0)),
+                        'category': p.get('category', 'unknown')
+                    }
+                    for p in products
+                ]
+            
+            elif cabinet.platform == 'ozon':
+                client = api_client_factory.get_ozon_client(user_id, cabinet.id)
+                products = await client.get_products(limit=50)
+                
+                return [
+                    {
+                        'id': str(p.get('offer_id') or p.get('id')),
+                        'name': p.get('name', 'Unknown'),
+                        'price': float(p.get('price', 0)),
+                        'cost_price': float(p.get('cost_price', 0)),
+                        'stock': int(p.get('stock', 0)),
+                        'rating': float(p.get('rating', 0)),
+                        'reviews': int(p.get('reviews', 0)),
+                        'category': p.get('category', 'unknown')
+                    }
+                    for p in products
+                ]
+            
+            else:
+                logger.error(f"Unknown platform: {cabinet.platform}")
+                return []
+                
+        except Exception as e:
+            logger.error(f"Failed to get products from API: {e}")
+            return []
     
     async def _make_product_decisions(self, user_id: str, cabinet, product: Dict):
         """Принимает решения по товару с учетом dry run режима"""
