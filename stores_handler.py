@@ -9,12 +9,18 @@ import json
 import os
 from pathlib import Path
 
-# Импорт клиента WB API (реальная интеграция)
+# Импорт клиентов API (реальная интеграция)
 try:
     from modules.wb_api_client import verify_wb_api_key, WildberriesAPIClient
     WB_API_AVAILABLE = True
 except ImportError:
     WB_API_AVAILABLE = False
+
+try:
+    from modules.ozon_api_client import verify_ozon_credentials, OzonAPIClient
+    OZON_API_AVAILABLE = True
+except ImportError:
+    OZON_API_AVAILABLE = False
 
 router = Router()
 
@@ -424,6 +430,116 @@ async def ozon_connect_start(callback: CallbackQuery, state: FSMContext):
         "❌ Нажмите /cancel для отмены"
     )
     await callback.answer()
+
+
+@router.message(StoreAuthStates.ozon_waiting_api_key)
+async def ozon_api_key_handler(message: Message, state: FSMContext):
+    """Обработка ввода Client ID и API Key Ozon"""
+    text = message.text.strip()
+    client_id = str(message.from_user.id)
+    
+    # Проверяем формат
+    if '|' not in text:
+        await message.answer(
+            "❌ <b>Неверный формат!</b>\n\n"
+            "Используйте разделитель <b>|</b>\n"
+            "Пример: <code>12345|a1b2c3d4-e5f6...</code>"
+        )
+        return
+    
+    parts = text.split('|', 1)
+    if len(parts) != 2:
+        await message.answer(
+            "❌ <b>Неверный формат!</b>\n\n"
+            "Нужно: <code>ClientID|APIKey</code>"
+        )
+        return
+    
+    ozon_client_id, api_key = parts[0].strip(), parts[1].strip()
+    
+    # Проверяем Client ID (должен быть числом)
+    if not ozon_client_id.isdigit():
+        await message.answer(
+            "❌ <b>Неверный Client ID!</b>\n\n"
+            "Client ID должен содержать только цифры.\n"
+            "Найдите его в личном кабинете Ozon."
+        )
+        return
+    
+    # Используем правильную папку 'ozon' для совместимости с check_store_connected
+    creds_dir = Path(f"/opt/clients/{client_id}/credentials/ozon")
+    creds_file = creds_dir / 'credentials.json'
+    
+    # Статус-бар проверки
+    status_msg = await message.answer(
+        "⏳ <b>Проверка подключения...</b>\n"
+        "🔄 Проверка Client ID и API Key..."
+    )
+    
+    # РЕАЛЬНАЯ проверка Ozon API (СНАЧАЛА проверяем, ПОТОМ сохраняем)
+    if not OZON_API_AVAILABLE:
+        await status_msg.edit_text(
+            "❌ <b>Ошибка:</b> Модуль интеграции Ozon недоступен.\n"
+            "Обратитесь к администратору."
+        )
+        return
+    
+    try:
+        from modules.ozon_api_client import verify_ozon_credentials, OzonAPIClient
+        
+        is_valid, msg = await verify_ozon_credentials(ozon_client_id, api_key)
+        
+        if not is_valid:
+            await status_msg.edit_text(
+                f"❌ <b>Ошибка подключения</b>\n\n{msg}\n\n"
+                f"Проверьте Client ID и API Key, попробуйте снова."
+            )
+            return
+        
+        await status_msg.edit_text(
+            "⏳ <b>Проверка подключения...</b>\n"
+            "✅ Данные приняты\n"
+            "🔄 Получение данных кабинета..."
+        )
+        
+        # Получаем список товаров через одну сессию
+        products_count = 0
+        try:
+            async with OzonAPIClient(ozon_client_id, api_key) as client:
+                products = await client.get_products(limit=100)
+                products_count = len(products)
+        except Exception as e:
+            # При ошибке получения товаров всё равно продолжаем
+            products_count = 0
+        
+    except Exception as e:
+        await status_msg.edit_text(
+            f"❌ <b>Ошибка при проверке:</b>\n{str(e)}\n\n"
+            f"Попробуйте позже или обратитесь в поддержку."
+        )
+        return
+    
+    # Проверка успешна - сохраняем credentials
+    creds_dir.mkdir(parents=True, exist_ok=True)
+    
+    creds = {
+        'client_id': ozon_client_id,
+        'api_key': api_key,
+        'verified': True,
+        'products_count': products_count,
+        'added_at': str(datetime.now())
+    }
+    
+    with open(creds_file, 'w') as f:
+        json.dump(creds, f, indent=2)
+    
+    await status_msg.edit_text(
+        f"✅ <b>Ozon подключен!</b>\n\n"
+        f"📦 Найдено товаров: <b>{products_count}</b>\n"
+        f"Seller AI начинает анализ кабинета..."
+    )
+    
+    await state.clear()
 
 
 # ============================================================================
