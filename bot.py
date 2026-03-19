@@ -28,6 +28,7 @@ from ab_testing_handler import register_handlers as register_ab_testing_handlers
 from mpstats_handler import register_handlers as register_mpstats_handlers
 from competitors_handler import register_handlers as register_competitors_handlers
 from fuck_mode_handler import register_handlers as register_fuck_mode_handlers
+from cabinet_handler import register_handlers as register_cabinet_handlers
 from stores_handler import router as stores_router
 from enhanced_menus import get_main_menu
 
@@ -234,6 +235,7 @@ def register_all_handlers():
     register_mpstats_handlers(dp)
     register_competitors_handlers(dp)
     register_fuck_mode_handlers(dp)
+    register_cabinet_handlers(dp)
     
     logger.info("✅ Все обработчики зарегистрированы")
 
