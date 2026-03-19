@@ -409,9 +409,73 @@ class FuckModeEngine:
         return None
     
     async def _analyze_ads(self, cabinet, product: Dict) -> Optional[Dict]:
-        """Анализирует рекламу"""
-        # TODO: Реальная логика рекламы
-        return None
+        """Анализирует рекламу через WB Ads API"""
+        try:
+            from .wb_ads_client import WBAdsClient
+            from .rate_limiter import rate_limiter
+            
+            # Проверяем rate limit
+            if not rate_limiter.check_limit(cabinet.user_id, 'wb', 'ads'):
+                logger.warning(f"Rate limit for ads API, skipping")
+                return None
+            
+            # Получаем API ключ
+            api_key = cabinet.api_key
+            if not api_key:
+                return None
+            
+            async with WBAdsClient(api_key) as client:
+                if not client.is_valid:
+                    return None
+                
+                # Ищем кампании для этого товара
+                campaigns = await client.get_campaigns(status='9')  # Активные
+                
+                product_campaigns = []
+                for campaign in campaigns:
+                    # Проверяем, относится ли кампания к товару
+                    if str(product.get('id')) in str(campaign.get('name', '')):
+                        product_campaigns.append(campaign)
+                
+                if not product_campaigns:
+                    return None
+                
+                decisions = []
+                for campaign in product_campaigns[:3]:  # Максимум 3 кампании
+                    campaign_id = campaign.get('id')
+                    
+                    # Получаем статистику
+                    daily_stats = await client.get_daily_statistics(campaign_id, days=3)
+                    
+                    if not daily_stats:
+                        continue
+                    
+                    total_spent = sum(day.get('spent', 0) for day in daily_stats)
+                    total_orders = sum(day.get('orders', 0) for day in daily_stats)
+                    
+                    # Рассчитываем ДРР
+                    avg_order_value = product.get('price', 0)
+                    revenue = total_orders * avg_order_value
+                    drr = client.calculate_drr(total_spent, revenue)
+                    
+                    # Принимаем решение
+                    if drr > 25:  # ДРР слишком высокий
+                        decisions.append({
+                            'type': 'ad_alert',
+                            'campaign_id': campaign_id,
+                            'campaign_name': campaign.get('name', 'Unknown'),
+                            'drr': drr,
+                            'spent': total_spent,
+                            'orders': total_orders,
+                            'action': 'review',
+                            'reason': f'Высокий ДРР: {drr:.1f}% (рекомендуется проверить)'
+                        })
+                
+                return decisions[0] if decisions else None
+                
+        except Exception as e:
+            logger.error(f"Error analyzing ads: {e}")
+            return None
     
     def _log_decision(self, user_id: str, cabinet_id: str, product_id: str, decision: Dict):
         """Логирует решение в файл и operation_log"""
