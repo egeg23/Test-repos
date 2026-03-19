@@ -8,6 +8,8 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
 from modules.analytics_engine import AnalyticsEngine, StatsFormatter
+from modules.ads_strategy_config import ads_strategy_config, AdsStrategyType
+from datetime import datetime
 import logging
 
 logger = logging.getLogger('stats_handler')
@@ -151,26 +153,82 @@ async def show_top_products(callback: CallbackQuery):
 
 @router.callback_query(F.data.endswith('_ads'))
 async def show_ads_stats(callback: CallbackQuery):
-    """Статистика рекламы"""
+    """Статистика рекламы - РЕАЛЬНЫЕ ДАННЫЕ"""
     platform = callback.data.split('_')[1]
+    user_id = str(callback.from_user.id)
     
-    text = (
-        f"📢 <b>Реклама ({platform.upper()})</b>\n\n"
-        f"┌─────────────────┬────────┐\n"
-        f"│ Показы          │ 45,230 │\n"
-        f"│ Клики           │ 1,450  │\n"
-        f"│ CTR             │  3.2%  │\n"
-        f"│ Заказы из рекл. │   89   │\n"
-        f"│ Расходы         │ 22.5K₽ │\n"
-        f"│ ДРР             │  18%   │\n"
-        f"└─────────────────┴────────┘\n\n"
-        f"📊 <b>Кампании:</b>\n"
-        f"• Авто-кампания: ДРР 16% ✅\n"
-        f"• Поиск: ДРР 21% ⚠️\n"
-        f"• Карточка: ДРР 19% ✅"
-    )
+    await callback.message.answer("⏳ Загружаю статистику рекламы...")
     
-    await callback.message.answer(text)
+    try:
+        if platform == 'wb':
+            from agents.ads_agent import AdsAgent
+            agent = AdsAgent()
+            report = await agent.get_campaigns_report(user_id)
+            await callback.message.answer(report, parse_mode='HTML')
+<<<<<<< HEAD
+        elif platform == 'ozon':
+            from modules.ozon_ads_client import OzonAdsClient
+            from modules.multi_cabinet_manager import cabinet_manager
+            
+            cabinets = cabinet_manager.get_active_cabinets(user_id, 'ozon')
+            if not cabinets:
+                await callback.message.answer(
+                    "❌ Нет активных кабинетов Ozon.\n"
+                    "Добавьте кабинет в разделе 'Мои магазины'"
+                )
+                await callback.answer()
+                return
+            
+            cabinet = cabinets[0]
+            if not cabinet.api_key or not hasattr(cabinet, 'client_id'):
+                await callback.message.answer(
+                    "❌ API ключ Ozon не найден."
+                )
+                await callback.answer()
+                return
+            
+            async with OzonAdsClient(cabinet.api_key, getattr(cabinet, 'client_id', '')) as client:
+                if not client.is_valid:
+                    await callback.message.answer("❌ Ошибка подключения к Ozon API")
+                    await callback.answer()
+                    return
+                
+                campaigns = await client.get_campaigns()
+                
+                if not campaigns:
+                    await callback.message.answer("📢 Нет рекламных кампаний Ozon.")
+                    await callback.answer()
+                    return
+                
+                lines = ["📢 <b>Кампании OZON</b>\n"]
+                for campaign in campaigns[:10]:
+                    state = campaign.get('state', 'UNKNOWN')
+                    status_emoji = {'CAMPAIGN_STATE_RUNNING': '🟢', 'CAMPAIGN_STATE_PAUSED': '⏸'}.get(state, '⚪')
+                    lines.append(f"{status_emoji} {campaign.get('title', 'Unknown')}")
+                
+                lines.append(f"\n📊 Всего: {len(campaigns)}")
+                await callback.message.answer("\n".join(lines), parse_mode='HTML')
+        else:
+            await callback.message.answer(f"📢 Платформа {platform} не поддерживается")
+    except Exception as e:
+        logger.error(f"Error showing ads: {e}")
+        await callback.message.answer("⚠️ Ошибка загрузки рекламы")
+=======
+        else:
+            await callback.message.answer(
+                f"📢 <b>Реклама ({platform.upper()})</b>\n\n"
+                f"⚠️ Рекламное API для Ozon пока не подключено.\n"
+                f"Работаем над этим!"
+            )
+    except Exception as e:
+        logger.error(f"Error showing ads stats: {e}")
+        await callback.message.answer(
+            f"📢 <b>Реклама ({platform.upper()})</b>\n\n"
+            f"⚠️ Не удалось загрузить данные.\n"
+            f"Убедитесь, что добавлен кабинет с API ключом."
+        )
+>>>>>>> main
+    
     await callback.answer()
 
 
@@ -189,6 +247,73 @@ async def cmd_reports(message: Message):
         "Выберите тип отчета для генерации:",
         reply_markup=keyboard
     )
+
+
+@router.message(Command("ads_strategy"))
+async def cmd_ads_strategy(message: Message):
+    """Показывает меню выбора стратегии рекламы"""
+    user_id = str(message.from_user.id)
+    
+    current_strategy = ads_strategy_config.get_user_strategy(user_id)
+    strategies = ads_strategy_config.get_all_strategies()
+    
+    text = (
+        "📊 <b>Стратегия управления рекламой</b>\n\n"
+        f"Текущая: {strategies[current_strategy].name}\n"
+        f"Целевой ДРР: {strategies[current_strategy].target_drr}%\n\n"
+        "Выберите новую стратегию:"
+    )
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text=f"{'✅ ' if current_strategy == AdsStrategyType.NEW_PRODUCT else ''}🚀 Запустить новый товар",
+            callback_data='strategy_new_product'
+        )],
+        [InlineKeyboardButton(
+            text=f"{'✅ ' if current_strategy == AdsStrategyType.MAINTAIN_MARGIN else ''}💰 Держать маржу",
+            callback_data='strategy_maintain_margin'
+        )],
+        [InlineKeyboardButton(
+            text=f"{'✅ ' if current_strategy == AdsStrategyType.TOP_POSITION_LOW_DRR else ''}🏆 Топ позиция (низкий ДРР)",
+            callback_data='strategy_top_position'
+        )],
+    ])
+    
+    await message.answer(text, reply_markup=keyboard)
+
+
+@router.callback_query(F.data.startswith('strategy_'))
+async def set_ads_strategy(callback: CallbackQuery):
+    """Устанавливает выбранную стратегию"""
+    user_id = str(callback.from_user.id)
+    
+    strategy_map = {
+        'strategy_new_product': AdsStrategyType.NEW_PRODUCT,
+        'strategy_maintain_margin': AdsStrategyType.MAINTAIN_MARGIN,
+        'strategy_top_position': AdsStrategyType.TOP_POSITION_LOW_DRR,
+    }
+    
+    strategy = strategy_map.get(callback.data)
+    if not strategy:
+        await callback.answer("❌ Неизвестная стратегия")
+        return
+    
+    # Устанавливаем стратегию
+    ads_strategy_config.set_user_strategy(user_id, strategy)
+    config = ads_strategy_config.get_strategy_config(strategy)
+    
+    text = (
+        f"✅ <b>Стратегия изменена!</b>\n\n"
+        f"{config.name}\n"
+        f"━━━━━━━━━━━━━━\n"
+        f"🎯 Целевой ДРР: {config.target_drr}%\n"
+        f"📈 Макс. ДРР: {config.max_drr}%\n"
+        f"⚡ Агрессивность: {config.bid_aggression}x\n\n"
+        f"<i>{config.description}</i>"
+    )
+    
+    await callback.message.edit_text(text)
+    await callback.answer()
 
 
 def register_handlers(dp):
