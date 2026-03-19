@@ -207,3 +207,134 @@ class SalesHistoryManager:
                 stats[pid]['avg_daily_sales'] = 0
         
         return stats
+    
+    # ============================================================================
+    # VELOCITY-BASED ANALYTICS (ЭТАП 2)
+    # ============================================================================
+    
+    def get_product_velocity(self, client_id: str, platform: str, product_id: str, days: int = 7) -> Dict:
+        """
+        Рассчитывает скорость продаж товара (velocity)
+        
+        Returns:
+            {
+                'current_velocity': float,  # продаж в день
+                'avg_velocity': float,      # средняя по истории
+                'velocity_trend': str,      # 'increasing', 'stable', 'decreasing'
+                'velocity_ratio': float,    # текущая / средняя
+                'peak_velocity': float,
+                'min_velocity': float
+            }
+        """
+        history_file = self._get_history_file(client_id, platform)
+        history = self._load_history(history_file)
+        
+        # Фильтруем по товару
+        product_records = [r for r in history if r.get('product_id') == product_id]
+        
+        if not product_records:
+            return {
+                'current_velocity': 0,
+                'avg_velocity': 0,
+                'velocity_trend': 'unknown',
+                'velocity_ratio': 1.0,
+                'peak_velocity': 0,
+                'min_velocity': 0
+            }
+        
+        # Сортируем по дате
+        product_records.sort(key=lambda x: x.get('date', ''))
+        
+        # Берем последние N дней
+        recent_records = product_records[-days:] if len(product_records) > days else product_records
+        
+        # Текущая скорость (последние 3 дня)
+        current_window = recent_records[-3:] if len(recent_records) >= 3 else recent_records
+        current_velocity = sum(r.get('sales_qty', 0) for r in current_window) / len(current_window) if current_window else 0
+        
+        # Средняя скорость за весь период
+        avg_velocity = sum(r.get('sales_qty', 0) for r in product_records) / len(product_records)
+        
+        # Пиковая и минимальная скорость
+        velocities = [r.get('sales_qty', 0) for r in product_records]
+        peak_velocity = max(velocities) if velocities else 0
+        min_velocity = min(velocities) if velocities else 0
+        
+        # Тренд
+        if len(recent_records) >= 2:
+            first_half = recent_records[:len(recent_records)//2]
+            second_half = recent_records[len(recent_records)//2:]
+            
+            first_avg = sum(r.get('sales_qty', 0) for r in first_half) / len(first_half) if first_half else 0
+            second_avg = sum(r.get('sales_qty', 0) for r in second_half) / len(second_half) if second_half else 0
+            
+            if second_avg > first_avg * 1.2:
+                velocity_trend = 'increasing'
+            elif second_avg < first_avg * 0.8:
+                velocity_trend = 'decreasing'
+            else:
+                velocity_trend = 'stable'
+        else:
+            velocity_trend = 'unknown'
+        
+        # Соотношение текущей к средней
+        velocity_ratio = current_velocity / avg_velocity if avg_velocity > 0 else 1.0
+        
+        return {
+            'current_velocity': round(current_velocity, 2),
+            'avg_velocity': round(avg_velocity, 2),
+            'velocity_trend': velocity_trend,
+            'velocity_ratio': round(velocity_ratio, 2),
+            'peak_velocity': peak_velocity,
+            'min_velocity': min_velocity
+        }
+    
+    def get_category_velocity_benchmark(self, client_id: str, platform: str, category: str) -> Dict:
+        """
+        Получает среднюю скорость продаж по категории (для сравнения)
+        """
+        # В реальности здесь был бы анализ всех товаров в категории
+        # Пока возвращаем mock данные
+        return {
+            'category': category,
+            'avg_velocity': 5.0,  # Средняя по категории
+            'median_velocity': 4.5,
+            'top_10_percent': 15.0,  # Верхние 10%
+            'bottom_10_percent': 1.0  # Нижние 10%
+        }
+    
+    def calculate_velocity_segments(self, client_id: str, platform: str) -> Dict[str, List[str]]:
+        """
+        Разбивает товары на сегменты по скорости продаж
+        
+        Returns:
+            {
+                'high_velocity': ['product_id_1', 'product_id_2'],  # >2x средней
+                'normal_velocity': ['product_id_3'],                # 0.8-2x
+                'low_velocity': ['product_id_4', 'product_id_5']    # <0.8x
+            }
+        """
+        stats = self.get_all_products_stats(client_id, platform)
+        
+        # Рассчитываем среднюю скорость по всем товарам
+        all_velocities = [s['avg_daily_sales'] for s in stats.values() if s['avg_daily_sales'] > 0]
+        global_avg = sum(all_velocities) / len(all_velocities) if all_velocities else 1
+        
+        segments = {
+            'high_velocity': [],
+            'normal_velocity': [],
+            'low_velocity': []
+        }
+        
+        for product_id, stat in stats.items():
+            velocity = stat['avg_daily_sales']
+            ratio = velocity / global_avg if global_avg > 0 else 1
+            
+            if ratio > 2.0:
+                segments['high_velocity'].append(product_id)
+            elif ratio < 0.8:
+                segments['low_velocity'].append(product_id)
+            else:
+                segments['normal_velocity'].append(product_id)
+        
+        return segments
