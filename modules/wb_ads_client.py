@@ -6,6 +6,7 @@
 
 import asyncio
 import logging
+import math
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime, timedelta
 import aiohttp
@@ -57,6 +58,10 @@ class WBAdsClient:
             except Exception as e:
                 self._last_error = str(e)
                 logger.error(f"❌ Failed to connect to WB Ads API: {e}")
+                # Закрываем сессию при ошибке
+                if self.session and not self.session.closed:
+                    await self.session.close()
+                    self.session = None
                 raise
     
     async def close(self):
@@ -300,45 +305,55 @@ class WBAdsClient:
         end_date: Optional[str] = None
     ) -> List[Dict]:
         """
-        Получает статистику по кампаниям
+        Получает статистику по кампаниям (API v3)
         
         Args:
-            campaign_ids: Список ID кампаний
+            campaign_ids: Список ID кампаний (макс 50)
             start_date: Начало периода (YYYY-MM-DD)
             end_date: Конец периода (YYYY-MM-DD)
         
         Returns:
             Статистика по кампаниям
         """
-        url = f"{self.BASE_URL}/adv/v2/fullstats"
-        
         # Даты по умолчанию - последние 7 дней
         if not end_date:
             end_date = datetime.now().strftime('%Y-%m-%d')
         if not start_date:
             start_date = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
         
-        payload = [
-            {
-                'id': cid,
-                'dates': [start_date, end_date]
-            }
-            for cid in campaign_ids
-        ]
+        all_results = []
         
-        try:
-            async with self.session.post(url, json=payload) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    logger.info(f"📊 Получена статистика для {len(data)} кампаний")
-                    return data
-                else:
-                    error_text = await response.text()
-                    raise Exception(f"HTTP {response.status}: {error_text}")
-                    
-        except Exception as e:
-            logger.error(f"Error getting statistics: {e}")
-            raise
+        # API v3 поддерживает макс 50 ID за запрос и 31 день
+        for i in range(0, len(campaign_ids), 50):
+            batch = campaign_ids[i:i+50]
+            
+            url = f"{self.BASE_URL}/adv/v3/fullstats"
+            params = {
+                'ids': ','.join(str(cid) for cid in batch),
+                'beginDate': start_date,
+                'endDate': end_date
+            }
+            
+            try:
+                async with self.session.get(url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        all_results.extend(data)
+                    else:
+                        error_text = await response.text()
+                        logger.warning(f"Failed to get stats: HTTP {response.status}: {error_text}")
+                        continue
+                        
+            except Exception as e:
+                logger.error(f"Error getting statistics: {e}")
+                continue
+            
+            # Rate limiting: 3 requests per minute
+            if i + 50 < len(campaign_ids):
+                await asyncio.sleep(20)
+        
+        logger.info(f"📊 Получена статистика для {len(all_results)} кампаний")
+        return all_results
     
     async def get_daily_statistics(
         self,
@@ -377,10 +392,10 @@ class WBAdsClient:
             orders_amount: Сумма заказов
         
         Returns:
-            ДРР в процентах
+            ДРР в процентах, или math.inf если нет продаж но есть расходы
         """
         if orders_amount == 0:
-            return 0.0
+            return 0.0 if spent == 0 else math.inf
         return round((spent / orders_amount) * 100, 2)
     
     # =========================================================================

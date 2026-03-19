@@ -8,6 +8,8 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
 from modules.analytics_engine import AnalyticsEngine, StatsFormatter
+from modules.ads_strategy_config import ads_strategy_config, AdsStrategyType
+from datetime import datetime
 import logging
 
 logger = logging.getLogger('stats_handler')
@@ -195,6 +197,73 @@ async def cmd_reports(message: Message):
         "Выберите тип отчета для генерации:",
         reply_markup=keyboard
     )
+
+
+@router.message(Command("ads_strategy"))
+async def cmd_ads_strategy(message: Message):
+    """Показывает меню выбора стратегии рекламы"""
+    user_id = str(message.from_user.id)
+    
+    current_strategy = ads_strategy_config.get_user_strategy(user_id)
+    strategies = ads_strategy_config.get_all_strategies()
+    
+    text = (
+        "📊 <b>Стратегия управления рекламой</b>\n\n"
+        f"Текущая: {strategies[current_strategy].name}\n"
+        f"Целевой ДРР: {strategies[current_strategy].target_drr}%\n\n"
+        "Выберите новую стратегию:"
+    )
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text=f"{'✅ ' if current_strategy == AdsStrategyType.NEW_PRODUCT else ''}🚀 Запустить новый товар",
+            callback_data='strategy_new_product'
+        )],
+        [InlineKeyboardButton(
+            text=f"{'✅ ' if current_strategy == AdsStrategyType.MAINTAIN_MARGIN else ''}💰 Держать маржу",
+            callback_data='strategy_maintain_margin'
+        )],
+        [InlineKeyboardButton(
+            text=f"{'✅ ' if current_strategy == AdsStrategyType.TOP_POSITION_LOW_DRR else ''}🏆 Топ позиция (низкий ДРР)",
+            callback_data='strategy_top_position'
+        )],
+    ])
+    
+    await message.answer(text, reply_markup=keyboard)
+
+
+@router.callback_query(F.data.startswith('strategy_'))
+async def set_ads_strategy(callback: CallbackQuery):
+    """Устанавливает выбранную стратегию"""
+    user_id = str(callback.from_user.id)
+    
+    strategy_map = {
+        'strategy_new_product': AdsStrategyType.NEW_PRODUCT,
+        'strategy_maintain_margin': AdsStrategyType.MAINTAIN_MARGIN,
+        'strategy_top_position': AdsStrategyType.TOP_POSITION_LOW_DRR,
+    }
+    
+    strategy = strategy_map.get(callback.data)
+    if not strategy:
+        await callback.answer("❌ Неизвестная стратегия")
+        return
+    
+    # Устанавливаем стратегию
+    ads_strategy_config.set_user_strategy(user_id, strategy)
+    config = ads_strategy_config.get_strategy_config(strategy)
+    
+    text = (
+        f"✅ <b>Стратегия изменена!</b>\n\n"
+        f"{config.name}\n"
+        f"━━━━━━━━━━━━━━\n"
+        f"🎯 Целевой ДРР: {config.target_drr}%\n"
+        f"📈 Макс. ДРР: {config.max_drr}%\n"
+        f"⚡ Агрессивность: {config.bid_aggression}x\n\n"
+        f"<i>{config.description}</i>"
+    )
+    
+    await callback.message.edit_text(text)
+    await callback.answer()
 
 
 def register_handlers(dp):

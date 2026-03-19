@@ -10,11 +10,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 import sys
+import html
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from modules.ai_learning_engine import AILearningEngine
 from modules.wb_ads_client import WBAdsClient
 from modules.api_client_factory import api_client_factory, CabinetNotFoundError
+from modules.ads_strategy_config import ads_strategy_config
 
 logger = logging.getLogger('ads_agent')
 
@@ -159,16 +161,29 @@ class AdsAgent:
             total_clicks = sum(day.get('clicks', 0) for day in daily_stats)
             
             # Рассчитываем метрики
-            current_drr = client.calculate_drr(total_spent, total_orders * campaign_info.get('price', 0))
+            campaign_price = campaign_info.get('price', 0) or 0
+            current_drr = client.calculate_drr(total_spent, total_orders * campaign_price)
             ctr = (total_clicks / total_views * 100) if total_views > 0 else 0
             
             current_bid = campaign_info.get('cpm', 0) / 100  # Копейки → рубли
+            
+            # Проверяем валидность current_bid
+            if current_bid <= 0:
+                logger.warning(f"Campaign {campaign_id}: Invalid bid {current_bid}, skipping")
+                return False
+            
+            # Получаем стратегию пользователя
+            strategy_config = ads_strategy_config.get_user_strategy_config(user_id)
+            target_drr = strategy_config.target_drr
+            max_drr = strategy_config.max_drr
+            bid_aggression = strategy_config.bid_aggression
             
             logger.info(
                 f"Campaign {campaign_id}: "
                 f"ДРР={current_drr:.1f}%, "
                 f"CTR={ctr:.2f}%, "
-                f"Ставка={current_bid:.0f}₽"
+                f"Ставка={current_bid:.0f}₽, "
+                f"Стратегия={strategy_config.name}"
             )
             
             # Анализируем через AI
@@ -176,7 +191,7 @@ class AdsAgent:
                 campaign_id=str(campaign_id),
                 product_id=str(campaign_info.get('nmId', 'unknown')),
                 current_drr=current_drr,
-                target_drr=15.0,  # Целевой ДРР
+                target_drr=target_drr,
                 orders_count=total_orders,
                 total_views=total_views,
                 ctr=ctr,
@@ -185,30 +200,35 @@ class AdsAgent:
             
             recommendation = analysis.get('recommendation')
             
-            # Применяем решение
+            # Применяем решение с учетом стратегии
             if recommendation == 'decrease_drr':
                 new_bid = await client.calculate_optimal_bid(
                     current_drr=current_drr,
-                    target_drr=15.0,
+                    target_drr=target_drr,
                     current_bid=current_bid,
                     orders=total_orders
                 )
                 
-                if abs(new_bid - current_bid) / current_bid > 0.05:  # Изменение > 5%
+                # Учитываем агрессивность стратегии
+                if bid_aggression != 1.0:
+                    adjustment = (new_bid - current_bid) * bid_aggression + current_bid
+                    new_bid = max(50.0, min(adjustment, 5000.0))  # Ограничения
+                
+                if current_bid > 0 and abs(new_bid - current_bid) / current_bid > 0.05:
                     success = await client.set_bid(campaign_id, new_bid)
                     if success:
                         logger.info(
                             f"💰 Campaign {campaign_id}: "
                             f"Ставка {current_bid:.0f}₽ → {new_bid:.0f}₽ "
-                            f"(ДРР {current_drr:.1f}%)")
+                            f"(ДРР {current_drr:.1f}%, цель {target_drr}%)")
                         return True
             
             elif recommendation == 'pause_campaign':
-                # Если ДРР критически высокий - ставим на паузу
-                if current_drr > 30:  # ДРР > 30%
+                # Используем max_drr из стратегии для паузы
+                if current_drr > max_drr:
                     success = await client.pause_campaign(campaign_id)
                     if success:
-                        logger.warning(f"⏸ Campaign {campaign_id} paused (ДРР {current_drr:.1f}%)")
+                        logger.warning(f"⏸ Campaign {campaign_id} paused (ДРР {current_drr:.1f}% > {max_drr}%)")
                         return True
             
             return False
@@ -246,6 +266,8 @@ class AdsAgent:
                 for campaign in campaigns[:10]:  # Показываем первые 10
                     camp_id = campaign.get('id')
                     camp_name = campaign.get('name', f'Campaign #{camp_id}')
+                    # Экранируем HTML
+                    camp_name = html.escape(camp_name)
                     status = campaign.get('status')
                     
                     # Статус текстом
