@@ -235,25 +235,31 @@ async def wb_menu_handler(callback: CallbackQuery, state: FSMContext):
             "Выберите раздел:",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons)
         )
+        await callback.answer()
     else:
-        # WB не подключен
+        # WB не подключен - СРАЗУ запрашиваем API ключ
+        await state.set_state(StoreAuthStates.wb_waiting_api_key)
         await callback.message.edit_text(
             "🟣 <b>Подключение Wildberries</b>\n\n"
-            "<b>Как получить API ключ:</b>\n"
-            "1. Зайдите в личный кабинет WB\n"
-            "2. Настройки → Доступ к API\n"
-            "3. Создайте новый ключ\n"
-            "4. <b>⚠️ Выберите ТОЛЬКО пункты на чтение!</b>\n"
-            "   ✅ Статистика\n"
-            "   ✅ Цены\n" 
-            "   ✅ Реклама (только просмотр)\n\n"
-            "🔒 Ключ хранится в зашифрованном виде",
+            "<b>📋 Инструкция по получению API ключа:</b>\n"
+            "1️⃣ Зайдите в <a href='https://seller.wildberries.ru/'>личный кабинет WB</a>\n"
+            "2️⃣ Перейдите в <b>Профиль → Доступ к API</b>\n"
+            "3️⃣ Нажмите <b>+ Создать ключ</b>\n"
+            "4️⃣ Выберите тип: <b>Стандартный</b>\n"
+            "5️⃣ ⚠️ <b>Важно:</b> включите только права на <b>чтение</b>:\n"
+            "   • Статистика\n"
+            "   • Цены и скидки\n"
+            "   • Реклама (только просмотр)\n"
+            "   • Продвижение товаров\n"
+            "6️⃣ Скопируйте ключ и отправьте ниже 👇\n\n"
+            "<b>🔐 Введите API ключ:</b>\n"
+            "<code>eyJhbGciOiJIUzI1NiIs...</code>\n\n"
+            "❌ Отправьте /cancel для отмены",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="🔐 Ввести API ключ", callback_data='wb_connect')],
                 [InlineKeyboardButton(text="⬅️ Назад", callback_data='stores')],
             ])
         )
-    await callback.answer()
+        await callback.answer()
 
 
 @router.callback_query(F.data == 'wb_connect')
@@ -400,21 +406,32 @@ async def ozon_menu_handler(callback: CallbackQuery, state: FSMContext):
             "Выберите раздел:",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons)
         )
+        await callback.answer()
     else:
+        # Ozon не подключен - СРАЗУ запрашиваем данные
+        await state.set_state(StoreAuthStates.ozon_waiting_api_key)
         await callback.message.edit_text(
             "🔵 <b>Подключение Ozon</b>\n\n"
-            "<b>Как получить API ключ:</b>\n"
-            "1. Зайдите в личный кабинет Ozon\n"
-            "2. Настройки → API интеграции\n"
-            "3. Создайте ключ Seller API\n"
-            "4. <b>⚠️ Выберите ТОЛЬКО на чтение!</b>\n\n"
-            "Нужны: Client ID и API Key",
+            "<b>📋 Инструкция по получению API ключей:</b>\n"
+            "1️⃣ Зайдите в <a href='https://seller.ozon.ru/'>личный кабинет Ozon</a>\n"
+            "2️⃣ Перейдите в <b>Настройки → API интеграции</b>\n"
+            "3️⃣ Нажмите <b>+ Создать ключ Seller API</b>\n"
+            "4️⃣ Выберите тип: <b>Seller API</b>\n"
+            "5️⃣ ⚠️ <b>Важно:</b> включите только права на <b>чтение</b>:\n"
+            "   • Список товаров\n"
+            "   • Цены и остатки\n"
+            "   • Статистика\n"
+            "   • Реклама (просмотр)\n"
+            "6️⃣ Скопируйте <b>Client ID</b> и <b>API Key</b>\n\n"
+            "<b>🔐 Введите данные в формате:</b>\n"
+            "<code>ClientID|APIKey</code>\n"
+            "<i>Пример: 12345|a1b2c3d4...</i>\n\n"
+            "❌ Отправьте /cancel для отмены",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="🔐 Ввести API ключ", callback_data='ozon_connect')],
                 [InlineKeyboardButton(text="⬅️ Назад", callback_data='stores')],
             ])
         )
-    await callback.answer()
+        await callback.answer()
 
 
 @router.callback_query(F.data == 'ozon_connect')
