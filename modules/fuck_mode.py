@@ -334,7 +334,9 @@ class FuckModeEngine:
             raise  # Перебрасываем для обработки выше
     
     async def _notify_decisions(self, user_id: str, cabinet, product: Dict, decisions: List[Dict]):
-        """Отправляет уведомление о принятых решениях"""
+        """Отправляет уведомление о принятых решениях в Telegram"""
+        from .notification_service import notification_service
+        
         config = fuck_mode_config.get_config(user_id)
         
         if config.dry_run:
@@ -345,6 +347,30 @@ class FuckModeEngine:
             mode_text = "[ПРИМЕНЕНО]"
         
         logger.info(f"{mode_emoji} Decisions for {product['name']}: {len(decisions)} {mode_text}")
+        
+        # Отправляем уведомление пользователю
+        try:
+            for decision in decisions:
+                if decision.get('type') == 'price_change':
+                    change_pct = decision.get('change_percent', 0)
+                    direction = "📈 Повышена" if change_pct > 0 else "📉 Снижена"
+                    
+                    message = f"{mode_emoji} <b>Fuck Mode {mode_text}</b>\n\n"
+                    message += f"🏪 {cabinet.name} ({cabinet.platform.upper()})\n"
+                    message += f"📦 {product['name'][:50]}...\n\n"
+                    message += f"{direction} цена:\n"
+                    message += f"• Было: {decision['current_price']}₽\n"
+                    message += f"• Стало: {decision['new_price']}₽\n"
+                    message += f"• Изменение: {change_pct:+.1f}%\n\n"
+                    message += f"🤖 Причина: {decision.get('reason', 'Не указана')}"
+                    
+                    await notification_service.send_notification(
+                        user_id=int(user_id),
+                        message=message
+                    )
+                    
+        except Exception as e:
+            logger.error(f"Failed to send notification: {e}")
     
     async def _analyze_price(self, user_id: str, cabinet, product: Dict) -> Optional[Dict]:
         """Анализирует цену и принимает решение используя Pricing Engine v2.0"""
@@ -367,7 +393,8 @@ class FuckModeEngine:
                     ),
                     'reason': decision.reason,
                     'confidence': decision.confidence,
-                    'factors': decision.factors
+                    'factors': decision.factors,
+                    'product_name': product.get('name', 'Unknown')  # Для уведомлений
                 }
             
             return None
