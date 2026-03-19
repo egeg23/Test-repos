@@ -76,7 +76,7 @@ class InventoryAgent:
         
         # Проверяем двухдневный алерт
         should_alert = self.sales_history.check_two_day_alert(
-            client_id, product_id, stock_days, threshold=17
+            client_id, platform, product_id, stock_days, threshold=17
         )
         
         if should_alert:
