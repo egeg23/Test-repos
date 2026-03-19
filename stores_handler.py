@@ -7,6 +7,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 import json
 import os
+import logging
 from pathlib import Path
 
 # Импорт клиентов API (реальная интеграция)
@@ -24,6 +25,9 @@ except ImportError:
 
 router = Router()
 
+# Логгер
+logger = logging.getLogger('stores_handler')
+
 # ============================================================================
 # СОСТОЯНИЯ (FSM)
 # ============================================================================
@@ -32,7 +36,9 @@ class StoreAuthStates(StatesGroup):
     """Состояния для авторизации магазинов"""
     avito_waiting_credentials = State()
     wb_waiting_api_key = State()
+    wb_ready_to_scan = State()  # Новое: готов к сканированию WB
     ozon_waiting_api_key = State()
+    ozon_ready_to_scan = State()  # Новое: готов к сканированию Ozon
     waiting_cost_price = State()
 
 
@@ -356,31 +362,143 @@ async def wb_api_key_handler(message: Message, state: FSMContext):
     with open(creds_file, 'w') as f:
         json.dump(creds, f, indent=2)
     
+    # Сохраняем API ключ в состоянии для сканирования
+    await state.update_data(wb_api_key=api_key, products_count=products_count)
+    
     await status_msg.edit_text(
         f"✅ <b>Wildberries подключен!</b>\n\n"
         f"📦 Найдено товаров: <b>{products_count}</b>\n"
-        f"Seller AI начинает анализ кабинета..."
-    )
-    
-    # Запрашиваем себестоимость для P&L
-    await asyncio.sleep(1)
-    await message.answer(
-        "📊 <b>Для расчета Unit-экономики</b>\n\n"
-        "Seller AI нужны данные о себестоимости товаров.\n\n"
-        "Отправьте в формате:\n"
-        "<code>артикул|себестоимость</code>\n\n"
-        "<b>Примеры:</b>\n"
-        "• <code>12345678|450</code>\n"
-        "• <code>87654321|1200</code>\n\n"
-        "Или загрузите Excel файл с колонками:\n"
-        "Артикул | Себестоимость | Желаемая маржа %",
+        f"🔐 API ключ сохранен\n\n"
+        f"<i>Теперь запустим полное сканирование кабинета...</i>",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="💰 Ввести позже", callback_data='wb_skip_cost')],
-            [InlineKeyboardButton(text="📊 К аналитике", callback_data='wb_stats')],
+            [InlineKeyboardButton(text="🚀 Погнали!", callback_data='wb_scan_start')],
         ])
     )
     
-    await state.set_state(StoreAuthStates.waiting_cost_price)
+    await state.set_state(StoreAuthStates.wb_ready_to_scan)
+
+
+@router.callback_query(F.data == 'wb_scan_start')
+async def wb_scan_start_handler(callback: CallbackQuery, state: FSMContext):
+    """Запуск полного сканирования WB кабинета"""
+    user_id = str(callback.from_user.id)
+    
+    # Получаем данные из состояния
+    data = await state.get_data()
+    api_key = data.get('wb_api_key')
+    
+    if not api_key:
+        await callback.answer("❌ Ошибка: API ключ не найден")
+        return
+    
+    # Сразу отвечаем на callback
+    await callback.answer("🚀 Начинаю сканирование...")
+    
+    # Показываем анимированный статус
+    scan_msg = await callback.message.edit_text(
+        "🚀 <b>Погнали!</b>\n\n"
+        "⏳ <b>Сканирование кабинета...</b>\n"
+        "🔄 Получаю список товаров...",
+        reply_markup=None
+    )
+    
+    try:
+        from modules.cabinet_scanner import CabinetScanner
+        
+        scanner = CabinetScanner(
+            user_id=user_id,
+            platform='wb',
+            api_key=api_key
+        )
+        
+        # Запускаем сканирование
+        result = await scanner.scan_full_cabinet()
+        
+        if result['success']:
+            # Сканирование успешно
+            profile = result['profile']
+            
+            await scan_msg.edit_text(
+                f"✅ <b>Сканирование завершено!</b>\n\n"
+                f"{result['summary']}\n\n"
+                f"<i>Seller AI теперь знает ваш кабинет и будет принимать умные решения.</i>",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="📊 К дашборду", callback_data='dashboard')],
+                    [InlineKeyboardButton(text="🤖 Настроить автономию", callback_data='autonomy')],
+                ])
+            )
+            
+            # Записываем успех в self-learning
+            try:
+                from modules.self_learning_engine import SelfLearningEngine
+                engine = SelfLearningEngine()
+                await engine.record_event(
+                    user_id=user_id,
+                    platform='wb',
+                    event_type='cabinet_scan_completed',
+                    data={
+                        'products_count': result['products_count'],
+                        'campaigns_count': result['campaigns_count'],
+                        'categories': profile.get('main_categories', [])
+                    },
+                    outcome='success'
+                )
+            except Exception as e:
+                logger.error(f"[wb_scan] Ошибка записи в learning: {e}")
+        else:
+            # Ошибка сканирования
+            await scan_msg.edit_text(
+                f"⚠️ <b>Сканирование завершено с ошибками</b>\n\n"
+                f"Кабинет подключен, но не удалось получить все данные.\n"
+                f"Ошибка: {result.get('error', 'Unknown')}\n\n"
+                f"<i>Вы можете продолжить работу — Seller AI будет собирать данные постепенно.</i>",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="📊 К дашборду", callback_data='dashboard')],
+                ])
+            )
+            
+            # Записываем частичный успех
+            try:
+                from modules.self_learning_engine import SelfLearningEngine
+                engine = SelfLearningEngine()
+                await engine.record_event(
+                    user_id=user_id,
+                    platform='wb',
+                    event_type='cabinet_scan_partial',
+                    data={'error': result.get('error')},
+                    outcome='partial_success'
+                )
+            except Exception as e:
+                logger.error(f"[wb_scan] Ошибка записи неудачи: {e}")
+    
+    except Exception as e:
+        logger.error(f"[wb_scan] Критическая ошибка: {e}")
+        await scan_msg.edit_text(
+            f"❌ <b>Ошибка сканирования</b>\n\n"
+            f"{str(e)}\n\n"
+            f"<i>Попробуйте позже или обратитесь в поддержку.</i>",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🔄 Попробовать снова", callback_data='wb_scan_start')],
+                [InlineKeyboardButton(text="📊 К дашборду", callback_data='dashboard')],
+            ])
+        )
+        
+        # Записываем неудачу
+        try:
+            from modules.self_learning_engine import SelfLearningEngine
+            engine = SelfLearningEngine()
+            await engine.record_event(
+                user_id=user_id,
+                platform='wb',
+                event_type='cabinet_scan_failed',
+                data={'error': str(e)},
+                outcome='failure'
+            )
+        except Exception as le:
+            logger.error(f"[wb_scan] Ошибка записи неудачи: {le}")
+    
+    finally:
+        await state.clear()
 
 
 # ============================================================================
@@ -550,13 +668,149 @@ async def ozon_api_key_handler(message: Message, state: FSMContext):
     with open(creds_file, 'w') as f:
         json.dump(creds, f, indent=2)
     
+    # Сохраняем данные в состоянии для сканирования
+    await state.update_data(
+        ozon_client_id=ozon_client_id,
+        ozon_api_key=api_key,
+        products_count=products_count
+    )
+    
     await status_msg.edit_text(
         f"✅ <b>Ozon подключен!</b>\n\n"
         f"📦 Найдено товаров: <b>{products_count}</b>\n"
-        f"Seller AI начинает анализ кабинета..."
+        f"🔐 API ключ сохранен\n\n"
+        f"<i>Теперь запустим полное сканирование кабинета...</i>",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🚀 Погнали!", callback_data='ozon_scan_start')],
+        ])
     )
     
-    await state.clear()
+    await state.set_state(StoreAuthStates.ozon_ready_to_scan)
+
+
+@router.callback_query(F.data == 'ozon_scan_start')
+async def ozon_scan_start_handler(callback: CallbackQuery, state: FSMContext):
+    """Запуск полного сканирования Ozon кабинета"""
+    user_id = str(callback.from_user.id)
+    
+    # Получаем данные из состояния
+    data = await state.get_data()
+    client_id = data.get('ozon_client_id')
+    api_key = data.get('ozon_api_key')
+    
+    if not client_id or not api_key:
+        await callback.answer("❌ Ошибка: API данные не найдены")
+        return
+    
+    # Сразу отвечаем на callback
+    await callback.answer("🚀 Начинаю сканирование...")
+    
+    # Показываем анимированный статус
+    scan_msg = await callback.message.edit_text(
+        "🚀 <b>Погнали!</b>\n\n"
+        "⏳ <b>Сканирование кабинета Ozon...</b>\n"
+        "🔄 Получаю список товаров...",
+        reply_markup=None
+    )
+    
+    try:
+        from modules.cabinet_scanner import CabinetScanner
+        
+        scanner = CabinetScanner(
+            user_id=user_id,
+            platform='ozon',
+            api_key=api_key,
+            client_id=client_id
+        )
+        
+        # Запускаем сканирование
+        result = await scanner.scan_full_cabinet()
+        
+        if result['success']:
+            # Сканирование успешно
+            profile = result['profile']
+            
+            await scan_msg.edit_text(
+                f"✅ <b>Сканирование Ozon завершено!</b>\n\n"
+                f"{result['summary']}\n\n"
+                f"<i>Seller AI теперь знает ваш кабинет Ozon и будет принимать умные решения.</i>",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="📊 К дашборду", callback_data='dashboard')],
+                    [InlineKeyboardButton(text="🤖 Настроить автономию", callback_data='autonomy')],
+                ])
+            )
+            
+            # Записываем успех в self-learning
+            try:
+                from modules.self_learning_engine import SelfLearningEngine
+                engine = SelfLearningEngine()
+                await engine.record_event(
+                    user_id=user_id,
+                    platform='ozon',
+                    event_type='cabinet_scan_completed',
+                    data={
+                        'products_count': result['products_count'],
+                        'campaigns_count': result['campaigns_count'],
+                        'categories': profile.get('main_categories', [])
+                    },
+                    outcome='success'
+                )
+            except Exception as e:
+                logger.error(f"[ozon_scan] Ошибка записи в learning: {e}")
+        else:
+            # Ошибка сканирования
+            await scan_msg.edit_text(
+                f"⚠️ <b>Сканирование Ozon завершено с ошибками</b>\n\n"
+                f"Кабинет подключен, но не удалось получить все данные.\n"
+                f"Ошибка: {result.get('error', 'Unknown')}\n\n"
+                f"<i>Вы можете продолжить работу — Seller AI будет собирать данные постепенно.</i>",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="📊 К дашборду", callback_data='dashboard')],
+                ])
+            )
+            
+            # Записываем частичный успех
+            try:
+                from modules.self_learning_engine import SelfLearningEngine
+                engine = SelfLearningEngine()
+                await engine.record_event(
+                    user_id=user_id,
+                    platform='ozon',
+                    event_type='cabinet_scan_partial',
+                    data={'error': result.get('error')},
+                    outcome='partial_success'
+                )
+            except Exception as e:
+                logger.error(f"[ozon_scan] Ошибка записи: {e}")
+    
+    except Exception as e:
+        logger.error(f"[ozon_scan] Критическая ошибка: {e}")
+        await scan_msg.edit_text(
+            f"❌ <b>Ошибка сканирования Ozon</b>\n\n"
+            f"{str(e)}\n\n"
+            f"<i>Попробуйте позже или обратитесь в поддержку.</i>",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🔄 Попробовать снова", callback_data='ozon_scan_start')],
+                [InlineKeyboardButton(text="📊 К дашборду", callback_data='dashboard')],
+            ])
+        )
+        
+        # Записываем неудачу
+        try:
+            from modules.self_learning_engine import SelfLearningEngine
+            engine = SelfLearningEngine()
+            await engine.record_event(
+                user_id=user_id,
+                platform='ozon',
+                event_type='cabinet_scan_failed',
+                data={'error': str(e)},
+                outcome='failure'
+            )
+        except Exception as le:
+            logger.error(f"[ozon_scan] Ошибка записи неудачи: {le}")
+    
+    finally:
+        await state.clear()
 
 
 # ============================================================================
