@@ -9,6 +9,7 @@ def get_main_menu(user_data=None):
     buttons = [
         [InlineKeyboardButton(text="🛍 Мои магазины", callback_data='stores'),
          InlineKeyboardButton(text="📊 Дашборд", callback_data='dashboard')],
+        [InlineKeyboardButton(text="💡 AI Рекомендации", callback_data='ai_recommendations')],
         [InlineKeyboardButton(text="📈 Аналитика", callback_data='analytics'),
          InlineKeyboardButton(text="💰 Цены", callback_data='pricing')],
         [InlineKeyboardButton(text="🤖 Автономия", callback_data='autonomy'),
@@ -197,6 +198,7 @@ CALLBACK_DESCRIPTIONS = {
     'menu': 'Главное меню',
     'stores': 'Мои магазины',
     'dashboard': 'Дашборд',
+    'ai_recommendations': 'AI Рекомендации',
     'analytics': 'Аналитика',
     'autonomy': 'Автономный режим',
     'pricing': 'Цены и ДРР',
