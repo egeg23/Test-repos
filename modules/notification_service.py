@@ -1,15 +1,17 @@
 # modules/notification_service.py - Реальные уведомления на основе API данных
 """
-Анализирует реальные данные из WB/Ozon API и генерирует уведомления
-при выходе за пороговые значения.
+Анализирует реальные данные из WB/Ozon API с учетом истории продаж.
+Генерирует уведомления когда запасов осталось на 15-20 дней (2 дня подряд).
 """
 
 import json
+import html
 import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 from dataclasses import dataclass, asdict
+from uuid import uuid4
 
 logger = logging.getLogger('notification_service')
 
@@ -17,168 +19,191 @@ logger = logging.getLogger('notification_service')
 @dataclass
 class Notification:
     """Модель уведомления"""
+    id: str                      # UUID для уникальности
     user_id: str
-    platform: str  # wb, ozon
-    type: str      # price_alert, stock_alert, ad_alert, margin_alert
+    platform: str               # wb, ozon
+    type: str                   # supply_needed, margin_alert, price_alert, ad_alert
     title: str
     message: str
-    priority: str  # low, medium, high
-    data: Dict     # Дополнительные данные (артикул, цена, остаток и т.д.)
+    priority: str               # low, medium, high, critical
+    data: Dict                  # Дополнительные данные
     created_at: str
     read: bool = False
 
 
 class NotificationService:
     """
-    Сервис уведомлений на основе реальных данных API.
-    Анализирует данные и генерирует алерты при выходе за пороги.
+    Сервис уведомлений на основе реальных данных API + истории продаж.
     """
     
     def __init__(self, clients_dir: str = "/opt/clients"):
         self.clients_dir = Path(clients_dir)
         self.notifications_file = self.clients_dir / "GLOBAL_AI_LEARNING" / "notifications.json"
         
-        # Пороговые значения (можно вынести в настройки пользователя)
-        self.thresholds = {
-            'stock_min': 10,          # Минимальный остаток
-            'margin_min': 0.15,       # Минимальная маржа 15%
-            'drr_max': 0.25,          # Макс. ДРР 25%
-            'price_change_max': 0.20  # Макс. изменение цены 20%
-        }
+        # Пороговые значения (по умолчанию 17 дней, пользователь может изменить)
+        self.default_threshold_days = 17
+        self.min_threshold = 10
+        self.max_threshold = 30
     
-    def analyze_wb_data(self, client_id: str, products: List[Dict], stats: Optional[Dict] = None) -> List[Notification]:
-        """
-        Анализирует данные WB и генерирует уведомления.
-        
-        Args:
-            client_id: ID пользователя
-            products: Список товаров из WB API
-            stats: Статистика продаж (опционально)
-            
-        Returns:
-            List[Notification]: Список уведомлений
-        """
-        notifications = []
-        now = datetime.now().isoformat()
-        
-        for product in products:
-            nm_id = product.get('nmId') or product.get('sku')
-            name = product.get('name', 'Без названия')
-            price = product.get('price', 0)
-            stock = product.get('stock', 0)
-            
-            # 1. Проверка остатков
-            if stock < self.thresholds['stock_min']:
-                notifications.append(Notification(
-                    user_id=client_id,
-                    platform='wb',
-                    type='stock_alert',
-                    title=f'⚠️ Заканчивается товар',
-                    message=f'"{name[:30]}..." (Арт. {nm_id}): остаток {stock} шт.',
-                    priority='high' if stock < 5 else 'medium',
-                    data={'nm_id': nm_id, 'stock': stock, 'threshold': self.thresholds['stock_min']},
-                    created_at=now
-                ))
-            
-            # 2. Проверка цены (если есть себестоимость в данных)
-            cost_price = product.get('cost_price')
-            if cost_price and price > 0:
-                margin = (price - cost_price) / price
-                if margin < self.thresholds['margin_min']:
-                    notifications.append(Notification(
-                        user_id=client_id,
-                        platform='wb',
-                        type='margin_alert',
-                        title=f'💸 Низкая маржа',
-                        message=f'"{name[:30]}..." (Арт. {nm_id}): маржа {margin:.1%} (ниже {self.thresholds["margin_min"]:.0%})',
-                        priority='high',
-                        data={'nm_id': nm_id, 'price': price, 'cost': cost_price, 'margin': margin},
-                        created_at=now
-                    ))
-        
-        logger.info(f"🔔 Сгенерировано {len(notifications)} уведомлений для WB")
-        return notifications
-    
-    def analyze_ozon_data(self, client_id: str, products: List[Dict], stocks: Optional[Dict] = None) -> List[Notification]:
-        """
-        Анализирует данные Ozon и генерирует уведомления.
-        
-        Args:
-            client_id: ID пользователя
-            products: Список товаров из Ozon API
-            stocks: Остатки по SKU (опционально)
-            
-        Returns:
-            List[Notification]: Список уведомлений
-        """
-        notifications = []
-        now = datetime.now().isoformat()
-        
-        for product in products:
-            offer_id = product.get('offer_id') or product.get('id')
-            name = product.get('name', 'Без названия')
-            price = product.get('price', 0)
-            
-            # Получаем остаток из stocks если есть
-            stock = stocks.get(offer_id, 0) if stocks else product.get('stock', 0)
-            
-            # 1. Проверка остатков
-            if stock < self.thresholds['stock_min']:
-                notifications.append(Notification(
-                    user_id=client_id,
-                    platform='ozon',
-                    type='stock_alert',
-                    title=f'⚠️ Заканчивается товар',
-                    message=f'"{name[:30]}..." (Арт. {offer_id}): остаток {stock} шт.',
-                    priority='high' if stock < 5 else 'medium',
-                    data={'offer_id': offer_id, 'stock': stock, 'threshold': self.thresholds['stock_min']},
-                    created_at=now
-                ))
-            
-            # 2. Проверка маржи
-            cost_price = product.get('cost_price')
-            if cost_price and price > 0:
-                margin = (price - cost_price) / price
-                if margin < self.thresholds['margin_min']:
-                    notifications.append(Notification(
-                        user_id=client_id,
-                        platform='ozon',
-                        type='margin_alert',
-                        title=f'💸 Низкая маржа',
-                        message=f'"{name[:30]}..." (Арт. {offer_id}): маржа {margin:.1%}',
-                        priority='high',
-                        data={'offer_id': offer_id, 'price': price, 'cost': cost_price, 'margin': margin},
-                        created_at=now
-                    ))
-        
-        logger.info(f"🔔 Сгенерировано {len(notifications)} уведомлений для Ozon")
-        return notifications
-    
-    def save_notifications(self, notifications: List[Notification]):
-        """Сохраняет уведомления в файл"""
-        if not notifications:
-            return
-            
-        self.notifications_file.parent.mkdir(parents=True, exist_ok=True)
-        
-        # Загружаем существующие
-        existing = []
-        if self.notifications_file.exists():
+    def get_user_threshold(self, client_id: str) -> int:
+        """Получает порог пользователя (или дефолт)"""
+        settings_file = self.clients_dir / client_id / "settings" / "autonomy.json"
+        if settings_file.exists():
             try:
-                with open(self.notifications_file, 'r') as f:
-                    existing = json.load(f)
+                with open(settings_file, 'r') as f:
+                    settings = json.load(f)
+                    threshold = settings.get('stock_days_threshold', self.default_threshold_days)
+                    return max(self.min_threshold, min(self.max_threshold, threshold))
             except:
                 pass
+        return self.default_threshold_days
+    
+    def analyze_inventory_forecast(
+        self, 
+        client_id: str, 
+        platform: str, 
+        products: List[Dict],
+        sales_history_manager
+    ) -> List[Notification]:
+        """
+        Анализирует прогноз запасов и генерирует уведомления.
         
-        # Добавляем новые
-        new_notifications = [asdict(n) for n in notifications]
-        existing.extend(new_notifications)
+        Args:
+            client_id: ID пользователя
+            platform: wb или ozon
+            products: Список товаров с текущими остатками
+            sales_history_manager: SalesHistoryManager для расчета средней скорости
+            
+        Returns:
+            List[Notification]: Список уведомлений о необходимости поставки
+        """
+        notifications = []
+        now = datetime.now().isoformat()
+        today = datetime.now().strftime('%Y-%m-%d')
+        threshold_days = self.get_user_threshold(client_id)
         
-        # Сохраняем
-        with open(self.notifications_file, 'w') as f:
-            json.dump(existing, f, indent=2)
+        logger.info(f"📊 Анализ {platform}: порог {threshold_days} дней, товаров {len(products)}")
         
-        logger.info(f"💾 Сохранено {len(notifications)} уведомлений")
+        for product in products:
+            product_id = product.get('nmId') or product.get('offer_id') or product.get('id')
+            name = product.get('name', 'Без названия')
+            current_stock = product.get('stock', 0)
+            
+            if not product_id:
+                continue
+            
+            # Получаем среднюю скорость продаж (A)
+            avg_daily_sales = sales_history_manager.calculate_avg_daily_sales(
+                client_id, platform, product_id, days=7
+            )
+            
+            if avg_daily_sales <= 0:
+                # Товар не продается - пропускаем
+                continue
+            
+            # Рассчитываем сколько дней хватит запасов (C = B / A)
+            stock_days = sales_history_manager.calculate_stock_days(current_stock, avg_daily_sales)
+            
+            # Проверяем 2 дня подряд
+            needs_alert = sales_history_manager.check_two_day_alert(
+                client_id, platform, product_id, stock_days, threshold_days
+            )
+            
+            if needs_alert:
+                # Рассчитываем сколько заказать
+                supply_qty = sales_history_manager.calculate_supply_needed(
+                    current_stock, avg_daily_sales, target_days=threshold_days
+                )
+                
+                # Определяем приоритет
+                if stock_days < 5:
+                    priority = 'critical'
+                    title = '🔴 КРИТИЧНО: Срочная поставка!'
+                elif stock_days < 10:
+                    priority = 'high'
+                    title = '🟠 Важно: Нужна поставка'
+                else:
+                    priority = 'medium'
+                    title = '🟡 Плановая поставка'
+                
+                notification = Notification(
+                    id=str(uuid4()),
+                    user_id=client_id,
+                    platform=platform,
+                    type='supply_needed',
+                    title=title,
+                    message=self._format_supply_message(name, stock_days, current_stock, supply_qty, threshold_days),
+                    priority=priority,
+                    data={
+                        'product_id': product_id,
+                        'product_name': name,
+                        'current_stock': current_stock,
+                        'avg_daily_sales': round(avg_daily_sales, 2),
+                        'stock_days': round(stock_days, 1),
+                        'threshold_days': threshold_days,
+                        'supply_qty': supply_qty,
+                        'alert_date': today
+                    },
+                    created_at=now
+                )
+                notifications.append(notification)
+                logger.info(f"🚨 Создано уведомление для {product_id}: {stock_days:.1f} дней")
+        
+        logger.info(f"✅ Сгенерировано {len(notifications)} уведомлений")
+        return notifications
+    
+    def _format_supply_message(self, name: str, stock_days: float, current_stock: int, supply_qty: int, threshold: int) -> str:
+        """Форматирует сообщение о поставке"""
+        return (
+            f'Товар: "{name[:40]}..."\n'
+            f'📦 Текущий запас: {current_stock} шт.\n'
+            f'📊 Хватит на: {stock_days:.1f} дней\n'
+            f'🎯 Рекомендуем заказать: {supply_qty} шт.\n'
+            f'(для запаса на {threshold} дней)'
+        )
+    
+    def save_notifications(self, notifications: List[Notification]):
+        """Сохраняет уведомления в файл с блокировкой"""
+        if not notifications:
+            return
+        
+        self.notifications_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Используем файл-блокировку для конкурентного доступа
+        lock_file = self.notifications_file.with_suffix('.lock')
+        
+        try:
+            # Простая блокировка через создание файла
+            import time
+            while lock_file.exists():
+                time.sleep(0.1)
+            
+            lock_file.touch()
+            
+            try:
+                # Загружаем существующие
+                existing = []
+                if self.notifications_file.exists():
+                    with open(self.notifications_file, 'r') as f:
+                        existing = json.load(f)
+                
+                # Добавляем новые
+                new_notifications = [asdict(n) for n in notifications]
+                existing.extend(new_notifications)
+                
+                # Атомарная запись
+                temp_file = self.notifications_file.with_suffix('.tmp')
+                with open(temp_file, 'w') as f:
+                    json.dump(existing, f, indent=2)
+                temp_file.replace(self.notifications_file)
+                
+                logger.info(f"💾 Сохранено {len(notifications)} уведомлений")
+                
+            finally:
+                lock_file.unlink(missing_ok=True)
+                
+        except Exception as e:
+            logger.error(f"❌ Ошибка сохранения уведомлений: {e}")
     
     def get_user_notifications(self, user_id: str, unread_only: bool = False, limit: int = 50) -> List[Dict]:
         """Получает уведомления пользователя"""
@@ -214,23 +239,36 @@ class NotificationService:
         """Возвращает количество непрочитанных уведомлений"""
         return len(self.get_user_notifications(user_id, unread_only=True))
     
-    def mark_as_read(self, notification_ids: List[str] = None, user_id: str = None):
-        """Отмечает уведомления как прочитанные"""
+    def mark_as_read(self, notification_id: str = None, user_id: str = None):
+        """Отмечает уведомление как прочитанное"""
         if not self.notifications_file.exists():
             return
         
+        lock_file = self.notifications_file.with_suffix('.lock')
+        
         try:
-            with open(self.notifications_file, 'r') as f:
-                notifications = json.load(f)
+            while lock_file.exists():
+                import time
+                time.sleep(0.1)
+            lock_file.touch()
             
-            for n in notifications:
-                if notification_ids and n.get('created_at') in notification_ids:
-                    n['read'] = True
-                elif user_id and n.get('user_id') == user_id and not notification_ids:
-                    n['read'] = True
-            
-            with open(self.notifications_file, 'w') as f:
-                json.dump(notifications, f, indent=2)
+            try:
+                with open(self.notifications_file, 'r') as f:
+                    notifications = json.load(f)
+                
+                for n in notifications:
+                    if notification_id and n.get('id') == notification_id:
+                        n['read'] = True
+                    elif user_id and not notification_id and n.get('user_id') == user_id:
+                        n['read'] = True
+                
+                temp_file = self.notifications_file.with_suffix('.tmp')
+                with open(temp_file, 'w') as f:
+                    json.dump(notifications, f, indent=2)
+                temp_file.replace(self.notifications_file)
+                
+            finally:
+                lock_file.unlink(missing_ok=True)
                 
         except Exception as e:
             logger.error(f"❌ Ошибка обновления уведомлений: {e}")
@@ -261,9 +299,10 @@ class NotificationService:
 
 
 def format_notification_message(notification: Dict) -> str:
-    """Форматирует уведомление для Telegram"""
+    """Форматирует уведомление для Telegram с HTML escaping"""
     priority_emoji = {
-        'high': '🔴',
+        'critical': '🔴',
+        'high': '🟠',
         'medium': '🟡',
         'low': '🟢'
     }
@@ -274,7 +313,7 @@ def format_notification_message(notification: Dict) -> str:
     }
     
     type_emoji = {
-        'stock_alert': '📦',
+        'supply_needed': '📦',
         'margin_alert': '💸',
         'price_alert': '💰',
         'ad_alert': '📢'
@@ -288,8 +327,12 @@ def format_notification_message(notification: Dict) -> str:
     if created:
         created = created[:16].replace('T', ' ')
     
+    # HTML escaping для безопасности
+    title = html.escape(notification.get('title', 'Без названия'))
+    message = html.escape(notification.get('message', ''))
+    
     return (
-        f"{emoji} <b>{notification.get('title')}</b>\n"
+        f"{emoji} <b>{title}</b>\n"
         f"{type_icon} {platform} | {created}\n\n"
-        f"{notification.get('message')}\n"
+        f"{message}"
     )

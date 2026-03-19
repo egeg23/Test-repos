@@ -34,13 +34,14 @@ logger = logging.getLogger('autonomous_cycle')
 # Добавляем путь к модулям
 sys.path.insert(0, '/opt/telegram_bot')
 
-# Импорт сервиса уведомлений
+# Импорт сервисов
 try:
     from modules.notification_service import NotificationService, format_notification_message
+    from modules.sales_history import SalesHistoryManager, SalesRecord
     NOTIFICATIONS_AVAILABLE = True
-except ImportError:
+except ImportError as e:
     NOTIFICATIONS_AVAILABLE = False
-    logger.warning("⚠️ Сервис уведомлений недоступен")
+    logger.warning(f"⚠️ Сервис уведомлений недоступен: {e}")
 
 
 class AutonomousCycle:
@@ -244,45 +245,85 @@ class AutonomousCycle:
         return products_data, stocks_data
     
     async def _generate_notifications(self, client_id: str):
-        """Генерирует уведомления на основе реальных данных API"""
+        """
+        Генерирует уведомления на основе прогноза запасов.
+        Логика: B/A=C, где C < threshold 2 дня подряд → алерт
+        """
         if not NOTIFICATIONS_AVAILABLE:
             return
-        
+
         try:
             from modules.notification_service import NotificationService
-            
+            from modules.sales_history import SalesHistoryManager
+
             notif_service = NotificationService(str(self.clients_dir))
+            sales_manager = SalesHistoryManager(str(self.clients_dir))
             stores = self._get_connected_stores(client_id)
-            
+
             all_notifications = []
-            
+            today = datetime.now().strftime('%Y-%m-%d')
+
             # Анализируем WB
             if 'wb' in stores:
                 wb_products = await self._check_wildberries(client_id, stores['wb'])
                 if wb_products:
-                    wb_notifications = notif_service.analyze_wb_data(
-                        client_id, wb_products, stats=None
+                    # Сохраняем историю продаж для WB
+                    wb_records = []
+                    for p in wb_products:
+                        sales = p.get('sales_qty_7d', 0)  # Если API дает продажи
+                        if sales > 0:
+                            wb_records.append(SalesRecord(
+                                date=today,
+                                product_id=p.get('nmId'),
+                                sales_qty=int(sales / 7),  # Среднее за день
+                                revenue=0,
+                                stock_end=p.get('stock', 0)
+                            ))
+
+                    if wb_records:
+                        sales_manager.add_daily_records_batch(client_id, 'wb', wb_records)
+
+                    # Генерируем уведомления на основе прогноза
+                    wb_notifications = notif_service.analyze_inventory_forecast(
+                        client_id, 'wb', wb_products, sales_manager
                     )
                     all_notifications.extend(wb_notifications)
                     logger.info(f"    🔔 WB: {len(wb_notifications)} уведомлений")
-            
+
             # Анализируем Ozon
             if 'ozon' in stores:
                 ozon_products, ozon_stocks = await self._check_ozon(client_id, stores['ozon'])
                 if ozon_products:
-                    ozon_notifications = notif_service.analyze_ozon_data(
-                        client_id, ozon_products, stocks=ozon_stocks
+                    # Сохраняем историю для Ozon
+                    ozon_records = []
+                    for p in ozon_products:
+                        sales = p.get('sales_qty_7d', 0)
+                        if sales > 0:
+                            ozon_records.append(SalesRecord(
+                                date=today,
+                                product_id=p.get('offer_id'),
+                                sales_qty=int(sales / 7),
+                                revenue=0,
+                                stock_end=p.get('stock', 0)
+                            ))
+
+                    if ozon_records:
+                        sales_manager.add_daily_records_batch(client_id, 'ozon', ozon_records)
+
+                    # Генерируем уведомления
+                    ozon_notifications = notif_service.analyze_inventory_forecast(
+                        client_id, 'ozon', ozon_products, sales_manager
                     )
                     all_notifications.extend(ozon_notifications)
                     logger.info(f"    🔔 Ozon: {len(ozon_notifications)} уведомлений")
-            
+
             # Сохраняем все уведомления
             if all_notifications:
                 notif_service.save_notifications(all_notifications)
                 logger.info(f"💾 Всего сохранено: {len(all_notifications)} уведомлений")
             else:
                 logger.info("✅ Нет проблем — уведомлений не требуется")
-                
+
         except Exception as e:
             logger.error(f"❌ Ошибка генерации уведомлений: {e}")
     

@@ -70,12 +70,13 @@ async def show_all_notifications(callback: CallbackQuery):
     # Отправляем каждое уведомление отдельным сообщением
     for notif in notifications[:3]:  # Показываем первые 3
         text = format_notification_message(notif)
+        notif_id = notif.get('id', '')
         
-        # Кнопка "Прочитано" для каждого
+        # Кнопка "Прочитано" для каждого (используем UUID)
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(
                 text="✅ Отметить прочитанным", 
-                callback_data=f"mark_read:{notif.get('created_at')}"
+                callback_data=f"mark_read:{notif_id}"
             )]
         ])
         
@@ -102,8 +103,9 @@ async def mark_all_read(callback: CallbackQuery):
 @router.callback_query(F.data.startswith('mark_read:'))
 async def mark_one_read(callback: CallbackQuery):
     """Отмечает одно уведомление прочитанным"""
-    created_at = callback.data.split(':')[1]
-    notification_service.mark_as_read(notification_ids=[created_at])
+    # Используем split(':', 1) чтобы сохранить полный UUID
+    notification_id = callback.data.split(':', 1)[1]
+    notification_service.mark_as_read(notification_id=notification_id)
     
     await callback.message.edit_text(
         callback.message.text + "\n\n✅ Прочитано"
