@@ -34,6 +34,14 @@ logger = logging.getLogger('autonomous_cycle')
 # Добавляем путь к модулям
 sys.path.insert(0, '/opt/telegram_bot')
 
+# Импорт сервиса уведомлений
+try:
+    from modules.notification_service import NotificationService, format_notification_message
+    NOTIFICATIONS_AVAILABLE = True
+except ImportError:
+    NOTIFICATIONS_AVAILABLE = False
+    logger.warning("⚠️ Сервис уведомлений недоступен")
+
 
 class AutonomousCycle:
     """Главный класс автономного цикла"""
@@ -55,8 +63,20 @@ class AutonomousCycle:
         for client_id in clients:
             try:
                 await self._process_client(client_id)
+                # Генерируем уведомления на основе реальных данных
+                if NOTIFICATIONS_AVAILABLE:
+                    await self._generate_notifications(client_id)
             except Exception as e:
                 logger.error(f"❌ Ошибка обработки клиента {client_id}: {e}")
+        
+        # Очищаем старые уведомления
+        if NOTIFICATIONS_AVAILABLE:
+            try:
+                notif_service = NotificationService(str(self.clients_dir))
+                notif_service.clear_old_notifications(days=7)
+                logger.info("🧹 Старые уведомления очищены")
+            except Exception as e:
+                logger.error(f"❌ Ошибка очистки уведомлений: {e}")
         
         logger.info("=" * 60)
         logger.info(f"✅ Цикл завершен: {datetime.now()}")
@@ -111,9 +131,13 @@ class AutonomousCycle:
         
         return stores
     
-    async def _check_wildberries(self, client_id: str, creds: Dict):
-        """Проверка магазина Wildberries"""
+    async def _check_wildberries(self, client_id: str, creds: Dict) -> List[Dict]:
+        """
+        Проверка магазина Wildberries.
+        Возвращает список товаров для анализа уведомлений.
+        """
         logger.info(f"  🔵 Wildberries:")
+        products_data = []
         
         try:
             from modules.wb_api_client import WildberriesAPIClient
@@ -121,12 +145,22 @@ class AutonomousCycle:
             api_key = creds.get('stat_api_key')
             if not api_key:
                 logger.warning(f"    ⚠️ Нет API ключа")
-                return
+                return products_data
             
             async with WildberriesAPIClient(api_key) as client:
                 # 1. Получаем товары
                 products = await client.get_products(limit=100)
                 logger.info(f"    📦 Товаров: {len(products)}")
+                
+                # Конвертируем в формат для анализа
+                for p in products:
+                    products_data.append({
+                        'nmId': getattr(p, 'nm_id', None) or p.get('nmId'),
+                        'name': getattr(p, 'name', None) or p.get('name', 'Без названия'),
+                        'price': getattr(p, 'price', 0) or p.get('price', 0),
+                        'stock': getattr(p, 'stock', 0) or p.get('stock', 0),
+                        'cost_price': None  # Будет загружаться из настроек
+                    })
                 
                 # 2. Получаем статистику (если доступна)
                 try:
@@ -151,10 +185,17 @@ class AutonomousCycle:
                 
         except Exception as e:
             logger.error(f"    ❌ Ошибка: {e}")
+        
+        return products_data
     
-    async def _check_ozon(self, client_id: str, creds: Dict):
-        """Проверка магазина Ozon"""
+    async def _check_ozon(self, client_id: str, creds: Dict) -> tuple:
+        """
+        Проверка магазина Ozon.
+        Возвращает (список товаров, остатки) для анализа.
+        """
         logger.info(f"  🔴 Ozon:")
+        products_data = []
+        stocks_data = {}
         
         try:
             from modules.ozon_api_client import OzonAPIClient
@@ -164,18 +205,30 @@ class AutonomousCycle:
             
             if not client_id_api or not api_key:
                 logger.warning(f"    ⚠️ Нет данных API")
-                return
+                return products_data, stocks_data
             
             async with OzonAPIClient(client_id_api, api_key) as client:
                 # 1. Получаем товары
                 products = await client.get_products(limit=100)
                 logger.info(f"    📦 Товаров: {len(products)}")
                 
+                # Конвертируем в формат для анализа
+                for p in products:
+                    offer_id = getattr(p, 'id', None) or p.get('offer_id') or p.get('id')
+                    products_data.append({
+                        'offer_id': offer_id,
+                        'name': getattr(p, 'name', None) or p.get('name', 'Без названия'),
+                        'price': getattr(p, 'price', 0) or p.get('price', 0),
+                        'stock': getattr(p, 'stock', 0) or p.get('stock', 0),
+                        'cost_price': None
+                    })
+                
                 # 2. Получаем остатки
                 try:
-                    offer_ids = [p.id for p in products[:50]]
-                    stocks = await client.get_stock(offer_ids)
-                    logger.info(f"    📊 Остатки получены: {len(stocks)} SKU")
+                    offer_ids = [p.get('offer_id') for p in products_data if p.get('offer_id')]
+                    if offer_ids:
+                        stocks_data = await client.get_stock(offer_ids[:50])  # Лимит API
+                        logger.info(f"    📊 Остатки получены: {len(stocks_data)} SKU")
                 except Exception as e:
                     logger.debug(f"    ℹ️ Остатки недоступны: {e}")
                 
@@ -187,6 +240,51 @@ class AutonomousCycle:
                 
         except Exception as e:
             logger.error(f"    ❌ Ошибка: {e}")
+        
+        return products_data, stocks_data
+    
+    async def _generate_notifications(self, client_id: str):
+        """Генерирует уведомления на основе реальных данных API"""
+        if not NOTIFICATIONS_AVAILABLE:
+            return
+        
+        try:
+            from modules.notification_service import NotificationService
+            
+            notif_service = NotificationService(str(self.clients_dir))
+            stores = self._get_connected_stores(client_id)
+            
+            all_notifications = []
+            
+            # Анализируем WB
+            if 'wb' in stores:
+                wb_products = await self._check_wildberries(client_id, stores['wb'])
+                if wb_products:
+                    wb_notifications = notif_service.analyze_wb_data(
+                        client_id, wb_products, stats=None
+                    )
+                    all_notifications.extend(wb_notifications)
+                    logger.info(f"    🔔 WB: {len(wb_notifications)} уведомлений")
+            
+            # Анализируем Ozon
+            if 'ozon' in stores:
+                ozon_products, ozon_stocks = await self._check_ozon(client_id, stores['ozon'])
+                if ozon_products:
+                    ozon_notifications = notif_service.analyze_ozon_data(
+                        client_id, ozon_products, stocks=ozon_stocks
+                    )
+                    all_notifications.extend(ozon_notifications)
+                    logger.info(f"    🔔 Ozon: {len(ozon_notifications)} уведомлений")
+            
+            # Сохраняем все уведомления
+            if all_notifications:
+                notif_service.save_notifications(all_notifications)
+                logger.info(f"💾 Всего сохранено: {len(all_notifications)} уведомлений")
+            else:
+                logger.info("✅ Нет проблем — уведомлений не требуется")
+                
+        except Exception as e:
+            logger.error(f"❌ Ошибка генерации уведомлений: {e}")
     
     def _save_analysis(self, client_id: str, platform: str, data: Dict):
         """Сохраняет результаты анализа"""
