@@ -67,7 +67,21 @@ class FuckModePricing:
             # 3. Получаем данные о продажах (velocity)
             velocity_data = await self._get_velocity_data(user_id, cabinet, product)
             
-            # 4. Используем Pricing Engine для расчета
+            # 4. Получаем статус Buy Box
+            from .buy_box_tracker import buy_box_tracker
+            
+            bb_status = buy_box_tracker.get_buy_box_status(
+                user_id, cabinet.id, product.get('id', '')
+            )
+            has_buy_box = bb_status.get('has_buy_box', False) if bb_status else False
+            
+            # Получаем статистику Buy Box (дни с корзиной)
+            bb_stats = buy_box_tracker.calculate_buy_box_stats(
+                user_id, cabinet.id, product.get('id', ''), days=30
+            )
+            days_with_bb = bb_stats.get('days_with_bb', 0)
+            
+            # 5. Используем Pricing Engine для расчета
             recommendation = self.pricing_engine.get_optimal_price(
                 product_id=product.get('id', ''),
                 current_price=product.get('price', 0),
@@ -76,8 +90,8 @@ class FuckModePricing:
                 sales_velocity=velocity_data.get('current', 0),
                 avg_velocity=velocity_data.get('average', 0),
                 stock_days=product.get('stock_days', 30),
-                has_buy_box=False,  # TODO: Получать реальный статус BB
-                days_with_bb=0,     # TODO: Хранить историю BB
+                has_buy_box=has_buy_box,
+                days_with_bb=days_with_bb,
                 strategy_name='aggressive_buy_box'
             )
             
