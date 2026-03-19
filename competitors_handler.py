@@ -2,6 +2,7 @@
 """
 Интеграция с кнопками меню:
 - Кнопка "🏆 Конкуренты" в аналитике
+- Поддержка WB и Ozon
 - Автоматически использует системную авторизацию Mpstats
 """
 
@@ -10,6 +11,7 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKe
 from aiogram.filters import Command
 import logging
 import asyncio
+import re
 
 logger = logging.getLogger('competitors_handler')
 router = Router()
@@ -18,6 +20,9 @@ router = Router()
 SYSTEM_MPSTATS_LOGIN = "tai_yan@mail.ru"
 SYSTEM_MPSTATS_PASSWORD = "Elizaweta2003*Mpstat2025"
 SYSTEM_CLIENT_ID = "system_mpstats"
+
+# Хранилище временных данных пользователей
+user_temp_data = {}
 
 
 async def ensure_system_auth():
@@ -68,11 +73,14 @@ async def show_competitors_menu(callback: CallbackQuery):
         )
         return
     
-    # Показываем меню выбора
+    # Показываем меню выбора с поддержкой обеих платформ
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔍 По nmId товара", callback_data='comp_search_by_id')],
-        [InlineKeyboardButton(text="📁 Мои товары", callback_data='comp_my_products')],
-        [InlineKeyboardButton(text="⭐ Топ конкурентов", callback_data='comp_top_competitors')],
+        [InlineKeyboardButton(text="🔍 По ID товара (WB)", callback_data='comp_search_wb')],
+        [InlineKeyboardButton(text="🔍 По ID товара (Ozon)", callback_data='comp_search_ozon')],
+        [InlineKeyboardButton(text="📁 Мои товары WB", callback_data='comp_my_products_wb')],
+        [InlineKeyboardButton(text="📁 Мои товары Ozon", callback_data='comp_my_products_ozon')],
+        [InlineKeyboardButton(text="⭐ Топ WB", callback_data='comp_top_wb'),
+         InlineKeyboardButton(text="⭐ Топ Ozon", callback_data='comp_top_ozon')],
         [InlineKeyboardButton(text="⬅️ Назад", callback_data='analytics')],
     ])
     
@@ -82,53 +90,148 @@ async def show_competitors_menu(callback: CallbackQuery):
         "• Цены конкурентов\n"
         "• Рейтинги и отзывы\n"
         "• Динамика продаж\n\n"
-        "Выберите действие:",
+        "Выберите маркетплейс:",
         reply_markup=keyboard
     )
 
 
-@router.callback_query(F.data == 'comp_search_by_id')
-async def search_by_id(callback: CallbackQuery):
-    """Поиск по nmId"""
+@router.callback_query(F.data.startswith('comp_search_'))
+async def search_by_platform(callback: CallbackQuery):
+    """Поиск по ID с выбором платформы"""
+    user_id = str(callback.from_user.id)
+    platform = callback.data.replace('comp_search_', '')
+    
+    # Сохраняем выбранную платформу
+    user_temp_data[user_id] = {'platform': platform, 'action': 'search'}
+    
+    platform_name = "🟣 Wildberries" if platform == "wb" else "🔵 Ozon"
+    id_example = "12345678" if platform == "wb" else "123456789"
+    
     await callback.message.answer(
-        "🔍 <b>Поиск товара по ID</b>\n\n"
-        "Введите nmId (артикул WB):\n"
-        "<code>12345678</code>\n\n"
-        "Или отправьте ссылку на товар"
+        f"🔍 <b>Поиск товара ({platform_name})</b>\n\n"
+        f"Введите ID товара:\n"
+        f"<code>{id_example}</code>\n\n"
+        f"Или отправьте ссылку на товар"
     )
     await callback.answer()
 
 
+@router.callback_query(F.data.startswith('comp_my_products_'))
+async def show_my_products_platform(callback: CallbackQuery):
+    """Показывает товары пользователя для выбранной платформы"""
+    platform = callback.data.replace('comp_my_products_', '')
+    platform_name = "🟣 WB" if platform == "wb" else "🔵 Ozon"
+    
+    await callback.answer(f"Загрузка товаров {platform_name}...")
+    
+    # TODO: Загрузить реальные товары из API
+    await callback.message.answer(
+        f"📋 <b>Ваши товары ({platform_name})</b>\n\n"
+        f"Здесь будет список ваших товаров\n"
+        f"из подключенного магазина {platform.upper()}.\n\n"
+        f"<i>Пока в разработке - используйте поиск по ID</i>"
+    )
+
+
+@router.callback_query(F.data.startswith('comp_top_'))
+async def show_top_platform(callback: CallbackQuery):
+    """Показывает топ конкурентов для платформы"""
+    platform = callback.data.replace('comp_top_', '')
+    platform_name = "🟣 WB" if platform == "wb" else "🔵 Ozon"
+    
+    await callback.answer(f"Анализ топа {platform_name}...")
+    
+    # TODO: Загрузить реальные топовые товары
+    await callback.message.answer(
+        f"⭐ <b>Топ конкурентов ({platform_name})</b>\n\n"
+        f"Здесь будет анализ топовых\n"
+        f"конкурентов на {platform.upper()}.\n\n"
+        f"<i>Пока в разработке - используйте поиск по ID</i>"
+    )
+
+
 @router.message(Command("competitors"))
 async def cmd_competitors(message: Message):
-    """Команда для быстрого поиска (можно через кнопку тоже)"""
+    """Команда для быстрого поиска с автоопределением платформы"""
     user_id = str(message.from_user.id)
     
     args = message.text.replace('/competitors', '').strip().split()
     
     if not args:
-        # Показываем кнопочное меню
+        # Показываем кнопочное меню с выбором платформы
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🔍 Ввести nmId", callback_data='comp_search_by_id')],
-            [InlineKeyboardButton(text="📋 Мои товары", callback_data='comp_my_products')],
+            [InlineKeyboardButton(text="🟣 WB", callback_data='comp_search_wb'),
+             InlineKeyboardButton(text="🔵 Ozon", callback_data='comp_search_ozon')],
         ])
         await message.answer(
             "🏆 <b>Анализ конкурентов</b>\n\n"
-            "Данные предоставлены Mpstats",
+            "Выберите маркетплейс:",
             reply_markup=keyboard
         )
         return
     
-    product_id = args[0]
-    platform = args[1] if len(args) > 1 else "wb"
+    # Пробуем определить платформу из аргументов
+    product_input = args[0]
+    platform = "wb"  # по умолчанию
+    
+    # Если указан второй аргумент - это платформа
+    if len(args) > 1 and args[1].lower() in ['wb', 'ozon']:
+        platform = args[1].lower()
+    else:
+        # Пробуем определить по ссылке
+        platform = detect_platform_from_url(product_input)
+        # Извлекаем ID из ссылки если нужно
+        product_id = extract_product_id(product_input, platform)
+    
+    product_id = extract_product_id(product_input, platform)
+    
+    if not product_id:
+        await message.answer("❌ Не удалось определить ID товара")
+        return
     
     await analyze_product(message, product_id, platform)
 
 
+def detect_platform_from_url(url: str) -> str:
+    """Определяет платформу по URL"""
+    url_lower = url.lower()
+    if 'ozon' in url_lower or 'ozon.ru' in url_lower:
+        return 'ozon'
+    elif 'wildberries' in url_lower or 'wb.ru' in url_lower:
+        return 'wb'
+    return 'wb'  # default
+
+
+def extract_product_id(text: str, platform: str = 'wb') -> Optional[str]:
+    """Извлекает ID товара из текста или ссылки"""
+    # Убираем пробелы
+    text = text.strip()
+    
+    # Пробуем найти числа в тексте
+    numbers = re.findall(r'\d+', text)
+    
+    if not numbers:
+        return None
+    
+    # Для WB: nmId обычно 8 цифр
+    # Для Ozon: offer_id может быть разной длины
+    if platform == 'wb':
+        # Ищем 8-значное число
+        for num in numbers:
+            if len(num) == 8:
+                return num
+        # Если не нашли 8-значное, берем первое
+        return numbers[0]
+    else:  # ozon
+        # Берем самое длинное число
+        return max(numbers, key=len)
+
+
 async def analyze_product(message_or_callback, product_id: str, platform: str = "wb"):
     """Анализирует товар и показывает отчет"""
+    platform_name = "🟣 Wildberries" if platform == "wb" else "🔵 Ozon"
     
-    status_msg = await message_or_callback.answer(f"🔍 Анализ товара {product_id}...")
+    status_msg = await message_or_callback.answer(f"🔍 Анализ {platform_name}:\n<code>{product_id}</code>")
     
     try:
         # Убеждаемся что системная авторизация работает
@@ -155,13 +258,15 @@ async def analyze_product(message_or_callback, product_id: str, platform: str = 
                     await status_msg.edit_text("❌ Ошибка авторизации")
                     return
             
-            await status_msg.edit_text(f"📊 Сбор данных {product_id}...")
+            await status_msg.edit_text(f"📊 Сбор данных {platform_name}...")
             
             data = await parser.get_product_data(product_id, platform)
             
             if not data:
                 await status_msg.edit_text(
-                    f"❌ Товар <code>{product_id}</code> не найден\n\n"
+                    f"❌ Товар не найден\n\n"
+                    f"Платформа: {platform_name}\n"
+                    f"ID: <code>{product_id}</code>\n\n"
                     f"Проверьте правильность ID"
                 )
                 return
@@ -175,13 +280,14 @@ async def analyze_product(message_or_callback, product_id: str, platform: str = 
             # Кнопки действий
             keyboard = InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text="🔄 Обновить", callback_data=f'comp_analyze_{product_id}_{platform}')],
-                [InlineKeyboardButton(text="📊 График цен", callback_data=f'comp_chart_{product_id}')],
-                [InlineKeyboardButton(text="💰 Установить цену", callback_data=f'set_price_{product_id}')],
+                [InlineKeyboardButton(text="📊 График цен", callback_data=f'comp_chart_{product_id}_{platform}')],
+                [InlineKeyboardButton(text="🏆 Конкуренты", callback_data=f'comp_list_{product_id}_{platform}')],
+                [InlineKeyboardButton(text="💰 Установить цену", callback_data=f'set_price_{product_id}_{platform}')],
                 [InlineKeyboardButton(text="⬅️ Назад", callback_data='analytics_competitors')],
             ])
             
             await status_msg.edit_text(text, reply_markup=keyboard)
-            logger.info(f"✅ Competitor analysis shown for {product_id}")
+            logger.info(f"✅ Competitor analysis shown for {product_id} on {platform}")
             
     except Exception as e:
         logger.error(f"❌ Analysis error: {e}")
@@ -190,10 +296,12 @@ async def analyze_product(message_or_callback, product_id: str, platform: str = 
 
 def format_competitor_report(product_id: str, data: dict, platform: str) -> str:
     """Форматирует отчет о товаре"""
+    platform_name = "🟣 Wildberries" if platform == "wb" else "🔵 Ozon"
+    platform_emoji = "🟣" if platform == "wb" else "🔵"
     
-    text = f"🔍 <b>Анализ товара</b>\n\n"
+    text = f"{platform_emoji} <b>Анализ товара</b>\n\n"
     text += f"📦 ID: <code>{product_id}</code>\n"
-    text += f"🛒 {platform.upper()}\n"
+    text += f"🛒 {platform_name}\n"
     text += f"📊 Mpstats\n\n"
     
     if data.get('name'):
@@ -228,33 +336,37 @@ async def callback_analyze(callback: CallbackQuery):
 @router.callback_query(F.data.startswith('comp_chart_'))
 async def show_chart(callback: CallbackQuery):
     """Показывает график цен"""
-    await callback.answer("📊 График в разработке")
+    parts = callback.data.split('_')
+    platform = parts[3] if len(parts) > 3 else "wb"
+    platform_name = "🟣 WB" if platform == "wb" else "🔵 Ozon"
+    await callback.answer(f"📊 График {platform_name} в разработке")
 
 
-@router.callback_query(F.data == 'comp_my_products')
-async def show_my_products(callback: CallbackQuery):
-    """Показывает список товаров пользователя"""
-    await callback.answer("📁 Загрузка товаров...")
-    # TODO: Получить список товаров из API WB/Ozon
-    await callback.message.answer(
-        "📋 <b>Ваши товары</b>\n\n"
-        "Здесь будет список ваших товаров\n"
-        "из подключенных магазинов."
-    )
-
-
-@router.callback_query(F.data == 'comp_top_competitors')
-async def show_top_competitors(callback: CallbackQuery):
-    """Показывает топ конкурентов"""
-    await callback.answer("⭐ Анализ топ конкурентов...")
-    await callback.message.answer(
-        "⭐ <b>Топ конкурентов</b>\n\n"
-        "Здесь будет анализ ваших основных\n"
-        "конкурентов по категориям."
-    )
+@router.callback_query(F.data.startswith('comp_list_'))
+async def show_competitors_list(callback: CallbackQuery):
+    """Показывает список конкурентов"""
+    parts = callback.data.split('_')
+    if len(parts) >= 3:
+        product_id = parts[2]
+        platform = parts[3] if len(parts) > 3 else "wb"
+        platform_name = "🟣 WB" if platform == "wb" else "🔵 Ozon"
+        
+        await callback.answer(f"🏆 Загрузка конкурентов {platform_name}...")
+        
+        # TODO: Вызвать парсер конкурентов
+        from modules.mpstats_competitors import MpstatsCompetitorParser
+        
+        parser = MpstatsCompetitorParser("/opt/clients")
+        # Здесь можно вызвать async метод
+        
+        await callback.message.answer(
+            f"🏆 <b>Конкуренты ({platform_name})</b>\n\n"
+            f"Товар: <code>{product_id}</code>\n\n"
+            f"<i>Загрузка списка конкурентов...</i>"
+        )
 
 
 def register_handlers(dp):
     """Регистрация обработчиков"""
     dp.include_router(router)
-    logger.info("✅ Обработчики competitors зарегистрированы")
+    logger.info("✅ Обработчики competitors зарегистрированы (WB + Ozon)")
