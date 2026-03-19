@@ -57,18 +57,10 @@ class MpstatsBrowserParser:
     async def authenticate(self, login: str, password: str) -> bool:
         """
         Authenticates on Mpstats using browser
-        
-        Args:
-            login: Email
-            password: Password
-            
-        Returns:
-            True if authenticated successfully
         """
         if not self.browser:
-            raise RuntimeError("Browser not initialized. Use async context manager.")
+            raise RuntimeError("Browser not initialized")
         
-        # Create new context and page
         self.context = await self.browser.new_context(
             viewport={'width': 1920, 'height': 1080},
             user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -78,21 +70,15 @@ class MpstatsBrowserParser:
         try:
             logger.info(f"🔐 Browser auth for {login}")
             
-            # Go to login page
             await self.page.goto("https://mpstats.io/auth/login", timeout=30000)
             await self.page.wait_for_load_state('networkidle')
             
-            # Fill login form
             await self.page.fill('input[name="email"], input[type="email"]', login)
             await self.page.fill('input[name="password"], input[type="password"]', password)
             
-            # Click login button
             await self.page.click('button[type="submit"], .btn-login, button:has-text("Войти")')
-            
-            # Wait for navigation
             await self.page.wait_for_timeout(3000)
             
-            # Check if logged in
             current_url = self.page.url
             if 'dashboard' in current_url or 'login' not in current_url:
                 logger.info("✅ Browser auth successful")
@@ -106,18 +92,9 @@ class MpstatsBrowserParser:
             return False
     
     async def get_product_data(self, product_id: str, platform: str = "wb") -> Optional[Dict]:
-        """
-        Gets product data from Mpstats
-        
-        Args:
-            product_id: nmId for WB or offer_id for Ozon
-            platform: 'wb' or 'ozon'
-            
-        Returns:
-            Product data dict or None
-        """
+        """Gets product data from Mpstats"""
         if not self.page:
-            raise RuntimeError("Not authenticated. Call authenticate() first.")
+            raise RuntimeError("Not authenticated")
         
         try:
             url = f"https://mpstats.io/{platform}/item/{product_id}"
@@ -125,11 +102,9 @@ class MpstatsBrowserParser:
             
             await self.page.goto(url, timeout=60000)
             await self.page.wait_for_load_state('networkidle')
-            await self.page.wait_for_timeout(2000)  # Wait for JS render
+            await self.page.wait_for_timeout(2000)
             
-            # Extract data from page
             data = await self._extract_product_data()
-            
             return data
             
         except Exception as e:
@@ -146,24 +121,14 @@ class MpstatsBrowserParser:
             'reviews': None,
             'sales': None,
             'revenue': None,
-            'stock': None,
-            'seller': None,
-            'category': None,
         }
         
         try:
-            # Product name
-            name_elem = await self.page.query_selector('h1, .product-name, [data-testid="product-name"]')
+            name_elem = await self.page.query_selector('h1, .product-name')
             if name_elem:
                 data['name'] = await name_elem.inner_text()
             
-            # Price - try multiple selectors
-            price_selectors = [
-                '.price-current',
-                '[data-testid="price"]',
-                '.product-price',
-                'span:has-text("₽")',
-            ]
+            price_selectors = ['.price-current', '[data-testid="price"]', '.product-price']
             for selector in price_selectors:
                 try:
                     elem = await self.page.query_selector(selector)
@@ -175,8 +140,7 @@ class MpstatsBrowserParser:
                 except:
                     continue
             
-            # Rating
-            rating_elem = await self.page.query_selector('.rating, [data-testid="rating"], .stars')
+            rating_elem = await self.page.query_selector('.rating, [data-testid="rating"]')
             if rating_elem:
                 text = await rating_elem.inner_text()
                 try:
@@ -184,107 +148,11 @@ class MpstatsBrowserParser:
                 except:
                     pass
             
-            # Reviews count
-            reviews_elem = await self.page.query_selector('.reviews-count, [data-testid="reviews"]')
-            if reviews_elem:
-                text = await reviews_elem.inner_text()
-                try:
-                    data['reviews'] = int(text.replace(' ', '').replace('отзывов', '').replace('отзыва', ''))
-                except:
-                    pass
-            
-            # Try to get data from page scripts (window.__INITIAL_STATE__ etc.)
-            page_data = await self.page.evaluate('''() => {
-                // Try to find data in common places
-                if (window.__INITIAL_STATE__) return window.__INITIAL_STATE__;
-                if (window.__DATA__) return window.__DATA__;
-                if (window.appData) return window.appData;
-                return null;
-            }''')
-            
-            if page_data:
-                logger.debug(f"Found page data: {type(page_data)}")
-                # Merge with extracted data
-                self._merge_page_data(data, page_data)
-            
             return data
             
         except Exception as e:
             logger.error(f"❌ Extraction error: {e}")
             return data
-    
-    def _merge_page_data(self, data: Dict, page_data: dict):
-        """Merges data from page scripts"""
-        try:
-            # Navigate through common structures
-            if isinstance(page_data, dict):
-                # Try product key
-                if 'product' in page_data:
-                    product = page_data['product']
-                    if 'price' in product and not data['price']:
-                        data['price'] = float(product['price'])
-                    if 'name' in product and not data['name']:
-                        data['name'] = product['name']
-                    if 'rating' in product and not data['rating']:
-                        data['rating'] = float(product['rating'])
-                
-                # Try item key
-                if 'item' in page_data:
-                    item = page_data['item']
-                    if isinstance(item, dict):
-                        if 'price' in item and not data['price']:
-                            data['price'] = float(item['price'])
-                        if 'nmId' in item:
-                            data['product_id'] = item['nmId']
-        except Exception as e:
-            logger.debug(f"Could not merge page data: {e}")
-    
-    async def get_competitor_prices(self, product_id: str, platform: str = "wb") -> List[Dict]:
-        """
-        Gets competitor prices for a product
-        
-        Returns:
-            List of competitor data: [{seller, price, rating, reviews}, ...]
-        """
-        competitors = []
-        
-        try:
-            # Navigate to competitors/sellers section if exists
-            # This depends on Mpstats UI structure
-            
-            # Try to find competitor data in page
-            comp_data = await self.page.evaluate('''() => {
-                const sellers = [];
-                // Look for seller elements
-                document.querySelectorAll('.seller-item, .competitor-row, [data-seller]').forEach(el => {
-                    const priceEl = el.querySelector('.price, [data-price]');
-                    const sellerEl = el.querySelector('.seller-name, [data-seller]');
-                    if (priceEl && sellerEl) {
-                        sellers.push({
-                            seller: sellerEl.innerText.trim(),
-                            price: priceEl.innerText.trim()
-                        });
-                    }
-                });
-                return sellers;
-            }''')
-            
-            if comp_data:
-                for item in comp_data:
-                    try:
-                        price_clean = item['price'].replace(' ', '').replace('₽', '').replace(',', '')
-                        competitors.append({
-                            'seller': item['seller'],
-                            'price': float(price_clean)
-                        })
-                    except:
-                        continue
-            
-            return competitors
-            
-        except Exception as e:
-            logger.error(f"❌ Error getting competitors: {e}")
-            return []
     
     async def save_session(self, client_id: str):
         """Saves browser session for reuse"""
@@ -294,7 +162,6 @@ class MpstatsBrowserParser:
         session_dir = self.clients_dir / "GLOBAL_AI_LEARNING" / "mpstats_browser"
         session_dir.mkdir(parents=True, exist_ok=True)
         
-        # Save storage state (cookies, localStorage)
         storage_state = await self.context.storage_state()
         state_file = session_dir / f"{client_id}_storage.json"
         
