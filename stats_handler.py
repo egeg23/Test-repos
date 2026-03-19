@@ -8,6 +8,7 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
 from modules.analytics_engine import AnalyticsEngine, StatsFormatter
+from datetime import datetime
 import logging
 
 logger = logging.getLogger('stats_handler')
@@ -151,26 +152,66 @@ async def show_top_products(callback: CallbackQuery):
 
 @router.callback_query(F.data.endswith('_ads'))
 async def show_ads_stats(callback: CallbackQuery):
-    """Статистика рекламы"""
+    """Статистика рекламы - РЕАЛЬНЫЕ ДАННЫЕ"""
     platform = callback.data.split('_')[1]
+    user_id = str(callback.from_user.id)
     
-    text = (
-        f"📢 <b>Реклама ({platform.upper()})</b>\n\n"
-        f"┌─────────────────┬────────┐\n"
-        f"│ Показы          │ 45,230 │\n"
-        f"│ Клики           │ 1,450  │\n"
-        f"│ CTR             │  3.2%  │\n"
-        f"│ Заказы из рекл. │   89   │\n"
-        f"│ Расходы         │ 22.5K₽ │\n"
-        f"│ ДРР             │  18%   │\n"
-        f"└─────────────────┴────────┘\n\n"
-        f"📊 <b>Кампании:</b>\n"
-        f"• Авто-кампания: ДРР 16% ✅\n"
-        f"• Поиск: ДРР 21% ⚠️\n"
-        f"• Карточка: ДРР 19% ✅"
-    )
+    await callback.message.answer("⏳ Загружаю статистику рекламы...")
     
-    await callback.message.answer(text)
+    try:
+        if platform == 'wb':
+            from agents.ads_agent import AdsAgent
+            agent = AdsAgent()
+            report = await agent.get_campaigns_report(user_id)
+            await callback.message.answer(report, parse_mode='HTML')
+        elif platform == 'ozon':
+            from modules.ozon_ads_client import OzonAdsClient
+            from modules.multi_cabinet_manager import cabinet_manager
+            
+            cabinets = cabinet_manager.get_active_cabinets(user_id, 'ozon')
+            if not cabinets:
+                await callback.message.answer(
+                    "❌ Нет активных кабинетов Ozon.\n"
+                    "Добавьте кабинет в разделе 'Мои магазины'"
+                )
+                await callback.answer()
+                return
+            
+            cabinet = cabinets[0]
+            if not cabinet.api_key or not hasattr(cabinet, 'client_id'):
+                await callback.message.answer(
+                    "❌ API ключ Ozon не найден."
+                )
+                await callback.answer()
+                return
+            
+            async with OzonAdsClient(cabinet.api_key, getattr(cabinet, 'client_id', '')) as client:
+                if not client.is_valid:
+                    await callback.message.answer("❌ Ошибка подключения к Ozon API")
+                    await callback.answer()
+                    return
+                
+                campaigns = await client.get_campaigns()
+                
+                if not campaigns:
+                    await callback.message.answer("📢 Нет рекламных кампаний Ozon.")
+                    await callback.answer()
+                    return
+                
+                lines = ["📢 <b>Кампании OZON</b>\n"]
+                for campaign in campaigns[:10]:
+                    state = campaign.get('state', 'UNKNOWN')
+                    status_emoji = {'CAMPAIGN_STATE_RUNNING': '🟢', 'CAMPAIGN_STATE_PAUSED': '⏸'}.get(state, '⚪')
+                    lines.append(f"{status_emoji} {campaign.get('title', 'Unknown')}")
+                
+                lines.append(f"\n📊 Всего: {len(campaigns)}")
+                await callback.message.answer("\n".join(lines), parse_mode='HTML')
+        else:
+            await callback.message.answer(f"📢 Платформа {platform} не поддерживается")
+    except Exception as e:
+        logger.error(f"Error showing ads: {e}")
+        await callback.message.answer("⚠️ Ошибка загрузки рекламы")
+    
     await callback.answer()
 
 
