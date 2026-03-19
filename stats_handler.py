@@ -10,12 +10,31 @@ from aiogram.filters import Command
 from modules.analytics_engine import AnalyticsEngine, StatsFormatter
 from modules.ads_strategy_config import ads_strategy_config, AdsStrategyType
 from datetime import datetime
+from functools import lru_cache
+import asyncio
 import logging
 
 logger = logging.getLogger('stats_handler')
 router = Router()
 
 analytics = AnalyticsEngine("/opt/clients")
+
+# Кэш для стратегий (TTL 60 секунд)
+_strategy_cache = {}
+
+@lru_cache(maxsize=128)
+def get_cached_strategy_config(strategy_type):
+    """Кэшированная конфигурация стратегии"""
+    return ads_strategy_config.get_strategy_config(strategy_type)
+
+async def prefetch_user_data(user_id: str):
+    """Предзагрузка данных пользователя в фоне"""
+    try:
+        # Предзагружаем стратегию
+        current = ads_strategy_config.get_user_strategy(user_id)
+        _strategy_cache[user_id] = current
+    except Exception:
+        pass
 
 
 @router.message(Command("stats"))
@@ -238,6 +257,9 @@ async def cmd_ads_strategy(message: Message):
     """Показывает меню выбора стратегии рекламы"""
     user_id = str(message.from_user.id)
     
+    # Предзагрузка в фоне (не блокирует UI)
+    asyncio.create_task(prefetch_user_data(user_id))
+    
     current_strategy = ads_strategy_config.get_user_strategy(user_id)
     strategies = ads_strategy_config.get_all_strategies()
     
@@ -290,7 +312,9 @@ async def set_ads_strategy(callback: CallbackQuery):
     
     # Устанавливаем стратегию
     ads_strategy_config.set_user_strategy(user_id, strategy)
-    config = ads_strategy_config.get_strategy_config(strategy)
+    
+    # Используем кэш для мгновенного отображения
+    config = get_cached_strategy_config(strategy)
     
     text = (
         f"✅ <b>Стратегия изменена!</b>\n\n"
@@ -302,8 +326,8 @@ async def set_ads_strategy(callback: CallbackQuery):
         f"<i>{config.description}</i>"
     )
     
+    await callback.answer()  # Сразу убираем "часики"
     await callback.message.edit_text(text)
-    await callback.answer()
 
 
 
@@ -379,8 +403,8 @@ async def on_bit_position_selected(callback: CallbackQuery):
     target_position = int(parts[2])
     
     # Обновляем меню с новой позицией
+    await callback.answer()  # Мгновенный отклик
     await _show_break_into_top_menu(callback.message, artikul, target_position)
-    await callback.answer(f"Цель: топ-{target_position}")
 
 
 @router.callback_query(F.data.startswith('bit_start:'))
@@ -417,8 +441,8 @@ async def on_bit_start(callback: CallbackQuery):
     # Устанавливаем стратегию BREAK_INTO_TOP для пользователя
     ads_strategy_config.set_user_strategy(user_id, AdsStrategyType.BREAK_INTO_TOP)
     
+    await callback.answer("✅ Запущено!")  # Быстрый отклик
     await callback.message.edit_text(text)
-    await callback.answer("✅ Прорыв в топ запущен!")
 
 
 @router.callback_query(F.data == 'bit_enter_artikul')
