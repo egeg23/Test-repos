@@ -23,7 +23,8 @@ class AdsStrategyType(Enum):
     """Типы стратегий управления рекламой"""
     NEW_PRODUCT = "new_product"           # Запустить новый товар
     MAINTAIN_MARGIN = "maintain_margin"   # Держать маржу
-    TOP_POSITION_LOW_DRR = "top_position_low_drr"  # Топ позиция за меньший ДРР
+    MAINTAIN_TOP_POSITION = "maintain_top_position"  # Поддержание топ позиции
+    BREAK_INTO_TOP = "break_into_top"     # Точное попадание в топ (для плохих продаж)
 
 
 @dataclass
@@ -63,15 +64,26 @@ DEFAULT_STRATEGIES = {
         priority="margin"
     ),
     
-    AdsStrategyType.TOP_POSITION_LOW_DRR: AdsStrategy(
-        name="🏆 Топ позиция за меньший ДРР",
-        description="Топ-товары уже имеют органический буст в выдаче, поэтому целевой ДРР минимален. Фокус на удержание позиции с минимальными рекламными затратами.",
+    AdsStrategyType.MAINTAIN_TOP_POSITION: AdsStrategy(
+        name="🏆 Поддержание топ позиции",
+        description="Топ-товары уже имеют органический буст в выдаче, поэтому целевой ДРР минимален (5%). Фокус на удержание позиции с минимальными рекламными затратами.",
         target_drr=5.0,          # Низкий ДРР — органика бустит
         max_drr=12.0,            # Макс допустимый ДРР
         min_drr=3.0,             # Минимальный ДРР для повышения ставки
         bid_aggression=2.0,      # Очень агрессивно
         pause_threshold=2.4,     # Пауза при ДРР > 12%
         priority="position"
+    ),
+    
+    AdsStrategyType.BREAK_INTO_TOP: AdsStrategy(
+        name="🎯 Точное попадание в топ",
+        description="Агрессивная стратегия для товаров с плохими продажами. Высокие ставки для входа в топ-5, затем автопереключение на 'Поддержание топ позиции'.",
+        target_drr=20.0,         # Высокий допустимый ДРР (временно)
+        max_drr=35.0,            # Критический ДРР
+        min_drr=15.0,            # Для увеличения ставки
+        bid_aggression=2.5,      # Максимальная агрессивность
+        pause_threshold=1.75,    # Пауза при ДРР > 35%
+        priority="breakthrough"
     )
 }
 
