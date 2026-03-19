@@ -188,11 +188,12 @@ class MpstatsAuthenticator:
     def _check_session_valid(self, session: requests.Session) -> bool:
         """Проверяет валидность сессии"""
         try:
-            # Пробуем зайти на дашборд
-            resp = session.get(f"{self.BASE_URL}/dashboard", timeout=10)
+            # Пробуем зайти на дашборд (короткий таймаут)
+            resp = session.get(f"{self.BASE_URL}/dashboard", timeout=5)
             # Если редирект на логин — сессия протухла
             return 'login' not in resp.url and resp.status_code == 200
-        except:
+        except Exception as e:
+            logger.debug(f"Session check failed: {e}")
             return False
     
     def is_authenticated(self, client_id: str) -> bool:
