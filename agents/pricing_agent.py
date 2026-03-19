@@ -18,6 +18,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from modules.pricing_engine import PricingEngine, PricingStrategy
 from modules.ab_testing import ABTestingFramework
 from modules.sales_history import SalesHistoryManager
+from modules.mpstats_auth import MpstatsAuthenticator
+
+try:
+    from modules.mpstats_browser import MpstatsBrowserParser, PLAYWRIGHT_AVAILABLE
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
+    MpstatsBrowserParser = None
 
 logger = logging.getLogger('pricing_agent')
 
@@ -44,6 +51,7 @@ class PricingAgent:
         self.pricing_engine = PricingEngine(clients_dir)
         self.ab_testing = ABTestingFramework(clients_dir)
         self.sales_history = SalesHistoryManager(clients_dir)
+        self.mpstats_auth = MpstatsAuthenticator(clients_dir)
         
         # Статус агента
         self.status_file = self.agent_dir / "status.json"
@@ -147,8 +155,16 @@ class PricingAgent:
             client_id, platform, product_id
         )
         
-        # 2. Получаем конкурентов (mock)
-        competitors = await self._get_competitors(product_id)
+        # 2. Получаем реальных конкурентов с Mpstats
+        competitors = await self._get_competitors_from_mpstats(client_id, product_id, platform)
+        
+        if not competitors:
+            # Fallback на mock данные
+            logger.warning(f"⚠️ No Mpstats data, using mock competitors for {product_id}")
+            competitors = [
+                {'price': 1450, 'rating': 4.3, 'reviews': 89, 'source': 'mock'},
+                {'price': 1590, 'rating': 4.7, 'reviews': 120, 'source': 'mock'},
+            ]
         
         # 3. Определяем стратегию
         strategy = self.ab_testing.get_recommended_strategy(client_id)
@@ -179,13 +195,67 @@ class PricingAgent:
         else:
             logger.info(f"⏭️ Price unchanged for {product_id} (diff: {diff_percent:.1%})")
     
-    async def _get_competitors(self, product_id: str) -> List[Dict]:
-        """Получает цены конкурентов"""
-        # Заглушка - в реальности парсинг Mpstats или API
-        return [
-            {'price': 1450, 'rating': 4.3, 'reviews': 89},
-            {'price': 1590, 'rating': 4.7, 'reviews': 120},
-        ]
+    async def _get_competitors_from_mpstats(self, client_id: str, product_id: str, platform: str = "wb") -> List[Dict]:
+        """
+        Получает реальные цены конкурентов с Mpstats
+        
+        Returns:
+            List of competitor data
+        """
+        competitors = []
+        
+        # Проверяем авторизацию
+        if not self.mpstats_auth.is_authenticated(client_id):
+            logger.warning(f"⚠️ Mpstats not authenticated for {client_id}")
+            return []
+        
+        # Если Playwright доступен — используем браузер
+        if PLAYWRIGHT_AVAILABLE and MpstatsBrowserParser:
+            try:
+                async with MpstatsBrowserParser(self.clients_dir) as parser:
+                    # Пробуем загрузить сессию
+                    if await parser.load_session(client_id):
+                        logger.info(f"🔍 Getting competitor data from Mpstats for {product_id}")
+                        data = await parser.get_product_data(product_id, platform)
+                        
+                        if data:
+                            # Добавляем собранные данные
+                            competitors.append({
+                                'price': data.get('price'),
+                                'rating': data.get('rating'),
+                                'reviews': data.get('reviews'),
+                                'source': 'mpstats_browser'
+                            })
+                            
+                            # Получаем цены конкурентов
+                            comp_prices = await parser.get_competitor_prices(product_id, platform)
+                            competitors.extend(comp_prices)
+                            
+                            # Сохраняем сессию для reuse
+                            await parser.save_session(client_id)
+                            
+                            logger.info(f"✅ Got {len(competitors)} competitors from Mpstats")
+            except Exception as e:
+                logger.error(f"❌ Browser parsing failed: {e}")
+        
+        # Fallback: используем API/session парсинг
+        if not competitors:
+            try:
+                from modules.mpstats_auth import MpstatsParser
+                mpstats_parser = MpstatsParser(self.mpstats_auth)
+                data = mpstats_parser.get_product_data(client_id, product_id, platform)
+                
+                if data and data.get('price'):
+                    competitors.append({
+                        'price': data['price'],
+                        'rating': data.get('rating'),
+                        'reviews': data.get('reviews'),
+                        'source': 'mpstats_api'
+                    })
+            except Exception as e:
+                logger.error(f"❌ API parsing failed: {e}")
+        
+        return competitors
     
     async def _apply_price_change(
         self,
