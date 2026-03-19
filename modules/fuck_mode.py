@@ -24,6 +24,7 @@ from enum import Enum
 
 from .fuck_mode_config import fuck_mode_config
 from .fuck_mode_pricing import fuck_mode_pricing, PricingDecision
+from .operation_log import operation_log
 
 logger = logging.getLogger('fuck_mode')
 
@@ -351,7 +352,9 @@ class FuckModeEngine:
         return None
     
     def _log_decision(self, user_id: str, cabinet_id: str, product_id: str, decision: Dict):
-        """Логирует решение"""
+        """Логирует решение в файл и operation_log"""
+        
+        # Лог в JSONL файл (для совместимости)
         entry = {
             'timestamp': datetime.now().isoformat(),
             'user_id': user_id,
@@ -365,6 +368,26 @@ class FuckModeEngine:
         
         self.status['total_decisions'] += 1
         self._save_status()
+        
+        # Лог в OperationLog (для отката и статистики)
+        if decision.get('type') == 'price_change':
+            from .multi_cabinet_manager import cabinet_manager
+            
+            cabinet = cabinet_manager.get_cabinet(user_id, cabinet_id)
+            if cabinet:
+                operation_log.log_operation(
+                    user_id=user_id,
+                    cabinet_id=cabinet_id,
+                    cabinet_name=cabinet.name,
+                    product_id=product_id,
+                    product_name=decision.get('product_name', 'Unknown'),
+                    operation_type='price_change',
+                    old_value=decision.get('current_price'),
+                    new_value=decision.get('new_price'),
+                    reason=decision.get('reason', ''),
+                    dry_run=decision.get('dry_run', True),
+                    success=True
+                )
     
     def _log_error(self, user_id: str, error: str):
         """Логирует ошибку"""
