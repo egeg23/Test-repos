@@ -17,6 +17,9 @@ from aiogram.enums import ParseMode
 # Добавляем путь к модулям
 sys.path.insert(0, str(Path(__file__).parent))
 
+# Database adapter (JSON → PostgreSQL migration)
+from modules.db_adapter import db_adapter
+
 # Импорт обработчиков
 from notification_handler import register_handlers as register_notification_handlers
 from settings_handler import register_handlers as register_settings_handlers
@@ -52,9 +55,24 @@ dp = Dispatcher()
 
 @dp.message(CommandStart())
 async def cmd_start(message: Message):
-    """Приветствие и главное меню"""
+    """Приветствие и главное меню + сохранение пользователя в БД"""
     user_id = message.from_user.id
     username = message.from_user.username or "друг"
+    
+    # Сохраняем пользователя в БД (JSON + PostgreSQL)
+    try:
+        user_data = {
+            'id': user_id,
+            'username': message.from_user.username,
+            'first_name': message.from_user.first_name,
+            'last_name': message.from_user.last_name,
+            'registered_at': message.date.isoformat()
+        }
+        db_adapter.save_user(user_id, user_data)
+        logger.info(f"User {user_id} saved to database")
+    except Exception as e:
+        logger.error(f"Failed to save user {user_id}: {e}")
+        # Не прерываем работу бота если БД недоступна
     
     text = (
         f"👋 Привет, {username}!\n\n"

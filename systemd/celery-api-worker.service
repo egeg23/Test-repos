@@ -1,0 +1,18 @@
+[Unit]
+Description=Celery API Worker for Seller AI
+After=network.target redis.service postgresql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/telegram_bot
+Environment=DATABASE_URL=postgresql://seller_ai:secure_password_2026@localhost:5432/seller_ai_prod
+Environment=REDIS_URL=redis://localhost:6379/0
+Environment=CELERY_BROKER_URL=redis://localhost:6379/1
+Environment=CELERY_RESULT_BACKEND=redis://localhost:6379/2
+ExecStart=/opt/telegram_bot/venv/bin/celery -A celery_app worker -Q api_jobs -n api_worker@%h --concurrency=5 --loglevel=info
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
