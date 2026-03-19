@@ -24,6 +24,7 @@ from modules.db_adapter import db_adapter
 from notification_handler import register_handlers as register_notification_handlers
 from settings_handler import register_handlers as register_settings_handlers
 from recommendations_handler import register_handlers as register_recommendations_handlers
+from ai_recommendations_handler import register_handlers as register_ai_recommendations_handlers
 from stats_handler import register_handlers as register_stats_handlers
 from content_handler import register_handlers as register_content_handlers
 from pricing_handler import register_handlers as register_pricing_handlers
@@ -246,6 +247,7 @@ def register_all_handlers():
     register_notification_handlers(dp)
     register_settings_handlers(dp)
     register_recommendations_handlers(dp)
+    register_ai_recommendations_handlers(dp)
     register_stats_handlers(dp)
     register_content_handlers(dp)
     register_pricing_handlers(dp)

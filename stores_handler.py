@@ -364,6 +364,12 @@ async def wb_api_key_handler(message: Message, state: FSMContext):
     with open(creds_file, 'w') as f:
         json.dump(creds, f, indent=2)
 
+    # Сохраняем дату первого подключения (для отсчета 45 дней обучения)
+    first_connect_file = Path(f"/opt/clients/{client_id}/first_connect.json")
+    if not first_connect_file.exists():
+        with open(first_connect_file, 'w') as f:
+            json.dump({'date': datetime.now().isoformat(), 'platform': 'wb'}, f)
+
     # Сохраняем API ключ в состоянии для сканирования
     await state.update_data(wb_api_key=api_key, products_count=products_count)
 
@@ -817,6 +823,12 @@ async def ozon_api_key_handler(message: Message, state: FSMContext):
 
     with open(creds_file, 'w') as f:
         json.dump(creds, f, indent=2)
+
+    # Сохраняем дату первого подключения (для отсчета 45 дней обучения)
+    first_connect_file = Path(f"/opt/clients/{client_id}/first_connect.json")
+    if not first_connect_file.exists():
+        with open(first_connect_file, 'w') as f:
+            json.dump({'date': datetime.now().isoformat(), 'platform': 'ozon'}, f)
 
     # Сохраняем данные в состоянии для сканирования
     await state.update_data(
