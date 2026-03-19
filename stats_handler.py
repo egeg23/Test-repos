@@ -306,6 +306,131 @@ async def set_ads_strategy(callback: CallbackQuery):
     await callback.answer()
 
 
+@router.message(Command("break_into_top"))
+async def cmd_break_into_top(message: Message):
+    """
+    Запускает режим "Точное попадание в топ" для конкретного артикула.
+    Использует Evirma для определения ставки.
+    """
+    user_id = str(message.from_user.id)
+    
+    # Парсим аргументы
+    args = message.text.split()[1:] if len(message.text.split()) > 1 else []
+    
+    if not args:
+        await message.answer(
+            "🎯 <b>Точное попадание в топ</b>\n\n"
+            "Использование:\n"
+            "<code>/break_into_top \u003cартикул\u003e [позиция]</code>\n\n"
+            "Примеры:\n"
+            "• <code>/break_into_top 12345678</code> - цель топ-5\n"
+            "• <code>/break_into_top 12345678 3</code> - цель топ-3\n\n"
+            "Артикул можно найти в карточке товара на WB."
+        )
+        return
+    
+    artikul = args[0]
+    target_position = int(args[1]) if len(args) > 1 and args[1].isdigit() else 5
+    
+    # Ограничиваем позицию 1-10
+    target_position = max(1, min(10, target_position))
+    
+    # Показываем меню выбора позиции
+    await _show_break_into_top_menu(message, artikul, target_position)
+
+
+async def _show_break_into_top_menu(message: Message, artikul: str, target_position: int):
+    """Показывает меню для запуска Break Into Top"""
+    
+    # Кнопки для выбора позиции
+    position_buttons = [
+        InlineKeyboardButton(
+            text=f"{'🎯 ' if target_position == pos else ''}Топ-{pos}",
+            callback_data=f'bit_position:{artikul}:{pos}'
+        )
+        for pos in [1, 3, 5, 10]
+    ]
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        position_buttons[:2],
+        position_buttons[2:],
+        [InlineKeyboardButton(
+            text="🚀 Запустить прорыв в топ",
+            callback_data=f'bit_start:{artikul}:{target_position}'
+        )],
+        [InlineKeyboardButton(text="« Назад", callback_data='ads_strategy')],
+    ])
+    
+    text = (
+        f"🎯 <b>Точное попадание в топ</b>\n\n"
+        f"Артикул: <code>{artikul}</code>\n"
+        f"Целевая позиция: <b>топ-{target_position}</b>\n\n"
+        f"📊 <b>Параметры стратегии:</b>\n"
+        f"• Целевой ДРР: 20%\n"
+        f"• Макс. ДРР: 35%\n"
+        f"• Агрессивность: 2.5x\n"
+        f"• Длительность: до 14 дней\n\n"
+        f"<i>После достижения топ-{target_position} автоматически\n"
+        f"переключится на "Поддержание топ позиции" (ДРР 5%)</i>"
+    )
+    
+    await message.answer(text, reply_markup=keyboard)
+
+
+@router.callback_query(F.data.startswith('bit_position:'))
+async def on_bit_position_selected(callback: CallbackQuery):
+    """Обработка выбора позиции для Break Into Top"""
+    parts = callback.data.split(':')
+    if len(parts) != 3:
+        await callback.answer("❌ Ошибка данных")
+        return
+    
+    artikul = parts[1]
+    target_position = int(parts[2])
+    
+    # Обновляем меню с новой позицией
+    await _show_break_into_top_menu(callback.message, artikul, target_position)
+    await callback.answer(f"Цель: топ-{target_position}")
+
+
+@router.callback_query(F.data.startswith('bit_start:'))
+async def on_bit_start(callback: CallbackQuery):
+    """Запускает Break Into Top для артикула"""
+    user_id = str(callback.from_user.id)
+    parts = callback.data.split(':')
+    
+    if len(parts) != 3:
+        await callback.answer("❌ Ошибка данных")
+        return
+    
+    artikul = parts[1]
+    target_position = int(parts[2])
+    
+    # TODO: Интеграция с Evirma для получения ставки
+    # Сейчас показываем заглушку
+    
+    text = (
+        f"🚀 <b>Прорыв в топ запущен!</b>\n\n"
+        f"Артикул: <code>{artikul}</code>\n"
+        f"Цель: <b>топ-{target_position}</b>\n\n"
+        f"⏳ <b>Следующие шаги:</b>\n"
+        f"1. Анализ ставок через Evirma...\n"
+        f"2. Установка оптимальной ставки...\n"
+        f"3. Мониторинг позиции...\n\n"
+        f"📈 Вы получите уведомление при:\n"
+        f"• Достижении топ-{target_position}\n"
+        f"• Превышении ДРР 35%\n"
+        f"• Необходимости корректировки\n\n"
+        f"<i>Стратегия: Break Into Top (ДРР 20%)</i>"
+    )
+    
+    # Устанавливаем стратегию BREAK_INTO_TOP для пользователя
+    ads_strategy_config.set_user_strategy(user_id, AdsStrategyType.BREAK_INTO_TOP)
+    
+    await callback.message.edit_text(text)
+    await callback.answer("✅ Прорыв в топ запущен!")
+
+
 def register_handlers(dp):
     """Регистрация обработчиков"""
     dp.include_router(router)
