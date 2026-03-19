@@ -306,38 +306,28 @@ async def set_ads_strategy(callback: CallbackQuery):
     await callback.answer()
 
 
-@router.message(Command("break_into_top"))
-async def cmd_break_into_top(message: Message):
-    """
-    Запускает режим "Точное попадание в топ" для конкретного артикула.
-    Использует Evirma для определения ставки.
-    """
-    user_id = str(message.from_user.id)
-    
-    # Парсим аргументы
-    args = message.text.split()[1:] if len(message.text.split()) > 1 else []
-    
-    if not args:
-        await message.answer(
-            "🎯 <b>Точное попадание в топ</b>\n\n"
-            "Использование:\n"
-            "<code>/break_into_top \u003cартикул\u003e [позиция]</code>\n\n"
-            "Примеры:\n"
-            "• <code>/break_into_top 12345678</code> - цель топ-5\n"
-            "• <code>/break_into_top 12345678 3</code> - цель топ-3\n\n"
-            "Артикул можно найти в карточке товара на WB."
-        )
-        return
-    
-    artikul = args[0]
-    target_position = int(args[1]) if len(args) > 1 and args[1].isdigit() else 5
-    
-    # Ограничиваем позицию 1-10
-    target_position = max(1, min(10, target_position))
-    
-    # Показываем меню выбора позиции
-    await _show_break_into_top_menu(message, artikul, target_position)
 
+
+
+async def _show_product_selection_for_break_into_top(callback: CallbackQuery):
+    """Показывает выбор товара для стратегии Break Into Top"""
+    # TODO: Получать реальные товары пользователя из API
+    # Пока показываем инструкцию с кнопкой ввода артикула
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="📝 Ввести артикул вручную", callback_data='bit_enter_artikul')],
+        [InlineKeyboardButton(text="« Назад", callback_data='ads_strategy')],
+    ])
+    
+    text = (
+        "🎯 <b>Попадание в топ</b>\n\n"
+        "Выберите товар для агрессивного продвижения:\n\n"
+        "<i>Сейчас: введите артикул вручную</i>\n"
+        "<i>Скоро: список ваших товаров загрузится автоматически</i>"
+    )
+    
+    await callback.message.edit_text(text, reply_markup=keyboard)
+    await callback.answer()
 
 async def _show_break_into_top_menu(message: Message, artikul: str, target_position: int):
     """Показывает меню для запуска Break Into Top"""
@@ -429,6 +419,27 @@ async def on_bit_start(callback: CallbackQuery):
     
     await callback.message.edit_text(text)
     await callback.answer("✅ Прорыв в топ запущен!")
+
+
+@router.callback_query(F.data == 'bit_enter_artikul')
+async def on_bit_enter_artikul(callback: CallbackQuery):
+    """Запрашивает ввод артикула вручную"""
+    # TODO: Реализовать FSM для ввода артикула
+    # Пока просто инструкция
+    
+    text = (
+        "🎯 <b>Ввод артикула</b>\n\n"
+        "Введите артикул товара в формате:\n"
+        "<code>артикул:12345678</code>\n\n"
+        "Или вернитесь назад и выберите другую стратегию."
+    )
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="« Назад", callback_data='strategy_break_into_top')],
+    ])
+    
+    await callback.message.edit_text(text, reply_markup=keyboard)
+    await callback.answer()
 
 
 def register_handlers(dp):
