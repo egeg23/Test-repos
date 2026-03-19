@@ -63,12 +63,15 @@ class AutonomousCycle:
         logger.info("=" * 60)
     
     def _get_active_clients(self) -> List[str]:
-        """Получает список активных клиентов"""
+        """Получает список активных клиентов (только с папкой credentials)"""
         clients = []
         if self.clients_dir.exists():
             for item in self.clients_dir.iterdir():
                 if item.is_dir() and not item.name.startswith('.'):
-                    clients.append(item.name)
+                    # Проверяем, есть ли папка credentials (признак реального клиента)
+                    creds_dir = item / 'credentials'
+                    if creds_dir.exists():
+                        clients.append(item.name)
         return clients
     
     async def _process_client(self, client_id: str):

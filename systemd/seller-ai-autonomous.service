@@ -7,7 +7,7 @@ Type=simple
 User=root
 WorkingDirectory=/opt/telegram_bot
 Environment=PYTHONPATH=/opt/telegram_bot
-ExecStart=/opt/telegram_bot/venv/bin/python /opt/telegram_bot/modules/autonomous_cycle.py
+ExecStart=/usr/bin/python3 /opt/telegram_bot/modules/autonomous_cycle.py
 Restart=on-failure
 RestartSec=60
 
