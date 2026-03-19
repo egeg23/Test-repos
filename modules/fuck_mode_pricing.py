@@ -68,14 +68,17 @@ class FuckModePricing:
             velocity_data = await self._get_velocity_data(user_id, cabinet, product)
             
             # 4. Используем Pricing Engine для расчета
-            recommendation = self.pricing_engine.calculate_price(
+            recommendation = self.pricing_engine.get_optimal_price(
+                product_id=product.get('id', ''),
                 current_price=product.get('price', 0),
                 cost_price=product.get('cost_price', 0),
-                competitor_prices=competitor_data.get('prices', []),
-                price_history=price_history,
-                velocity=velocity_data.get('current', 1.0),
-                rating=product.get('rating', 0),
-                reviews_count=product.get('reviews', 0)
+                competitors=[{'price': p} for p in competitor_data.get('prices', [])],
+                sales_velocity=velocity_data.get('current', 0),
+                avg_velocity=velocity_data.get('average', 0),
+                stock_days=product.get('stock_days', 30),
+                has_buy_box=False,  # TODO: Получать реальный статус BB
+                days_with_bb=0,     # TODO: Хранить историю BB
+                strategy_name='aggressive_buy_box'
             )
             
             # 5. Формируем решение
@@ -84,9 +87,13 @@ class FuckModePricing:
                     action='increase' if recommendation.recommended_price > product.get('price') else 'decrease',
                     current_price=product.get('price'),
                     recommended_price=recommendation.recommended_price,
-                    reason=recommendation.reason,
+                    reason=recommendation.reasoning,
                     confidence=recommendation.confidence,
-                    factors=recommendation.factors
+                    factors={
+                        'strategy': recommendation.strategy_used,
+                        'expected_margin': recommendation.expected_margin,
+                        'buy_box_probability': recommendation.buy_box_probability
+                    }
                 )
             
             return None  # Цена оптимальна
