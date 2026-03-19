@@ -5,7 +5,8 @@
 Стратегии:
 1. new_product - Запустить новый товар (высокий допустимый ДРР)
 2. maintain_margin - Держать маржу (стандартный ДРР)
-3. top_position_low_drr - Топ позиция за меньший ДРР (агрессивная)
+3. maintain_top_position - Поддержание топ позиции (минимальный ДРР, 5%)
+4. break_into_top - Точное попадание в топ (для плохих продаж, 20%)
 """
 
 import json
@@ -35,7 +36,7 @@ class AdsStrategy:
     target_drr: float           # Целевой ДРР (%)
     max_drr: float              # Максимальный допустимый ДРР (%)
     min_drr: float              # Минимальный ДРР для увеличения ставки (%)
-    bid_aggression: float       # Агрессивность изменения ставки (0.5-2.0)
+    bid_aggression: float       # Агрессивность изменения ставки (0.5-2.5)
     pause_threshold: float      # Порог для паузы (множитель к target_drr)
     priority: str               # Приоритет: sales | margin | position
 
@@ -124,8 +125,18 @@ class AdsStrategyConfig:
             AdsStrategyType (по умолчанию MAINTAIN_MARGIN)
         """
         strategy_str = self._config.get(user_id, AdsStrategyType.MAINTAIN_MARGIN.value)
+        
+        # Миграция: старое значение "top_position_low_drr" -> "maintain_top_position"
+        if strategy_str == "top_position_low_drr":
+            strategy_str = AdsStrategyType.MAINTAIN_TOP_POSITION.value
+            self._config[user_id] = strategy_str
+            self._save_config()
+            logger.info(f"Migrated user {user_id} from top_position_low_drr to maintain_top_position")
+        
         try:
             return AdsStrategyType(strategy_str)
+        except ValueError:
+            return AdsStrategyType.MAINTAIN_MARGIN
         except ValueError:
             return AdsStrategyType.MAINTAIN_MARGIN
     
