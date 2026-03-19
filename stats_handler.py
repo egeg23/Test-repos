@@ -151,26 +151,32 @@ async def show_top_products(callback: CallbackQuery):
 
 @router.callback_query(F.data.endswith('_ads'))
 async def show_ads_stats(callback: CallbackQuery):
-    """Статистика рекламы"""
+    """Статистика рекламы - РЕАЛЬНЫЕ ДАННЫЕ"""
     platform = callback.data.split('_')[1]
+    user_id = str(callback.from_user.id)
     
-    text = (
-        f"📢 <b>Реклама ({platform.upper()})</b>\n\n"
-        f"┌─────────────────┬────────┐\n"
-        f"│ Показы          │ 45,230 │\n"
-        f"│ Клики           │ 1,450  │\n"
-        f"│ CTR             │  3.2%  │\n"
-        f"│ Заказы из рекл. │   89   │\n"
-        f"│ Расходы         │ 22.5K₽ │\n"
-        f"│ ДРР             │  18%   │\n"
-        f"└─────────────────┴────────┘\n\n"
-        f"📊 <b>Кампании:</b>\n"
-        f"• Авто-кампания: ДРР 16% ✅\n"
-        f"• Поиск: ДРР 21% ⚠️\n"
-        f"• Карточка: ДРР 19% ✅"
-    )
+    await callback.message.answer("⏳ Загружаю статистику рекламы...")
     
-    await callback.message.answer(text)
+    try:
+        if platform == 'wb':
+            from agents.ads_agent import AdsAgent
+            agent = AdsAgent()
+            report = await agent.get_campaigns_report(user_id)
+            await callback.message.answer(report, parse_mode='HTML')
+        else:
+            await callback.message.answer(
+                f"📢 <b>Реклама ({platform.upper()})</b>\n\n"
+                f"⚠️ Рекламное API для Ozon пока не подключено.\n"
+                f"Работаем над этим!"
+            )
+    except Exception as e:
+        logger.error(f"Error showing ads stats: {e}")
+        await callback.message.answer(
+            f"📢 <b>Реклама ({platform.upper()})</b>\n\n"
+            f"⚠️ Не удалось загрузить данные.\n"
+            f"Убедитесь, что добавлен кабинет с API ключом."
+        )
+    
     await callback.answer()
 
 

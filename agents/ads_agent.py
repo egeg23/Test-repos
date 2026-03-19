@@ -1,6 +1,6 @@
-# agents/ads_agent.py - Подагент управления рекламой
+# agents/ads_agent.py - Подагент управления рекламой (REAL API)
 """
-Ads Agent - управление рекламными кампаниями (ДРР, ставки)
+Ads Agent - управление рекламными кампаниями с реальным WB API
 """
 
 import asyncio
@@ -8,17 +8,19 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from modules.ai_learning_engine import AILearningEngine
+from modules.wb_ads_client import WBAdsClient
+from modules.api_client_factory import api_client_factory, CabinetNotFoundError
 
 logger = logging.getLogger('ads_agent')
 
 
 class AdsAgent:
-    """🤖 Ads Agent - управление рекламой (ДРР оптимизация)"""
+    """🤖 Ads Agent - управление рекламой с реальным API"""
     
     def __init__(self, clients_dir: str = "/opt/clients"):
         self.clients_dir = Path(clients_dir)
@@ -34,65 +36,240 @@ class AdsAgent:
         if self.status_file.exists():
             with open(self.status_file) as f:
                 return json.load(f)
-        return {'last_run': None, 'campaigns_adjusted': 0}
+        return {
+            'last_run': None,
+            'campaigns_adjusted': 0,
+            'total_campaigns': 0,
+            'api_calls': 0
+        }
     
     def _save_status(self):
         with open(self.status_file, 'w') as f:
             json.dump(self.status, f, default=str)
     
-    async def run_cycle(self, client_id: str, platform: str = "wb"):
-        """Цикл работы"""
-        logger.info(f"📢 Ads Agent cycle for {client_id}")
+    async def run_cycle(self, user_id: str, platform: str = "wb"):
+        """
+        Цикл работы с реальным API
         
-        campaigns = await self._get_campaigns(client_id, platform)
+        Args:
+            user_id: ID пользователя
+            platform: Платформа (wb/ozon)
+        """
+        logger.info(f"📢 Ads Agent cycle for {user_id} ({platform})")
         
-        for campaign in campaigns:
-            await self._optimize_campaign(client_id, campaign)
+        if platform != 'wb':
+            logger.warning(f"Platform {platform} not yet supported for ads")
+            return
         
-        self.status['last_run'] = datetime.now().isoformat()
-        self._save_status()
+        try:
+            # Получаем API ключ пользователя
+            api_key = await self._get_api_key(user_id, platform)
+            if not api_key:
+                logger.warning(f"No API key found for user {user_id}")
+                return
+            
+            # Подключаемся к API
+            async with WBAdsClient(api_key) as client:
+                if not client.is_valid:
+                    logger.error(f"Invalid WB Ads API key for user {user_id}")
+                    return
+                
+                # Получаем активные кампании
+                campaigns = await client.get_campaigns(status='9')  # 9 = активна
+                
+                if not campaigns:
+                    logger.info(f"No active campaigns for user {user_id}")
+                    return
+                
+                self.status['total_campaigns'] = len(campaigns)
+                
+                # Обрабатываем каждую кампанию
+                adjusted_count = 0
+                for campaign in campaigns:
+                    try:
+                        adjusted = await self._optimize_campaign(
+                            user_id=user_id,
+                            client=client,
+                            campaign=campaign
+                        )
+                        if adjusted:
+                            adjusted_count += 1
+                    except Exception as e:
+                        logger.error(f"Error optimizing campaign {campaign.get('id')}: {e}")
+                        continue
+                
+                self.status['campaigns_adjusted'] = adjusted_count
+                self.status['api_calls'] = self.status.get('api_calls', 0) + len(campaigns)
+                
+                logger.info(f"✅ Ads Agent: {adjusted_count}/{len(campaigns)} campaigns optimized")
         
-        logger.info(f"✅ Ads Agent: {len(campaigns)} campaigns optimized")
+        except Exception as e:
+            logger.error(f"Ads Agent error for {user_id}: {e}")
+        
+        finally:
+            self.status['last_run'] = datetime.now().isoformat()
+            self._save_status()
     
-    async def _get_campaigns(self, client_id: str, platform: str) -> List[Dict]:
-        """Получает кампании"""
-        return [
-            {'id': 'camp_1', 'drr': 25.0, 'orders': 8, 'views': 500, 'ctr': 3.5, 'days': 5},
-            {'id': 'camp_2', 'drr': 18.0, 'orders': 45, 'views': 2000, 'ctr': 4.2, 'days': 20},
-        ]
+    async def _get_api_key(self, user_id: str, platform: str) -> Optional[str]:
+        """Получает API ключ пользователя"""
+        try:
+            from modules.multi_cabinet_manager import cabinet_manager
+            
+            cabinets = cabinet_manager.get_all_user_cabinets(user_id)
+            for cabinet in cabinets:
+                if cabinet.platform == platform and cabinet.api_key:
+                    return cabinet.api_key
+            
+            return None
+        except Exception as e:
+            logger.error(f"Failed to get API key: {e}")
+            return None
     
-    async def _optimize_campaign(self, client_id: str, campaign: Dict):
-        """Оптимизирует кампанию"""
-        analysis = self.ai_learning.analyze_drr_situation(
-            campaign_id=campaign['id'],
-            product_id='product_1',
-            current_drr=campaign['drr'],
-            target_drr=15.0,
-            orders_count=campaign['orders'],
-            total_views=campaign['views'],
-            ctr=campaign['ctr'],
-            days_since_start=campaign['days']
-        )
+    async def _optimize_campaign(
+        self,
+        user_id: str,
+        client: WBAdsClient,
+        campaign: Dict
+    ) -> bool:
+        """
+        Оптимизирует кампанию на основе ДРР
         
-        recommendation = analysis.get('recommendation')
+        Returns:
+            True если были внесены изменения
+        """
+        campaign_id = campaign.get('id')
+        if not campaign_id:
+            return False
         
-        if recommendation == 'decrease_drr':
-            action = "Снижаем ставку"
-        elif recommendation == 'maintain_high_drr':
-            action = "Поддерживаем высокий ДРР"
-        elif recommendation == 'check_content':
-            action = "Проверяем контент (низкий CTR)"
-        else:
-            action = "Норма"
+        try:
+            # Получаем детальную информацию о кампании
+            campaign_info = await client.get_campaign_info(campaign_id)
+            
+            # Получаем статистику за последние 7 дней
+            daily_stats = await client.get_daily_statistics(campaign_id, days=7)
+            
+            if not daily_stats:
+                logger.info(f"No statistics for campaign {campaign_id}")
+                return False
+            
+            # Считаем суммарную статистику
+            total_spent = sum(day.get('spent', 0) for day in daily_stats)
+            total_orders = sum(day.get('orders', 0) for day in daily_stats)
+            total_views = sum(day.get('views', 0) for day in daily_stats)
+            total_clicks = sum(day.get('clicks', 0) for day in daily_stats)
+            
+            # Рассчитываем метрики
+            current_drr = client.calculate_drr(total_spent, total_orders * campaign_info.get('price', 0))
+            ctr = (total_clicks / total_views * 100) if total_views > 0 else 0
+            
+            current_bid = campaign_info.get('cpm', 0) / 100  # Копейки → рубли
+            
+            logger.info(
+                f"Campaign {campaign_id}: "
+                f"ДРР={current_drr:.1f}%, "
+                f"CTR={ctr:.2f}%, "
+                f"Ставка={current_bid:.0f}₽"
+            )
+            
+            # Анализируем через AI
+            analysis = self.ai_learning.analyze_drr_situation(
+                campaign_id=str(campaign_id),
+                product_id=str(campaign_info.get('nmId', 'unknown')),
+                current_drr=current_drr,
+                target_drr=15.0,  # Целевой ДРР
+                orders_count=total_orders,
+                total_views=total_views,
+                ctr=ctr,
+                days_since_start=len(daily_stats)
+            )
+            
+            recommendation = analysis.get('recommendation')
+            
+            # Применяем решение
+            if recommendation == 'decrease_drr':
+                new_bid = await client.calculate_optimal_bid(
+                    current_drr=current_drr,
+                    target_drr=15.0,
+                    current_bid=current_bid,
+                    orders=total_orders
+                )
+                
+                if abs(new_bid - current_bid) / current_bid > 0.05:  # Изменение > 5%
+                    success = await client.set_bid(campaign_id, new_bid)
+                    if success:
+                        logger.info(
+                            f"💰 Campaign {campaign_id}: "
+                            f"Ставка {current_bid:.0f}₽ → {new_bid:.0f}₽ "
+                            f"(ДРР {current_drr:.1f}%)")
+                        return True
+            
+            elif recommendation == 'pause_campaign':
+                # Если ДРР критически высокий - ставим на паузу
+                if current_drr > 30:  # ДРР > 30%
+                    success = await client.pause_campaign(campaign_id)
+                    if success:
+                        logger.warning(f"⏸ Campaign {campaign_id} paused (ДРР {current_drr:.1f}%)")
+                        return True
+            
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error optimizing campaign {campaign_id}: {e}")
+            return False
+    
+    async def get_campaigns_report(self, user_id: str) -> str:
+        """
+        Генерирует отчёт по кампаниям для Telegram
         
-        logger.info(f"📢 Campaign {campaign['id']}: ДРР {campaign['drr']}% → {action}")
-        self.status['campaigns_adjusted'] = self.status.get('campaigns_adjusted', 0) + 1
+        Returns:
+            Текст отчёта
+        """
+        try:
+            api_key = await self._get_api_key(user_id, 'wb')
+            if not api_key:
+                return "❌ API ключ не найден. Добавьте кабинет WB."
+            
+            async with WBAdsClient(api_key) as client:
+                campaigns = await client.get_campaigns()
+                
+                if not campaigns:
+                    return "📢 Нет рекламных кампаний."
+                
+                # Собираем статистику по всем кампаниям
+                total_spent = 0
+                total_orders = 0
+                total_views = 0
+                total_clicks = 0
+                
+                lines = ["📢 <b>Рекламные кампании</b>\n"]
+                
+                for campaign in campaigns[:10]:  # Показываем первые 10
+                    camp_id = campaign.get('id')
+                    camp_name = campaign.get('name', f'Campaign #{camp_id}')
+                    status = campaign.get('status')
+                    
+                    # Статус текстом
+                    status_emoji = {
+                        '9': '🟢',   # Активна
+                        '11': '⏸',  # Пауза
+                    }.get(str(status), '⚪')
+                    
+                    lines.append(f"{status_emoji} {camp_name}")
+                
+                lines.append(f"\n📊 Всего кампаний: {len(campaigns)}")
+                lines.append(f"🕐 Обновлено: {datetime.now().strftime('%H:%M')}")
+                
+                return "\n".join(lines)
+                
+        except Exception as e:
+            logger.error(f"Error generating report: {e}")
+            return f"❌ Ошибка получения данных: {e}"
 
 
 if __name__ == "__main__":
     import sys
     if len(sys.argv) < 2:
-        print("Usage: python ads_agent.py <client_id>")
+        print("Usage: python ads_agent.py <user_id>")
         sys.exit(1)
     
     agent = AdsAgent()
