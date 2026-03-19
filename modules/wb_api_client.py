@@ -90,24 +90,41 @@ class WildberriesAPIClient:
                     data = await response.json()
                     if isinstance(data, dict) or isinstance(data, list):
                         self._is_valid = True
+                        self._last_error = None
                         return True, "✅ API ключ валиден. Доступ получен."
                     else:
+                        self._is_valid = False
+                        self._last_error = "Unexpected API response"
                         return False, "⚠️ Неожиданный ответ от API"
                         
                 elif response.status == 401:
+                    self._is_valid = False
+                    self._last_error = "Invalid API key (401)"
                     return False, "❌ Неверный API ключ (401 Unauthorized)"
                 elif response.status == 403:
+                    self._is_valid = False
+                    self._last_error = "Access forbidden (403)"
                     return False, "❌ Доступ запрещен (403 Forbidden). Проверьте права ключа."
                 elif response.status == 429:
+                    self._is_valid = False
+                    self._last_error = "Rate limit exceeded (429)"
                     return False, "⏳ Слишком много запросов (429 Too Many Requests)"
                 else:
+                    self._is_valid = False
+                    self._last_error = f"HTTP {response.status}"
                     return False, f"❌ Ошибка API: HTTP {response.status}"
                     
         except aiohttp.ClientError as e:
+            self._is_valid = False
+            self._last_error = str(e)
             return False, f"❌ Ошибка соединения: {str(e)}"
         except asyncio.TimeoutError:
+            self._is_valid = False
+            self._last_error = "Timeout"
             return False, "⏳ Таймаут соединения с WB API"
         except Exception as e:
+            self._is_valid = False
+            self._last_error = str(e)
             return False, f"❌ Неизвестная ошибка: {str(e)}"
     
     async def get_cabinet_info(self) -> Optional[WBCabinetInfo]:
@@ -193,13 +210,15 @@ class WildberriesAPIClient:
         Returns:
             bool: Успешно ли обновление
         """
-        url = f"{self.BASE_URL_V2}/upload/api/v2/prices"
+        url = "https://discounts-prices-api.wildberries.ru/api/v2/upload/task"
         
-        payload = [{
-            "nmId": nm_id,
-            "price": price,
-            "discount": discount
-        }]
+        payload = {
+            "data": [{
+                "nmID": nm_id,
+                "price": price,
+                "discount": discount
+            }]
+        }
         
         async with self.session.post(url, json=payload) as response:
             return response.status == 200
@@ -242,8 +261,9 @@ class WildberriesAPIClient:
             if response.status == 200:
                 return await response.json()
             elif response.status == 401:
-                # Advertising API может быть недоступен
-                return []
+                raise Exception("Advertising API требует отдельный API ключ (401 Unauthorized)")
+            elif response.status == 403:
+                raise Exception("Доступ к Advertising API запрещен (403 Forbidden)")
             else:
                 raise Exception(f"HTTP {response.status}")
     

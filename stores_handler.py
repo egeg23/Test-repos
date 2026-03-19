@@ -278,26 +278,17 @@ async def wb_api_key_handler(message: Message, state: FSMContext):
         )
         return
     
+    # Используем правильную папку 'wb' (не 'wildberries') для совместимости с check_store_connected
+    creds_dir = Path(f"/opt/clients/{client_id}/credentials/wb")
+    creds_file = creds_dir / 'credentials.json'
+    
     # Статус-бар проверки
     status_msg = await message.answer(
         "⏳ <b>Проверка подключения...</b>\n"
         "🔄 Проверка API ключа..."
     )
     
-    # Сохраняем ключ
-    creds_dir = Path(f"/opt/clients/{client_id}/credentials/wildberries")
-    creds_dir.mkdir(parents=True, exist_ok=True)
-    
-    creds = {
-        'stat_api_key': api_key,
-        'verified': False,
-        'added_at': str(datetime.now())
-    }
-    
-    with open(creds_dir / 'credentials.json', 'w') as f:
-        json.dump(creds, f, indent=2)
-    
-    # РЕАЛЬНАЯ проверка API ключа через WildberriesAPIClient
+    # РЕАЛЬНАЯ проверка API ключа (СНАЧАЛА проверяем, ПОТОМ сохраняем)
     if not WB_API_AVAILABLE:
         await status_msg.edit_text(
             "❌ <b>Ошибка:</b> Модуль интеграции недоступен.\n"
@@ -306,20 +297,13 @@ async def wb_api_key_handler(message: Message, state: FSMContext):
         return
     
     try:
-        from modules.wb_api_client import verify_wb_api_key
+        from modules.wb_api_client import verify_wb_api_key, WildberriesAPIClient
         
-        await status_msg.edit_text(
-            "⏳ <b>Проверка подключения...</b>\n"
-            "🔄 Проверка API ключа..."
-        )
-        
-        is_valid, message = await verify_wb_api_key(api_key)
+        is_valid, msg = await verify_wb_api_key(api_key)
         
         if not is_valid:
-            # Удаляем невалидные credentials
-            os.remove(creds_dir / 'credentials.json')
             await status_msg.edit_text(
-                f"❌ <b>Ошибка подключения</b>\n\n{message}\n\n"
+                f"❌ <b>Ошибка подключения</b>\n\n{msg}\n\n"
                 f"Проверьте ключ и попробуйте снова."
             )
             return
@@ -330,12 +314,14 @@ async def wb_api_key_handler(message: Message, state: FSMContext):
             "🔄 Получение данных кабинета..."
         )
         
-        # Получаем список товаров для подтверждения
-        from modules.wb_api_client import get_wb_products
+        # Получаем список товаров через одну сессию
+        products_count = 0
         try:
-            products = await get_wb_products(api_key, limit=5)
-            products_count = len(products)
+            async with WildberriesAPIClient(api_key) as client:
+                products = await client.get_products(limit=100)  # Получаем реальное количество
+                products_count = len(products)
         except Exception as e:
+            # При ошибке получения товаров всё равно продолжаем, но с count=0
             products_count = 0
         
     except Exception as e:
@@ -345,23 +331,17 @@ async def wb_api_key_handler(message: Message, state: FSMContext):
         )
         return
     
-    # Проверка успешна - обновляем статус
-    creds['verified'] = True
-    creds['products_count'] = products_count
-    with open(creds_dir / 'credentials.json', 'w') as f:
-        json.dump(creds, f, indent=2)
+    # Проверка успешна - сохраняем credentials
+    creds_dir.mkdir(parents=True, exist_ok=True)
     
-    await status_msg.edit_text(
-        "⏳ <b>Проверка подключения...</b>\n"
-        "✅ API ключ принят\n"
-        "🔄 Получение данных кабинета..."
-    )
+    creds = {
+        'stat_api_key': api_key,
+        'verified': True,
+        'products_count': products_count,
+        'added_at': str(datetime.now())
+    }
     
-    await asyncio.sleep(2)
-    
-    # Проверка успешна
-    creds['verified'] = True
-    with open(creds_dir / 'credentials.json', 'w') as f:
+    with open(creds_file, 'w') as f:
         json.dump(creds, f, indent=2)
     
     await status_msg.edit_text(
