@@ -5,7 +5,8 @@
 Стратегии:
 1. new_product - Запустить новый товар (высокий допустимый ДРР)
 2. maintain_margin - Держать маржу (стандартный ДРР)
-3. top_position_low_drr - Топ позиция за меньший ДРР (агрессивная)
+3. maintain_top_position - Поддержание топ позиции (минимальный ДРР, 5%)
+4. break_into_top - Точное попадание в топ (для плохих продаж, 20%)
 """
 
 import json
@@ -23,7 +24,8 @@ class AdsStrategyType(Enum):
     """Типы стратегий управления рекламой"""
     NEW_PRODUCT = "new_product"           # Запустить новый товар
     MAINTAIN_MARGIN = "maintain_margin"   # Держать маржу
-    TOP_POSITION_LOW_DRR = "top_position_low_drr"  # Топ позиция за меньший ДРР
+    MAINTAIN_TOP_POSITION = "maintain_top_position"  # Поддержание топ позиции
+    BREAK_INTO_TOP = "break_into_top"     # Точное попадание в топ (для плохих продаж)
 
 
 @dataclass
@@ -34,7 +36,7 @@ class AdsStrategy:
     target_drr: float           # Целевой ДРР (%)
     max_drr: float              # Максимальный допустимый ДРР (%)
     min_drr: float              # Минимальный ДРР для увеличения ставки (%)
-    bid_aggression: float       # Агрессивность изменения ставки (0.5-2.0)
+    bid_aggression: float       # Агрессивность изменения ставки (0.5-2.5)
     pause_threshold: float      # Порог для паузы (множитель к target_drr)
     priority: str               # Приоритет: sales | margin | position
 
@@ -63,15 +65,26 @@ DEFAULT_STRATEGIES = {
         priority="margin"
     ),
     
-    AdsStrategyType.TOP_POSITION_LOW_DRR: AdsStrategy(
-        name="🏆 Топ позиция за меньший ДРР",
-        description="Топ-товары уже имеют органический буст в выдаче, поэтому целевой ДРР минимален. Фокус на удержание позиции с минимальными рекламными затратами.",
+    AdsStrategyType.MAINTAIN_TOP_POSITION: AdsStrategy(
+        name="🏆 Поддержание топ позиции",
+        description="Топ-товары уже имеют органический буст в выдаче, поэтому целевой ДРР минимален (5%). Фокус на удержание позиции с минимальными рекламными затратами.",
         target_drr=5.0,          # Низкий ДРР — органика бустит
         max_drr=12.0,            # Макс допустимый ДРР
         min_drr=3.0,             # Минимальный ДРР для повышения ставки
         bid_aggression=2.0,      # Очень агрессивно
         pause_threshold=2.4,     # Пауза при ДРР > 12%
         priority="position"
+    ),
+    
+    AdsStrategyType.BREAK_INTO_TOP: AdsStrategy(
+        name="🎯 Точное попадание в топ",
+        description="Агрессивная стратегия для товаров с плохими продажами. Высокие ставки для входа в топ-5, затем автопереключение на 'Поддержание топ позиции'.",
+        target_drr=20.0,         # Высокий допустимый ДРР (временно)
+        max_drr=35.0,            # Критический ДРР
+        min_drr=15.0,            # Для увеличения ставки
+        bid_aggression=2.5,      # Максимальная агрессивность
+        pause_threshold=1.75,    # Пауза при ДРР > 35%
+        priority="breakthrough"
     )
 }
 
@@ -112,8 +125,18 @@ class AdsStrategyConfig:
             AdsStrategyType (по умолчанию MAINTAIN_MARGIN)
         """
         strategy_str = self._config.get(user_id, AdsStrategyType.MAINTAIN_MARGIN.value)
+        
+        # Миграция: старое значение "top_position_low_drr" -> "maintain_top_position"
+        if strategy_str == "top_position_low_drr":
+            strategy_str = AdsStrategyType.MAINTAIN_TOP_POSITION.value
+            self._config[user_id] = strategy_str
+            self._save_config()
+            logger.info(f"Migrated user {user_id} from top_position_low_drr to maintain_top_position")
+        
         try:
             return AdsStrategyType(strategy_str)
+        except ValueError:
+            return AdsStrategyType.MAINTAIN_MARGIN
         except ValueError:
             return AdsStrategyType.MAINTAIN_MARGIN
     

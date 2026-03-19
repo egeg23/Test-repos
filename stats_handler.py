@@ -165,7 +165,6 @@ async def show_ads_stats(callback: CallbackQuery):
             agent = AdsAgent()
             report = await agent.get_campaigns_report(user_id)
             await callback.message.answer(report, parse_mode='HTML')
-<<<<<<< HEAD
         elif platform == 'ozon':
             from modules.ozon_ads_client import OzonAdsClient
             from modules.multi_cabinet_manager import cabinet_manager
@@ -213,21 +212,6 @@ async def show_ads_stats(callback: CallbackQuery):
     except Exception as e:
         logger.error(f"Error showing ads: {e}")
         await callback.message.answer("⚠️ Ошибка загрузки рекламы")
-=======
-        else:
-            await callback.message.answer(
-                f"📢 <b>Реклама ({platform.upper()})</b>\n\n"
-                f"⚠️ Рекламное API для Ozon пока не подключено.\n"
-                f"Работаем над этим!"
-            )
-    except Exception as e:
-        logger.error(f"Error showing ads stats: {e}")
-        await callback.message.answer(
-            f"📢 <b>Реклама ({platform.upper()})</b>\n\n"
-            f"⚠️ Не удалось загрузить данные.\n"
-            f"Убедитесь, что добавлен кабинет с API ключом."
-        )
->>>>>>> main
     
     await callback.answer()
 
@@ -274,8 +258,12 @@ async def cmd_ads_strategy(message: Message):
             callback_data='strategy_maintain_margin'
         )],
         [InlineKeyboardButton(
-            text=f"{'✅ ' if current_strategy == AdsStrategyType.TOP_POSITION_LOW_DRR else ''}🏆 Топ позиция (низкий ДРР)",
-            callback_data='strategy_top_position'
+            text=f"{'✅ ' if current_strategy == AdsStrategyType.MAINTAIN_TOP_POSITION else ''}🏆 Поддержание топ позиции",
+            callback_data='strategy_maintain_top'
+        )],
+        [InlineKeyboardButton(
+            text=f"{'✅ ' if current_strategy == AdsStrategyType.BREAK_INTO_TOP else ''}🎯 Попадание в топ (для плохих продаж)",
+            callback_data='strategy_break_into_top'
         )],
     ])
     
@@ -290,7 +278,9 @@ async def set_ads_strategy(callback: CallbackQuery):
     strategy_map = {
         'strategy_new_product': AdsStrategyType.NEW_PRODUCT,
         'strategy_maintain_margin': AdsStrategyType.MAINTAIN_MARGIN,
-        'strategy_top_position': AdsStrategyType.TOP_POSITION_LOW_DRR,
+        'strategy_maintain_top': AdsStrategyType.MAINTAIN_TOP_POSITION,
+        'strategy_break_into_top': AdsStrategyType.BREAK_INTO_TOP,
+        'strategy_top_position': AdsStrategyType.MAINTAIN_TOP_POSITION,  # Legacy callback
     }
     
     strategy = strategy_map.get(callback.data)
