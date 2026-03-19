@@ -24,6 +24,7 @@ from recommendations_handler import register_handlers as register_recommendation
 from stats_handler import register_handlers as register_stats_handlers
 from content_handler import register_handlers as register_content_handlers
 from pricing_handler import register_handlers as register_pricing_handlers
+from ab_testing_handler import register_handlers as register_ab_testing_handlers
 from stores_handler import router as stores_router
 from enhanced_menus import get_main_menu
 
@@ -226,6 +227,7 @@ def register_all_handlers():
     register_stats_handlers(dp)
     register_content_handlers(dp)
     register_pricing_handlers(dp)
+    register_ab_testing_handlers(dp)
     
     logger.info("✅ Все обработчики зарегистрированы")
 
