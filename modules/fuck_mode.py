@@ -23,6 +23,7 @@ from typing import Dict, List, Optional
 from enum import Enum
 
 from .fuck_mode_config import fuck_mode_config
+from .fuck_mode_pricing import fuck_mode_pricing, PricingDecision
 
 logger = logging.getLogger('fuck_mode')
 
@@ -212,9 +213,17 @@ class FuckModeEngine:
             await self._make_product_decisions(user_id, cabinet, product)
     
     async def _get_cabinet_products(self, cabinet) -> List[Dict]:
-        """Получает список товаров кабинета"""
-        # TODO: Реальный API вызов
-        # Пока возвращаем mock
+        """Получает список товаров кабинета через API"""
+        # Используем реальную логику получения товаров
+        # Временно возвращаем mock для безопасности
+        # TODO: Раскомментировать после тестирования
+        # return await fuck_mode_pricing.get_products_from_api(
+        #     user_id=self.current_user_id,  # Нужно передать user_id
+        #     cabinet=cabinet,
+        #     limit=50
+        # )
+        
+        # Пока mock для тестирования
         return [
             {
                 'id': '12345678',
@@ -222,7 +231,9 @@ class FuckModeEngine:
                 'current_price': 1500,
                 'cost_price': 800,
                 'stock': 45,
-                'category': 'electronics'
+                'category': 'electronics',
+                'rating': 4.5,
+                'reviews': 120
             }
         ]
     
@@ -232,7 +243,7 @@ class FuckModeEngine:
         config = fuck_mode_config.get_config(user_id)
         
         # 1. Анализ цены
-        price_decision = await self._analyze_price(cabinet, product)
+        price_decision = await self._analyze_price(user_id, cabinet, product)
         if price_decision:
             price_decision['dry_run'] = config.dry_run
             decisions.append(price_decision)
@@ -272,16 +283,19 @@ class FuckModeEngine:
             
             if cabinet.platform == 'wb':
                 client = api_client_factory.get_wb_client(user_id, cabinet.id)
-                # TODO: await client.update_price(product['id'], new_price)
+                # Конвертируем в копейки для WB
+                price_in_cents = int(new_price * 100)
+                await client.update_price(product['id'], price_in_cents)
                 logger.info(f"[REAL] WB price updated: {product['id']} -> {new_price}")
             
             elif cabinet.platform == 'ozon':
                 client = api_client_factory.get_ozon_client(user_id, cabinet.id)
-                # TODO: await client.update_price(product['id'], new_price)
+                await client.update_price(product['id'], new_price)
                 logger.info(f"[REAL] Ozon price updated: {product['id']} -> {new_price}")
             
         except Exception as e:
             logger.error(f"Failed to apply price change: {e}")
+            raise  # Перебрасываем для обработки выше
     
     async def _notify_decisions(self, user_id: str, cabinet, product: Dict, decisions: List[Dict]):
         """Отправляет уведомление о принятых решениях"""
@@ -296,10 +310,35 @@ class FuckModeEngine:
         
         logger.info(f"{mode_emoji} Decisions for {product['name']}: {len(decisions)} {mode_text}")
     
-    async def _analyze_price(self, cabinet, product: Dict) -> Optional[Dict]:
-        """Анализирует цену и принимает решение"""
-        # TODO: Реальная логика ценообразования
-        return None
+    async def _analyze_price(self, user_id: str, cabinet, product: Dict) -> Optional[Dict]:
+        """Анализирует цену и принимает решение используя Pricing Engine v2.0"""
+        try:
+            decision = await fuck_mode_pricing.analyze_product_price(
+                user_id=user_id,
+                cabinet=cabinet,
+                product=product
+            )
+            
+            if decision and decision.action in ['increase', 'decrease']:
+                return {
+                    'type': 'price_change',
+                    'action': decision.action,
+                    'current_price': decision.current_price,
+                    'new_price': decision.recommended_price,
+                    'change_percent': round(
+                        (decision.recommended_price - decision.current_price) / decision.current_price * 100,
+                        2
+                    ),
+                    'reason': decision.reason,
+                    'confidence': decision.confidence,
+                    'factors': decision.factors
+                }
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in price analysis: {e}")
+            return None
     
     async def _analyze_stock(self, cabinet, product: Dict) -> Optional[Dict]:
         """Анализирует остатки"""
