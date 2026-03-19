@@ -413,5 +413,11 @@ __all__ = [
     'content_router',
     'ContentCreationState',
     'start_content_from_recommendations',
-    'CONTENT_CREATOR_AVAILABLE'
+    'CONTENT_CREATOR_AVAILABLE',
+    'register_handlers'
 ]
+
+
+def register_handlers(dp):
+    """Регистрация обработчиков Content Creator"""
+    dp.include_router(content_router)
