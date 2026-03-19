@@ -1,0 +1,15 @@
+[Unit]
+Description=Seller AI Autonomous Cycle
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/telegram_bot
+Environment=PYTHONPATH=/opt/telegram_bot
+ExecStart=/usr/bin/python3 /opt/telegram_bot/modules/autonomous_cycle.py
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target
