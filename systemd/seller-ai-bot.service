@@ -1,0 +1,19 @@
+[Unit]
+Description=Seller AI Telegram Bot
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/telegram_bot
+Environment=PYTHONPATH=/opt/telegram_bot
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /opt/telegram_bot/bot.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=seller-ai-bot
+
+[Install]
+WantedBy=multi-user.target

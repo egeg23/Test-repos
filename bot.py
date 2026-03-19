@@ -23,6 +23,7 @@ from settings_handler import register_handlers as register_settings_handlers
 from recommendations_handler import register_handlers as register_recommendations_handlers
 from stats_handler import register_handlers as register_stats_handlers
 from content_handler import register_handlers as register_content_handlers
+from pricing_handler import register_handlers as register_pricing_handlers
 from stores_handler import router as stores_router
 from enhanced_menus import get_main_menu
 
@@ -34,7 +35,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Токен бота
-BOT_TOKEN = "8552259512:AAFiOfiqGeyCuLrwMPPAEsT1RUd1LUqjHXs"
+BOT_TOKEN = "8552259512:AAGKEo5d0ZIKvWGjfv2r9HbndEWtMZNKc-c"
 
 # Инициализация бота и диспетчера
 bot = Bot(token=BOT_TOKEN)
@@ -148,6 +149,13 @@ async def show_pricing(callback: CallbackQuery):
     await callback.answer()
 
 
+@dp.callback_query(F.data == 'pricing')
+async def show_pricing(callback: CallbackQuery):
+    """Ценообразование"""
+    await callback.message.answer("💰 Используйте /pricing для управления ценами")
+    await callback.answer()
+
+
 @dp.callback_query(F.data == 'advertising')
 async def show_advertising(callback: CallbackQuery):
     """Реклама"""
@@ -217,6 +225,7 @@ def register_all_handlers():
     register_recommendations_handlers(dp)
     register_stats_handlers(dp)
     register_content_handlers(dp)
+    register_pricing_handlers(dp)
     
     logger.info("✅ Все обработчики зарегистрированы")
 
