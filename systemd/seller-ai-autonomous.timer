@@ -1,0 +1,10 @@
+[Unit]
+Description=Seller AI Autonomous Cycle Timer
+Requires=seller-ai-autonomous.service
+
+[Timer]
+OnCalendar=*:0/10
+Persistent=true
+
+[Install]
+WantedBy=timers.target
