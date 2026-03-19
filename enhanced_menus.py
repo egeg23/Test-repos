@@ -129,9 +129,11 @@ def get_settings_menu(user_data=None):
     """Меню настроек"""
     buttons = [
         [InlineKeyboardButton(text="🔐 API Ключи", callback_data='settings_api')],
+        [InlineKeyboardButton(text="🏪 Мои кабинеты", callback_data='settings_cabinets')],
         [InlineKeyboardButton(text="🔔 Уведомления", callback_data='settings_notifications')],
         [InlineKeyboardButton(text="👤 Профиль", callback_data='settings_profile')],
         [InlineKeyboardButton(text="🤖 Автономия", callback_data='settings_autonomy')],
+        [InlineKeyboardButton(text="🚀 Fuck Mode (BETA)", callback_data='beta_fuck_mode')],
         [InlineKeyboardButton(text="⬅️ Назад", callback_data='menu')],
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
