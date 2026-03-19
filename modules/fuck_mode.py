@@ -278,6 +278,25 @@ class FuckModeEngine:
         decisions = []
         config = fuck_mode_config.get_config(user_id)
         
+        # Проверяем Buy Box статус (для WB)
+        if cabinet.platform == 'wb' and cabinet.api_key:
+            try:
+                from .buy_box_tracker import buy_box_tracker
+                has_bb = await buy_box_tracker.check_buy_box(
+                    user_id, cabinet.id, product['id'], cabinet.api_key
+                )
+                if has_bb is not None:
+                    product['has_buy_box'] = has_bb
+                    
+                    # Получаем статистику
+                    bb_stats = buy_box_tracker.calculate_buy_box_stats(
+                        user_id, cabinet.id, product['id'], days=30
+                    )
+                    product['bb_percentage'] = bb_stats.get('bb_percentage', 0)
+                    product['bb_trend'] = bb_stats.get('trend', 'unknown')
+            except Exception as e:
+                logger.warning(f"Failed to check Buy Box for {product['id']}: {e}")
+        
         # 1. Анализ цены
         price_decision = await self._analyze_price(user_id, cabinet, product)
         if price_decision:
