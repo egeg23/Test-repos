@@ -18,6 +18,10 @@ from aiogram.fsm.state import State, StatesGroup
 
 from enhanced_menus import is_admin, get_admin_menu
 from modules.chat_cleaner import chat_cleaner
+from modules.subscription_manager import (
+    SubscriptionManager, AdminStats, PLANS,
+    get_plan_keyboard, get_duration_keyboard
+)
 
 router = Router()
 logger = logging.getLogger('admin_handler')
@@ -30,6 +34,11 @@ logger = logging.getLogger('admin_handler')
 class AdminStates(StatesGroup):
     waiting_broadcast_message = State()  # Ожидание текста рассылки
     waiting_test_user_id = State()  # Ожидание ID для теста
+    # NEW: Состояния для выдачи доступа
+    waiting_grant_username = State()  # Ожидание ника Telegram
+    waiting_grant_plan = State()  # Выбор тарифа
+    waiting_grant_duration = State()  # Выбор срока
+    confirm_grant = State()  # Подтверждение выдачи
 
 
 # ============================================================================
@@ -115,7 +124,7 @@ async def admin_users_handler(callback: CallbackQuery, state: FSMContext, bot: B
 
 @router.callback_query(F.data == 'admin_stats')
 async def admin_stats_handler(callback: CallbackQuery, state: FSMContext, bot: Bot):
-    """Системная статистика"""
+    """Обновлённая статистика с тарифами и доходами"""
     user_id = callback.from_user.id
     
     if not is_admin(user_id):
@@ -125,18 +134,30 @@ async def admin_stats_handler(callback: CallbackQuery, state: FSMContext, bot: B
     await callback.answer()
     await chat_cleaner.track_and_clean(bot=bot, callback=callback)
     
-    stats = await get_detailed_stats()
+    # Получаем полную статистику
+    stats = AdminStats().get_full_stats()
+    basic = await get_detailed_stats()
     
     text = (
-        "📊 <b>СИСТЕМНАЯ СТАТИСТИКА</b>\n\n"
-        f"🤖 Версия бота: {stats['version']}\n"
-        f"⏱ Аптайм: {stats['uptime']}\n"
-        f"👥 Всего пользователей: {stats['total_users']}\n"
-        f"🏪 WB кабинетов: {stats['wb_cabinets']}\n"
-        f"🏪 Ozon кабинетов: {stats['ozon_cabinets']}\n"
-        f"📝 AI Рекомендаций: {stats['recommendations']}\n"
-        f"💾 База данных: {stats['db_size']}\n"
-        f"🔴 Ошибки за 24ч: {stats['errors_24h']}\n"
+        "📊 <b>СТАТИСТИКА</b>\n\n"
+        "<b>👥 Пользователи:</b>\n"
+        f"• Всего: {stats['total_users']}\n"
+        f"• Активные подписки: {stats['active_subscriptions']}\n"
+        f"• Просроченные: {stats['expired_subscriptions']}\n\n"
+        "<b>💰 Финансы:</b>\n"
+        f"• Общая выручка: {stats['total_revenue']:,}₽\n"
+        f"• Средний чек: {stats['total_revenue'] // max(stats['active_subscriptions'], 1):,}₽\n\n"
+        "<b>📦 Магазины:</b>\n"
+        f"• Всего: {stats['stores']['total']}\n"
+        f"• Wildberries: {stats['stores']['wb']}\n"
+        f"• Ozon: {stats['stores']['ozon']}\n"
+        f"• Авито: {stats['stores']['avito']}\n\n"
+        "<b>📋 Тарифы:</b>\n"
+        f"• Free: {stats['plans'].get('free', 0)}\n"
+        f"• Basic (490₽): {stats['plans'].get('basic', 0)}\n"
+        f"• Pro (990₽): {stats['plans'].get('pro', 0)}\n"
+        f"• Enterprise (2990₽): {stats['plans'].get('enterprise', 0)}\n\n"
+        f"<b>🤖 Бот:</b> {basic['uptime']}"
     )
     
     msg = await bot.send_message(
@@ -437,6 +458,266 @@ async def admin_restart_confirm_handler(callback: CallbackQuery, state: FSMConte
     import sys
     import os
     os.execv(sys.executable, [sys.executable] + sys.argv)
+
+
+# ============================================================================
+# ВЫДАЧА ДОСТУПА (Многоступенчатый процесс)
+# ============================================================================
+
+@router.callback_query(F.data == 'admin_grant_access')
+async def admin_grant_access_handler(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """Начало выдачи доступа - запрос ника Telegram"""
+    user_id = callback.from_user.id
+    
+    if not is_admin(user_id):
+        await callback.answer("❌ Нет доступа", show_alert=True)
+        return
+    
+    await callback.answer()
+    await chat_cleaner.track_and_clean(bot=bot, callback=callback)
+    
+    msg = await bot.send_message(
+        chat_id=callback.message.chat.id,
+        text=(
+            "🎁 <b>ВЫДАЧА ДОСТУПА</b>\n\n"
+            "Шаг 1/4: Введите <b>ник в Telegram</b> пользователя\n"
+            "(без @, например: username)\n\n"
+            "Для отмены: /cancel"
+        ),
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="❌ Отмена", callback_data='admin_panel')],
+        ])
+    )
+    chat_cleaner.add_bot_message(user_id, msg.message_id)
+    await state.set_state(AdminStates.waiting_grant_username)
+
+
+@router.message(AdminStates.waiting_grant_username)
+async def grant_username_handler(message: Message, state: FSMContext, bot: Bot):
+    """Получение ника и запрос тарифа"""
+    user_id = message.from_user.id
+    
+    if not is_admin(user_id):
+        return
+    
+    if message.text == '/cancel':
+        await state.clear()
+        await message.answer("❌ Отменено")
+        return
+    
+    username = message.text.strip().replace('@', '')
+    
+    # Сохраняем ник
+    await state.update_data(grant_username=username)
+    
+    # Удаляем сообщение пользователя
+    await chat_cleaner.track_and_clean(bot=bot, message=message)
+    
+    # Показываем тарифы
+    msg = await bot.send_message(
+        chat_id=message.chat.id,
+        text=(
+            f"🎁 <b>ВЫДАЧА ДОСТУПА</b>\n\n"
+            f"Пользователь: @{username}\n\n"
+            f"Шаг 2/4: Выберите <b>тариф</b>:"
+        ),
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=get_plan_keyboard() + [
+            [InlineKeyboardButton(text="❌ Отмена", callback_data='admin_panel')],
+        ])
+    )
+    chat_cleaner.add_bot_message(user_id, msg.message_id)
+    await state.set_state(AdminStates.waiting_grant_plan)
+
+
+@router.callback_query(F.data.startswith('grant_plan_'))
+async def grant_plan_handler(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """Выбор тарифа и запрос срока"""
+    user_id = callback.from_user.id
+    
+    if not is_admin(user_id):
+        await callback.answer("❌ Нет доступа", show_alert=True)
+        return
+    
+    plan = callback.data.replace('grant_plan_', '')
+    
+    # Сохраняем тариф
+    await state.update_data(grant_plan=plan)
+    
+    # Получаем данные
+    data = await state.get_data()
+    username = data.get('grant_username', 'unknown')
+    plan_info = PLANS.get(plan, {})
+    
+    await callback.answer()
+    await chat_cleaner.track_and_clean(bot=bot, callback=callback)
+    
+    # Показываем сроки
+    msg = await bot.send_message(
+        chat_id=callback.message.chat.id,
+        text=(
+            f"🎁 <b>ВЫДАЧА ДОСТУПА</b>\n\n"
+            f"Пользователь: @{username}\n"
+            f"Тариф: <b>{plan_info.get('name', plan)}</b> ({plan_info.get('price', 0)}₽/мес)\n\n"
+            f"Шаг 3/4: Выберите <b>срок</b>:"
+        ),
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=get_duration_keyboard() + [
+            [InlineKeyboardButton(text="❌ Отмена", callback_data='admin_panel')],
+        ])
+    )
+    chat_cleaner.add_bot_message(user_id, msg.message_id)
+    await state.set_state(AdminStates.waiting_grant_duration)
+
+
+@router.callback_query(F.data.startswith('grant_duration_'))
+async def grant_duration_handler(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """Выбор срока и подтверждение"""
+    user_id = callback.from_user.id
+    
+    if not is_admin(user_id):
+        await callback.answer("❌ Нет доступа", show_alert=True)
+        return
+    
+    duration = int(callback.data.replace('grant_duration_', ''))
+    
+    # Сохраняем срок
+    await state.update_data(grant_duration=duration)
+    
+    # Получаем все данные
+    data = await state.get_data()
+    username = data.get('grant_username', 'unknown')
+    plan = data.get('grant_plan', 'basic')
+    plan_info = PLANS.get(plan, {})
+    
+    total_price = plan_info.get('price', 0) * duration
+    
+    await callback.answer()
+    await chat_cleaner.track_and_clean(bot=bot, callback=callback)
+    
+    # Показываем подтверждение
+    msg = await bot.send_message(
+        chat_id=callback.message.chat.id,
+        text=(
+            f"🎁 <b>ПОДТВЕРЖДЕНИЕ</b>\n\n"
+            f"Пользователь: <b>@{username}</b>\n"
+            f"Тариф: <b>{plan_info.get('name', plan)}</b>\n"
+            f"Срок: <b>{duration} мес.</b>\n"
+            f"Стоимость: <b>{total_price:,}₽</b>\n\n"
+            f"✅ Всё верно?"
+        ),
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="✅ Подтвердить", callback_data='grant_confirm')],
+            [InlineKeyboardButton(text="❌ Отмена", callback_data='admin_panel')],
+        ])
+    )
+    chat_cleaner.add_bot_message(user_id, msg.message_id)
+    await state.set_state(AdminStates.confirm_grant)
+
+
+@router.callback_query(F.data == 'grant_confirm')
+async def grant_confirm_handler(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """Финальное подтверждение и выдача доступа"""
+    user_id = callback.from_user.id
+    
+    if not is_admin(user_id):
+        await callback.answer("❌ Нет доступа", show_alert=True)
+        return
+    
+    # Получаем все данные
+    data = await state.get_data()
+    username = data.get('grant_username', 'unknown')
+    plan = data.get('grant_plan', 'basic')
+    duration = data.get('grant_duration', 1)
+    
+    await callback.answer()
+    await chat_cleaner.track_and_clean(bot=bot, callback=callback)
+    
+    # Находим пользователя по нику
+    target_user_id = await find_user_by_username(username)
+    
+    if not target_user_id:
+        msg = await bot.send_message(
+            chat_id=callback.message.chat.id,
+            text=f"❌ Пользователь @{username} не найден в базе",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🔄 Попробовать снова", callback_data='admin_grant_access')],
+                [InlineKeyboardButton(text="⬅️ Назад", callback_data='admin_panel')],
+            ])
+        )
+        chat_cleaner.add_bot_message(user_id, msg.message_id)
+        await state.clear()
+        return
+    
+    # Выдаём подписку
+    sub_manager = SubscriptionManager()
+    success = sub_manager.grant_subscription(
+        user_id=target_user_id,
+        plan=plan,
+        months=duration,
+        granted_by=str(user_id)
+    )
+    
+    if success:
+        plan_info = PLANS.get(plan, {})
+        msg = await bot.send_message(
+            chat_id=callback.message.chat.id,
+            text=(
+                f"✅ <b>ДОСТУП ВЫДАН!</b>\n\n"
+                f"Пользователь: @{username}\n"
+                f"Тариф: {plan_info.get('name', plan)}\n"
+                f"Срок: {duration} мес.\n"
+                f"Действует до: {(datetime.now() + __import__('datetime').timedelta(days=30*duration)).strftime('%d.%m.%Y')}\n\n"
+                f"Пользователь получит уведомление."
+            ),
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🎁 Выдать ещё", callback_data='admin_grant_access')],
+                [InlineKeyboardButton(text="⬅️ В админ-панель", callback_data='admin_panel')],
+            ])
+        )
+        
+        # Отправляем уведомление пользователю
+        try:
+            await bot.send_message(
+                chat_id=int(target_user_id),
+                text=(
+                    f"🎉 <b>Вам выдан доступ!</b>\n\n"
+                    f"Тариф: <b>{plan_info.get('name', plan)}</b>\n"
+                    f"Срок: {duration} мес.\n"
+                    f"Действует до: {(datetime.now() + __import__('datetime').timedelta(days=30*duration)).strftime('%d.%m.%Y')}\n\n"
+                    f"Нажмите /start для обновления меню."
+                )
+            )
+        except Exception as e:
+            logger.error(f"Failed to notify user {target_user_id}: {e}")
+    else:
+        msg = await bot.send_message(
+            chat_id=callback.message.chat.id,
+            text=f"❌ Ошибка при выдаче доступа. Попробуйте снова.",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="⬅️ Назад", callback_data='admin_panel')],
+            ])
+        )
+    
+    chat_cleaner.add_bot_message(user_id, msg.message_id)
+    await state.clear()
+
+
+async def find_user_by_username(username: str) -> str:
+    """Находит user_id по username"""
+    try:
+        clients_dir = Path("/opt/clients")
+        registry_file = clients_dir / 'USER_REGISTRY.json'
+        
+        if registry_file.exists():
+            with open(registry_file, 'r') as f:
+                registry = json.load(f)
+            
+            for user_id, data in registry.items():
+                if data.get('username', '').lower() == username.lower():
+                    return user_id.replace('user_', '')
+    except Exception as e:
+        logger.error(f"Error finding user: {e}")
+    
+    return None
 
 
 # ============================================================================

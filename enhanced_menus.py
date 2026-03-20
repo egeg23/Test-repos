@@ -45,6 +45,7 @@ def get_admin_menu(user_id: int = None):
          InlineKeyboardButton(text="💾 Бэкапы", callback_data='admin_backups')],
         [InlineKeyboardButton(text="🧪 Тест режим", callback_data='admin_test_mode'),
          InlineKeyboardButton(text="📢 Рассылка", callback_data='admin_broadcast')],
+        [InlineKeyboardButton(text="🎁 Выдать доступ", callback_data='admin_grant_access')],  # NEW
         [InlineKeyboardButton(text="🧹 Очистка", callback_data='admin_cleanup'),
          InlineKeyboardButton(text="🔄 Рестарт", callback_data='admin_restart')],
         [InlineKeyboardButton(text="⬅️ Назад", callback_data='menu')],
