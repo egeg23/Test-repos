@@ -1,7 +1,7 @@
 # stores_handler.py - Обработчик раздела "Магазины"
 # Seller AI - Автономная система управления маркетплейсами
 
-from aiogram import Router, F
+from aiogram import Router, F, Bot
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -9,6 +9,9 @@ import json
 import os
 import logging
 from pathlib import Path
+
+# Импорт системы очистки чата
+from modules.chat_cleaner import chat_cleaner
 
 # Импорт клиентов API (реальная интеграция)
 try:
@@ -95,10 +98,13 @@ def check_store_connected(client_id: str, platform: str) -> dict:
 # ============================================================================
 
 @router.callback_query(F.data == 'avito_menu')
-async def avito_menu_handler(callback: CallbackQuery, state: FSMContext):
-    """Обработчик меню Авито"""
+async def avito_menu_handler(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """Обработчик меню Авито с очисткой чата"""
     client_id = str(callback.from_user.id)
     status = check_store_connected(client_id, 'avito')
+    
+    # Очищаем чат
+    await chat_cleaner.track_and_clean(bot=bot, callback=callback)
 
     if status['connected']:
         # Авито подключено - показываем управление
@@ -108,27 +114,32 @@ async def avito_menu_handler(callback: CallbackQuery, state: FSMContext):
             [InlineKeyboardButton(text="⚙️ Настройки", callback_data='avito_settings')],
             [InlineKeyboardButton(text="⬅️ Назад", callback_data='stores')],
         ]
-        await callback.message.edit_text(
-            "🏪 <b>Авито</b> - подключено ✅\n\n"
-            "Выберите действие:",
+        msg = await bot.send_message(
+            chat_id=callback.message.chat.id,
+            text="🏪 <b>Авито</b> - подключено ✅\n\n"
+                 "Выберите действие:",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons)
         )
     else:
         # Авито не подключено - запрашиваем данные
-        await callback.message.edit_text(
-            "🏪 <b>Подключение Авито</b>\n\n"
-            "<b>Формат ввода:</b>\n"
-            "<code>email|пароль</code>\n\n"
-            "<b>Примеры:</b>\n"
-            "• <code>example@mail.ru|password123</code>\n"
-            "• <code>login@yandex.ru|MyPass456</code>\n\n"
-            "⚠️ Используйте символ <b>|</b> (вертикальная черта) как разделитель\n"
-            "🔒 Данные хранятся в зашифрованном виде",
+        msg = await bot.send_message(
+            chat_id=callback.message.chat.id,
+            text="🏪 <b>Подключение Авито</b>\n\n"
+                 "<b>Формат ввода:</b>\n"
+                 "<code>email|пароль</code>\n\n"
+                 "<b>Примеры:</b>\n"
+                 "• <code>example@mail.ru|password123</code>\n"
+                 "• <code>login@yandex.ru|MyPass456</code>\n\n"
+                 "⚠️ Используйте символ <b>|</b> (вертикальная черта) как разделитель\n"
+                 "🔒 Данные хранятся в зашифрованном виде",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text="🔐 Ввести данные", callback_data='avito_connect')],
                 [InlineKeyboardButton(text="⬅️ Назад", callback_data='stores')],
             ])
         )
+    
+    # Сохраняем ID сообщения бота
+    chat_cleaner.add_bot_message(callback.from_user.id, msg.message_id)
     await callback.answer()
 
 
@@ -1124,14 +1135,23 @@ async def ozon_skip_cost_handler(callback: CallbackQuery, state: FSMContext):
 # ============================================================================
 
 @router.callback_query(F.data == 'stores')
-async def back_to_stores(callback: CallbackQuery):
-    """Возврат в меню магазинов"""
+async def back_to_stores(callback: CallbackQuery, bot: Bot):
+    """Возврат в меню магазинов с очисткой чата"""
     client_id = str(callback.from_user.id)
-    await callback.message.edit_text(
-        "🛍 <b>МАГАЗИНЫ</b>\n\n"
-        "Выберите площадку:",
+    
+    # Очищаем чат
+    await chat_cleaner.track_and_clean(bot=bot, callback=callback)
+    
+    # Отправляем новое сообщение
+    msg = await bot.send_message(
+        chat_id=callback.message.chat.id,
+        text="🛍 <b>МАГАЗИНЫ</b>\n\n"
+             "Выберите площадку:",
         reply_markup=get_stores_menu(client_id)
     )
+    
+    # Сохраняем ID сообщения
+    chat_cleaner.add_bot_message(callback.from_user.id, msg.message_id)
     await callback.answer()
 
 

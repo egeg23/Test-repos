@@ -25,6 +25,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.enums import ParseMode
 
+# Импорт системы очистки чата
+from modules.chat_cleaner import chat_cleaner
+
 # States для рекомендаций
 class AIRecommendationsStates(StatesGroup):
     waiting_rejection_reason = State()  # Ожидание причины отказа
@@ -361,12 +364,15 @@ class AIRecommendationsEngine:
 # ============================================================================
 
 @router.callback_query(F.data == 'ai_recommendations')
-async def ai_recommendations_handler(callback: CallbackQuery, state: FSMContext):
-    """Главный обработчик AI рекомендаций"""
+async def ai_recommendations_handler(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """Главный обработчик AI рекомендаций с очисткой чата"""
     await callback.answer()
     
     user_id = str(callback.from_user.id)
     engine = AIRecommendationsEngine(user_id)
+    
+    # Очищаем чат
+    await chat_cleaner.track_and_clean(bot=bot, callback=callback)
     
     # Получаем оставшиеся дни обучения
     days_remaining = engine.get_learning_days_remaining()
@@ -384,22 +390,24 @@ async def ai_recommendations_handler(callback: CallbackQuery, state: FSMContext)
         progress_text += "<i>Теперь вы можете активировать полную автономию в разделе «Автономия».</i>\n\n"
     
     if not recommendations:
-        await callback.message.edit_text(
-            progress_text + "🤔 Пока нет рекомендаций. Подключите API и загрузите себестоимость для начала анализа.",
+        msg = await bot.send_message(
+            chat_id=callback.message.chat.id,
+            text=progress_text + "🤔 Пока нет рекомендаций. Подключите API и загрузите себестоимость для начала анализа.",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text="🛍 Подключить магазин", callback_data='stores')],
                 [InlineKeyboardButton(text="⬅️ Назад", callback_data='menu')],
             ])
         )
+        chat_cleaner.add_bot_message(callback.from_user.id, msg.message_id)
         return
     
     # Показываем первую рекомендацию
-    await show_recommendation(callback, engine, recommendations[0], 0, len(recommendations), progress_text)
+    await show_recommendation(bot, callback, engine, recommendations[0], 0, len(recommendations), progress_text)
 
 
-async def show_recommendation(callback: CallbackQuery, engine: AIRecommendationsEngine, 
+async def show_recommendation(bot: Bot, callback: CallbackQuery, engine: AIRecommendationsEngine, 
                                rec: Recommendation, index: int, total: int, header: str):
-    """Показывает конкретную рекомендацию"""
+    """Показывает конкретную рекомендацию с очисткой"""
     
     # Формируем текст рекомендации
     text = header
@@ -438,17 +446,28 @@ async def show_recommendation(callback: CallbackQuery, engine: AIRecommendations
     buttons.append([InlineKeyboardButton(text="📊 История рекомендаций", callback_data='rec_history')])
     buttons.append([InlineKeyboardButton(text="⬅️ В меню", callback_data='menu')])
     
-    await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
+    # Отправляем новое сообщение
+    msg = await bot.send_message(
+        chat_id=callback.message.chat.id,
+        text=text,
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons)
+    )
+    
+    # Сохраняем ID
+    chat_cleaner.add_bot_message(callback.from_user.id, msg.message_id)
 
 
 @router.callback_query(F.data.startswith('rec_nav_'))
-async def rec_nav_handler(callback: CallbackQuery, state: FSMContext):
-    """Навигация между рекомендациями"""
+async def rec_nav_handler(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """Навигация между рекомендациями с очисткой"""
     await callback.answer()
     
     index = int(callback.data.split('_')[2])
     user_id = str(callback.from_user.id)
     engine = AIRecommendationsEngine(user_id)
+    
+    # Очищаем чат
+    await chat_cleaner.track_and_clean(bot=bot, callback=callback)
     
     recommendations = engine.recommendations
     if 0 <= index < len(recommendations):
@@ -458,17 +477,20 @@ async def rec_nav_handler(callback: CallbackQuery, state: FSMContext):
         else:
             header = "✅ <b>Обучение завершено!</b>\n\n"
         
-        await show_recommendation(callback, engine, recommendations[index], index, len(recommendations), header)
+        await show_recommendation(bot, callback, engine, recommendations[index], index, len(recommendations), header)
 
 
 @router.callback_query(F.data.startswith('rec_accept_'))
-async def rec_accept_handler(callback: CallbackQuery, state: FSMContext):
-    """Пользователь принял рекомендацию"""
+async def rec_accept_handler(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """Пользователь принял рекомендацию с очисткой"""
     await callback.answer("✅ Записано! Отслеживаю результат...")
     
     rec_id = callback.data.replace('rec_accept_', '')
     user_id = str(callback.from_user.id)
     engine = AIRecommendationsEngine(user_id)
+    
+    # Очищаем чат
+    await chat_cleaner.track_and_clean(bot=bot, callback=callback)
     
     if engine.accept_recommendation(rec_id):
         # Показываем подтверждение
@@ -479,48 +501,57 @@ async def rec_accept_handler(callback: CallbackQuery, state: FSMContext):
             "<i>Это помогает мне учиться и давать более точные советы.</i>"
         )
         
-        await callback.message.edit_text(
-            text,
+        msg = await bot.send_message(
+            chat_id=callback.message.chat.id,
+            text=text,
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text="💡 Следующая рекомендация", callback_data='ai_recommendations')],
                 [InlineKeyboardButton(text="⬅️ В меню", callback_data='menu')],
             ])
         )
+        chat_cleaner.add_bot_message(callback.from_user.id, msg.message_id)
     else:
-        await callback.message.edit_text(
-            "❌ Ошибка. Рекомендация не найдена.",
+        msg = await bot.send_message(
+            chat_id=callback.message.chat.id,
+            text="❌ Ошибка. Рекомендация не найдена.",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text="⬅️ Назад", callback_data='ai_recommendations')],
             ])
         )
+        chat_cleaner.add_bot_message(callback.from_user.id, msg.message_id)
 
 
 @router.callback_query(F.data.startswith('rec_reject_'))
-async def rec_reject_handler(callback: CallbackQuery, state: FSMContext):
-    """Пользователь отклонил рекомендацию - запрашиваем причину"""
+async def rec_reject_handler(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """Пользователь отклонил рекомендацию - запрашиваем причину с очисткой"""
     await callback.answer()
     
     rec_id = callback.data.replace('rec_reject_', '')
     await state.update_data(rejecting_rec_id=rec_id)
     
-    await callback.message.edit_text(
-        "❌ <b>Почему вы отклоняете эту рекомендацию?</b>\n\n"
-        "Ваш ответ поможет мне лучше понять ваш бизнес и давать более релевантные советы.\n\n"
-        "<i>Напишите коротко, например:</i>\n"
-        "• «Уже пробовал, не сработало»\n"
-        "• «Сейчас не подходит по сезону»\n"
-        "• «Нет бюджета на рекламу»\n"
-        "• «Цена и так максимальная»",
+    # Очищаем чат
+    await chat_cleaner.track_and_clean(bot=bot, callback=callback)
+    
+    msg = await bot.send_message(
+        chat_id=callback.message.chat.id,
+        text="❌ <b>Почему вы отклоняете эту рекомендацию?</b>\n\n"
+             "Ваш ответ поможет мне лучше понять ваш бизнес и давать более релевантные советы.\n\n"
+             "<i>Напишите коротко, например:</i>\n"
+             "• «Уже пробовал, не сработало»\n"
+             "• «Сейчас не подходит по сезону»\n"
+             "• «Нет бюджета на рекламу»\n"
+             "• «Цена и так максимальная»",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="⬅️ Отмена", callback_data='ai_recommendations')],
         ])
     )
+    chat_cleaner.add_bot_message(callback.from_user.id, msg.message_id)
     await state.set_state(AIRecommendationsStates.waiting_rejection_reason)
 
 
 @router.message(AIRecommendationsStates.waiting_rejection_reason)
-async def rejection_reason_handler(message: Message, state: FSMContext):
-    """Обработка причины отклонения"""
+async def rejection_reason_handler(message: Message, state: FSMContext, bot: Bot):
+    """Обработка причины отклонения с очисткой"""
     reason = message.text.strip()
     data = await state.get_data()
     rec_id = data.get('rejecting_rec_id')
@@ -533,34 +564,44 @@ async def rejection_reason_handler(message: Message, state: FSMContext):
     user_id = str(message.from_user.id)
     engine = AIRecommendationsEngine(user_id)
     
+    # Очищаем чат (удаляем сообщение пользователя и бота)
+    await chat_cleaner.track_and_clean(bot=bot, message=message)
+    
     if engine.reject_recommendation(rec_id, reason):
-        await message.answer(
-            "📝 <b>Записано!</b>\n\n"
-            f"Причина: <i>{reason}</i>\n\n"
-            "Я запомнил это и буду учитывать в будущих рекомендациях.",
+        msg = await bot.send_message(
+            chat_id=message.chat.id,
+            text=f"📝 <b>Записано!</b>\n\n"
+                 f"Причина: <i>{reason}</i>\n\n"
+                 "Я запомнил это и буду учитывать в будущих рекомендациях.",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text="💡 Следующая рекомендация", callback_data='ai_recommendations')],
                 [InlineKeyboardButton(text="⬅️ В меню", callback_data='menu')],
             ])
         )
+        chat_cleaner.add_bot_message(user_id, msg.message_id)
     else:
-        await message.answer(
-            "❌ Ошибка при сохранении.",
+        msg = await bot.send_message(
+            chat_id=message.chat.id,
+            text="❌ Ошибка при сохранении.",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text="⬅️ Назад", callback_data='ai_recommendations')],
             ])
         )
+        chat_cleaner.add_bot_message(user_id, msg.message_id)
     
     await state.clear()
 
 
 @router.callback_query(F.data == 'rec_history')
-async def rec_history_handler(callback: CallbackQuery, state: FSMContext):
-    """История рекомендаций"""
+async def rec_history_handler(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """История рекомендаций с очисткой"""
     await callback.answer()
     
     user_id = str(callback.from_user.id)
     engine = AIRecommendationsEngine(user_id)
+    
+    # Очищаем чат
+    await chat_cleaner.track_and_clean(bot=bot, callback=callback)
     
     # Считаем статистику
     accepted = len([r for r in engine.recommendations if r.status == "accepted"])
@@ -588,13 +629,15 @@ async def rec_history_handler(callback: CallbackQuery, state: FSMContext):
         if rejection_patterns:
             text += f"\n📚 <b>Что я узнал о вас:</b> {len(rejection_patterns)} паттернов отказа"
     
-    await callback.message.edit_text(
-        text,
+    msg = await bot.send_message(
+        chat_id=callback.message.chat.id,
+        text=text,
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="💡 Текущие рекомендации", callback_data='ai_recommendations')],
             [InlineKeyboardButton(text="⬅️ В меню", callback_data='menu')],
         ])
     )
+    chat_cleaner.add_bot_message(callback.from_user.id, msg.message_id)
 
 
 def register_handlers(dp):

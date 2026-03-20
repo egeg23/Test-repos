@@ -17,6 +17,9 @@ from aiogram.enums import ParseMode
 # Добавляем путь к модулям
 sys.path.insert(0, str(Path(__file__).parent))
 
+# Импорт системы очистки чата
+from modules.chat_cleaner import chat_cleaner
+
 # Database adapter (JSON → PostgreSQL migration)
 from modules.db_adapter import db_adapter
 
@@ -97,9 +100,18 @@ async def cmd_menu(message: Message):
 
 
 @dp.callback_query(F.data == 'menu')
-async def back_to_menu(callback: CallbackQuery):
-    """Возврат в главное меню"""
-    await callback.message.edit_text("<b>Главное меню</b>", reply_markup=get_main_menu())
+async def back_to_menu(callback: CallbackQuery, bot: Bot):
+    """Возврат в главное меню с очисткой"""
+    # Очищаем чат
+    await chat_cleaner.track_and_clean(bot=bot, callback=callback)
+    
+    # Отправляем новое сообщение
+    msg = await bot.send_message(
+        chat_id=callback.message.chat.id,
+        text="<b>Главное меню</b>",
+        reply_markup=get_main_menu()
+    )
+    chat_cleaner.add_bot_message(callback.from_user.id, msg.message_id)
     await callback.answer()
 
 
