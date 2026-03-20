@@ -21,65 +21,65 @@ PLANS = {
     'free': {
         'name': 'Free',
         'price': 0,
-        'max_stores': 1,
+        'max_stores': 0,
         'features': [
-            'Базовая аналитика',
-            '1 магазин',
-            'Ручное управление'
+            'Ознакомительный режим',
+            'Без магазинов',
+            'Демо данных'
         ],
         'limits': {
-            'max_stores': 1,
+            'max_stores': 0,
             'ai_recommendations': False,
             'autonomy': False,
             'priority_support': False
         }
     },
     'basic': {
-        'name': 'Basic',
-        'price': 490,
-        'max_stores': 3,
+        'name': 'Базовый',
+        'price': 14900,
+        'max_stores': 1,
         'features': [
-            '3 магазина',
+            '1 магазин',
             'AI рекомендации',
             'Ежедневные отчёты',
             'Email поддержка'
         ],
         'limits': {
-            'max_stores': 3,
+            'max_stores': 1,
             'ai_recommendations': True,
             'autonomy': False,
             'priority_support': False
         }
     },
     'pro': {
-        'name': 'Pro',
-        'price': 990,
-        'max_stores': 10,
+        'name': 'Про',
+        'price': 39900,
+        'max_stores': 5,
         'features': [
-            '10 магазинов',
+            '5 магазинов',
             'Полная автономия',
             'Fuck Mode',
             'Приоритетная поддержка'
         ],
         'limits': {
-            'max_stores': 10,
+            'max_stores': 5,
             'ai_recommendations': True,
             'autonomy': True,
             'priority_support': True
         }
     },
     'enterprise': {
-        'name': 'Enterprise',
-        'price': 2990,
-        'max_stores': 999,
+        'name': 'Мега',
+        'price': 94500,
+        'max_stores': 12,
         'features': [
-            'Безлимит магазинов',
-            'Все функции Pro',
+            '12 магазинов',
+            'Все функции Про',
             'Персональный менеджер',
             'API доступ'
         ],
         'limits': {
-            'max_stores': 999,
+            'max_stores': 12,
             'ai_recommendations': True,
             'autonomy': True,
             'priority_support': True,
