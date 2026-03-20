@@ -4,7 +4,16 @@
 
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-def get_main_menu(user_data=None):
+# Admin user ID
+ADMIN_USER_ID = 216929582
+
+
+def is_admin(user_id: int) -> bool:
+    """Проверяет является ли пользователь админом"""
+    return user_id == ADMIN_USER_ID
+
+
+def get_main_menu(user_id: int = None, user_data=None):
     """Главное меню - основная панель управления"""
     buttons = [
         [InlineKeyboardButton(text="🛍 Мои магазины", callback_data='stores'),
@@ -16,7 +25,29 @@ def get_main_menu(user_data=None):
          InlineKeyboardButton(text="📢 Реклама", callback_data='advertising')],
         [InlineKeyboardButton(text="🔔 Уведомления", callback_data='notifications'),
          InlineKeyboardButton(text="⚙️ Настройки", callback_data='settings')],
-        [InlineKeyboardButton(text="🆘 Поддержка", callback_data='support')],
+    ]
+    
+    # Admin-only button
+    if user_id and is_admin(user_id):
+        buttons.append([InlineKeyboardButton(text="🔐 Админ-панель", callback_data='admin_panel')])
+    
+    buttons.append([InlineKeyboardButton(text="🆘 Поддержка", callback_data='support')])
+    
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def get_admin_menu(user_id: int = None):
+    """Админ-панель (только для админа)"""
+    buttons = [
+        [InlineKeyboardButton(text="👥 Пользователи", callback_data='admin_users'),
+         InlineKeyboardButton(text="📊 Статистика", callback_data='admin_stats')],
+        [InlineKeyboardButton(text="🤖 AI Обучение", callback_data='admin_ai_learning'),
+         InlineKeyboardButton(text="💾 Бэкапы", callback_data='admin_backups')],
+        [InlineKeyboardButton(text="🧪 Тест режим", callback_data='admin_test_mode'),
+         InlineKeyboardButton(text="📢 Рассылка", callback_data='admin_broadcast')],
+        [InlineKeyboardButton(text="🧹 Очистка", callback_data='admin_cleanup'),
+         InlineKeyboardButton(text="🔄 Рестарт", callback_data='admin_restart')],
+        [InlineKeyboardButton(text="⬅️ Назад", callback_data='menu')],
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 

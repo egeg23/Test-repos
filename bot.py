@@ -37,6 +37,7 @@ from competitors_handler import register_handlers as register_competitors_handle
 from fuck_mode_handler import register_handlers as register_fuck_mode_handlers
 from cabinet_handler import register_handlers as register_cabinet_handlers
 from stores_handler import router as stores_router
+from admin_handler import register_handlers as register_admin_handlers  # NEW
 from enhanced_menus import get_main_menu
 
 # Настройка логирования
@@ -90,7 +91,7 @@ async def cmd_start(message: Message):
         f"Используйте меню ниже:"
     )
     
-    await message.answer(text, reply_markup=get_main_menu(), parse_mode=ParseMode.HTML)
+    await message.answer(text, reply_markup=get_main_menu(user_id=user_id), parse_mode=ParseMode.HTML)
 
 
 @dp.message(Command("menu"))
@@ -102,6 +103,8 @@ async def cmd_menu(message: Message):
 @dp.callback_query(F.data == 'menu')
 async def back_to_menu(callback: CallbackQuery, bot: Bot):
     """Возврат в главное меню с очисткой"""
+    user_id = callback.from_user.id
+    
     # Очищаем чат
     await chat_cleaner.track_and_clean(bot=bot, callback=callback)
     
@@ -109,9 +112,9 @@ async def back_to_menu(callback: CallbackQuery, bot: Bot):
     msg = await bot.send_message(
         chat_id=callback.message.chat.id,
         text="<b>Главное меню</b>",
-        reply_markup=get_main_menu()
+        reply_markup=get_main_menu(user_id=user_id)
     )
-    chat_cleaner.add_bot_message(callback.from_user.id, msg.message_id)
+    chat_cleaner.add_bot_message(user_id, msg.message_id)
     await callback.answer()
 
 
@@ -268,6 +271,7 @@ def register_all_handlers():
     register_competitors_handlers(dp)
     register_fuck_mode_handlers(dp)
     register_cabinet_handlers(dp)
+    register_admin_handlers(dp)  # NEW: Админ-панель
     
     logger.info("✅ Все обработчики зарегистрированы")
 
