@@ -46,8 +46,8 @@ logger = logging.getLogger(__name__)
 # Токен бота
 BOT_TOKEN = "8552259512:AAGKEo5d0ZIKvWGjfv2r9HbndEWtMZNKc-c"
 
-# Инициализация бота и диспетчера
-bot = Bot(token=BOT_TOKEN)
+# Инициализация бота и диспетчера с HTML-форматированием по умолчанию
+bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
 dp = Dispatcher()
 
 # ============================================================================

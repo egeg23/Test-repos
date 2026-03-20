@@ -385,7 +385,7 @@ async def _show_break_into_top_menu(message: Message, artikul: str, target_posit
         f"• Агрессивность: 2.5x\n"
         f"• Длительность: до 14 дней\n\n"
         f"<i>После достижения топ-{target_position} автоматически\n"
-        f"переключится на "Поддержание топ позиции" (ДРР 5%)</i>"
+        f"переключится на «Поддержание топ позиции» (ДРР 5%)</i>"
     )
     
     await message.answer(text, reply_markup=keyboard)
