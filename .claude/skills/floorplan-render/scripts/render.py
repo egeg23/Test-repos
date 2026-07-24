@@ -15,7 +15,9 @@ from pathlib import Path
 
 import requests
 
-API_URL = "https://api.openai.com/v1/images/edits"
+# Endpoint берётся из OPENAI_BASE_URL (дефолт — OpenAI напрямую). Для RU-реселлера
+# укажите его base_url, напр. proxyapi: OPENAI_BASE_URL=https://api.proxyapi.ru/openai/v1
+DEFAULT_BASE_URL = "https://api.openai.com/v1"
 
 BASE_PROMPT = (
     "photorealistic top-down 2D floor plan render, oak herringbone parquet, "
@@ -53,6 +55,9 @@ def main() -> int:
         )
         return 1
 
+    base_url = os.environ.get("OPENAI_BASE_URL", DEFAULT_BASE_URL).rstrip("/")
+    api_url = f"{base_url}/images/edits"
+
     extra = " ".join(sys.argv[2:]).strip()
     prompt = f"{BASE_PROMPT}, {extra}" if extra else BASE_PROMPT
 
@@ -66,7 +71,7 @@ def main() -> int:
 
     with input_path.open("rb") as f:
         response = requests.post(
-            API_URL,
+            api_url,
             headers={"Authorization": f"Bearer {api_key}"},
             data=data,
             files={"image": (input_path.name, f, "image/png")},

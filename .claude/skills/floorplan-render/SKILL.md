@@ -12,6 +12,9 @@ description: Превращает векторный/схематичный пл
 
 - Переменная окружения `OPENAI_API_KEY`. Если она не задана — **не запускай**
   скрипт: он завершится с понятной ошибкой, рендер невозможен.
+- (Опционально) `OPENAI_BASE_URL` — базовый URL API. По умолчанию
+  `https://api.openai.com/v1` (OpenAI напрямую). Для RU-реселлера укажите его
+  endpoint, например proxyapi: `OPENAI_BASE_URL=https://api.proxyapi.ru/openai/v1`.
 - Python 3 с библиотекой `requests`.
 - Для SVG-входа: `rsvg-convert` (librsvg) или `cairosvg`.
 
