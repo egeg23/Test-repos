@@ -10,6 +10,7 @@
 
 import base64
 import os
+import struct
 import sys
 from pathlib import Path
 
@@ -24,6 +25,21 @@ BASE_PROMPT = (
     "terracotta kitchen tiles, soft realistic shadows, textured furniture, "
     "interior magazine style, keep exact wall layout and furniture positions unchanged"
 )
+
+
+def pick_size(png_path: Path) -> str:
+    """Подбирает размер вывода под ориентацию входного PNG (сохраняем геометрию)."""
+    try:
+        with png_path.open("rb") as f:
+            header = f.read(24)
+        width, height = struct.unpack(">II", header[16:24])
+    except (OSError, struct.error):
+        return "1536x1024"
+    if width >= height * 1.2:
+        return "1536x1024"
+    if height >= width * 1.2:
+        return "1024x1536"
+    return "1024x1024"
 
 
 def main() -> int:
@@ -65,7 +81,7 @@ def main() -> int:
         "model": "gpt-image-1",
         "prompt": prompt,
         "input_fidelity": "high",
-        "size": "1536x1024",
+        "size": pick_size(input_path),
         "quality": "high",
     }
 
