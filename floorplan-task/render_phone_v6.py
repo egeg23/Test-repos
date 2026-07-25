@@ -1,0 +1,228 @@
+#!/usr/bin/env python3
+"""Версия 6: планы без подписей + жёсткая привязка каждой фигуры плана к предмету
+мебели (в v5 модель развернула обеденный стол на 90° и потеряла пуфы). Планы БЕЗ подписей (их накладываем поверх готового рендера,
+чтобы модель не коверкала буквы и цифры). Качество по умолчанию medium — в
+несколько раз дешевле high, а для проверки «сел ли стиль» разницы почти нет.
+Плюс можно рендерить только нужную комнату, не платя за остальные.
+
+Только стандартная библиотека Python — работает в a-Shell на iPhone,
+в Termux на Android и на любом компьютере с python3.
+
+Запуск:
+    python3 render_phone_v6.py <ключ>                  # обе комнаты, medium
+    python3 render_phone_v6.py <ключ> bedroom          # только спальня
+    OPENAI_IMAGE_QUALITY=high python3 render_phone_v6.py <ключ> bedroom
+
+Результат: <комната>_render_<качество>.png рядом со скриптом — например
+bedroom_render_medium.png. Имя включает качество, чтобы дешёвые пробные
+рендеры не затирали финальные.
+"""
+
+import base64
+import json
+import os
+import socket
+import sys
+import time
+import urllib.error
+import urllib.request
+import uuid
+
+CROPS = ("https://raw.githubusercontent.com/egeg23/Test-repos/"
+         "19cd8c6d55ba6b0a4c66d3a1b55aaa1c2ef026f1/floorplan-task")
+
+# Жёсткие правила: ортогональная проекция, никакой самодеятельности с планировкой.
+KEEP = (
+    "Photorealistic top-down floor plan render in the style of an interior design "
+    "magazine. STRICTLY ORTHOGRAPHIC BIRD'S-EYE VIEW, camera pointing straight down "
+    "at 90 degrees: no perspective, no tilt, no visible fronts or sides of furniture, "
+    "every object seen purely from above. Keep the exact wall layout, room proportions "
+    "and furniture positions of the input plan — do NOT invent extra rooms, doors, "
+    "corridors or partitions, do NOT split the image into panels or change scale "
+    "between areas. Render the whole plan at ONE consistent scale. Leave the white "
+    "margins around the plan pure white and empty. Do NOT draw any text, letters, "
+    "numbers, labels or watermarks anywhere in the image — the floor must stay clean. "
+    "TREAT THE INPUT AS A STRICT BLUEPRINT: every piece of furniture must keep the "
+    "exact footprint, size, proportions and ROTATION drawn in the plan. Do not rotate "
+    "anything by 90 degrees, do not shrink or enlarge anything, do not move items to "
+    "another part of the room, do not reduce the number of chairs or seats. Your only "
+    "job is to give each existing shape realistic materials, colour and shading. "
+    "Soft realistic shadows, richly textured materials"
+)
+
+PROMPTS = {
+    "living_room_clean": KEEP + (
+        ". Floor throughout: pale blonde oak wide planks laid in straight parallel rows, "
+        "NOT herringbone, light warm beige tone. "
+        "READ THE SHAPES IN THE PLAN LIKE THIS, keeping each one exactly where and how "
+        "it is drawn: (1) the L-shaped outline in the top-left corner is a large corner "
+        "sectional sofa in dove-grey velvet with deep button tufting, chesterfield "
+        "style, strewn with colourful cushions — multicolour pixel-check, red-orange "
+        "chevron zigzag, black-and-white polka dot — and a cream fringed throw over one "
+        "arm; (2) the tall narrow rectangle standing in front of the sofa is a low "
+        "coffee table with a dark marble top, its long side running top-to-bottom just "
+        "as drawn; (3) the two squares below it are two upholstered poufs, one beige "
+        "leather, one cream; under this seating group lies a cream rug with one large "
+        "red circle printed off to one side of it. (4) The long rectangle in the lower "
+        "half of the room is the DINING TABLE: it is a long rectangle whose LONG AXIS "
+        "RUNS VERTICALLY, top to bottom of the image, exactly as drawn — never rotate it "
+        "sideways — laid with a cream tablecloth, plates and a small vase of flowers, "
+        "with FOUR chairs along its left long side and FOUR chairs along its right long "
+        "side, beige velvet seats except one thin gold wire chair. (5) A wooden "
+        "table-football table stands against the right-hand wall, between the seating "
+        "group and the dining table. (6) Along the right-hand wall: a low light-oak TV "
+        "console on slim legs with three drawers, a large flat-screen TV on it and a "
+        "small red cube lamp beside it; the wall behind it is clad in beige marble. "
+        "(7) The kitchen runs along the bottom and lower-left walls: honey-oak upper "
+        "cabinets, glossy white lower units, dark countertop, white oven, black hob, "
+        "stainless steel sink, tall white fridge. Dark brown floor-length curtains at "
+        "the window on the top wall, a few potted green plants on the floor."),
+    "bedroom_clean": KEEP + (
+        ". Floor: light oak wide planks laid in straight parallel rows, NOT herringbone. "
+        "READ THE SHAPES IN THE PLAN LIKE THIS, keeping each one exactly where and how "
+        "it is drawn: (1) the large rectangle is a double bed — beige-taupe velvet "
+        "headboard, deeply buttoned and tufted, with WINGED sides, and a base quilted in "
+        "a honeycomb pattern; white duvet, a mustard-ochre knitted throw with fringe "
+        "lying across the foot, a round woven rattan tray resting on the duvet; pillows: "
+        "white, one mint-green, one ochre velvet, one with a black-and-white coral "
+        "print. (2) A large cream shaggy rug lies under and around the bed. (3) The two "
+        "small squares flanking the head of the bed are bedside tables of dark wood with "
+        "white marble tops and slim brass frames, each with a white dome table lamp; a "
+        "small potted plant on one. (4) On the wall behind the headboard hang two wide "
+        "framed pictures of pale blue abstract watercolour in light oak frames, seen "
+        "edge-on from above. (5) The desk shape is a white writing desk with a cream "
+        "velvet chair with gold legs and a round gold-framed mirror on the wall above "
+        "it. (6) The small room at the bottom is a walk-in wardrobe with white open "
+        "shelving and neatly folded linen. Warm greige walls, dark brown floor-length "
+        "curtains at the terrace window."),
+}
+
+
+def post_multipart(url: str, api_key: str, fields: dict, png: bytes) -> dict:
+    boundary = uuid.uuid4().hex
+    parts = []
+    for name, value in fields.items():
+        parts.append(
+            f"--{boundary}\r\n"
+            f'Content-Disposition: form-data; name="{name}"\r\n\r\n'
+            f"{value}\r\n".encode()
+        )
+    parts.append(
+        f"--{boundary}\r\n"
+        f'Content-Disposition: form-data; name="image"; filename="plan.png"\r\n'
+        f"Content-Type: image/png\r\n\r\n".encode()
+    )
+    parts.append(png)
+    parts.append(f"\r\n--{boundary}--\r\n".encode())
+
+    req = urllib.request.Request(
+        url,
+        data=b"".join(parts),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": f"multipart/form-data; boundary={boundary}",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=900) as resp:
+        return json.loads(resp.read().decode())
+
+
+def with_retries(action, what: str, attempts: int = 4):
+    """Мобильная сеть рвёт длинные загрузки — повторяем с паузой."""
+    for attempt in range(1, attempts + 1):
+        try:
+            return action()
+        except urllib.error.HTTPError as e:
+            # 4xx (кроме 429) — наша вина, повторять бессмысленно.
+            if e.code != 429 and e.code < 500:
+                raise
+            if attempt == attempts:
+                raise
+            body = e.read().decode(errors="replace")[:200]
+            print(f"  {what}: сервер ответил {e.code} ({body}); повтор {attempt}/{attempts - 1}…", flush=True)
+        except (urllib.error.URLError, socket.timeout, ConnectionError, OSError) as e:
+            if attempt == attempts:
+                raise
+            print(f"  {what}: связь оборвалась ({e}); повтор {attempt}/{attempts - 1}…", flush=True)
+        time.sleep(5 * attempt)
+
+
+def main() -> int:
+    api_key = (sys.argv[1] if len(sys.argv) > 1 else os.environ.get("OPENAI_API_KEY", "")).strip()
+    if not api_key:
+        print("Укажите ключ: python3 render_phone_v6.py <ключ> [комната …]", file=sys.stderr)
+        return 1
+
+    known = {n.replace("_clean", "") for n in PROMPTS}
+    wanted = [a.strip().lower() for a in sys.argv[2:]] or sorted(known)
+    unknown = [w for w in wanted if w not in known]
+    if unknown:
+        print(f"Неизвестная комната: {', '.join(unknown)}. Доступны: {', '.join(sorted(known))}",
+              file=sys.stderr)
+        return 1
+
+    quality = os.environ.get("OPENAI_IMAGE_QUALITY", "medium").strip().lower()
+    if quality not in ("low", "medium", "high"):
+        print(f"Качество должно быть low, medium или high (указано: {quality})", file=sys.stderr)
+        return 1
+
+    base_url = os.environ.get("OPENAI_BASE_URL", "https://api.proxyapi.ru/openai/v1").rstrip("/")
+    print(f"Качество: {quality}. Комнаты: {', '.join(wanted)}\n", flush=True)
+
+    for name, prompt in PROMPTS.items():
+        short = name.replace("_clean", "")
+        if short not in wanted:
+            continue
+        out = f"{short}_render_{quality}.png"
+
+        # Уже отрисовано в прошлый раз (например, до обрыва связи) — не переделываем.
+        if os.path.exists(out) and os.path.getsize(out) > 0:
+            print(f"✓ {out} уже готов, пропускаю", flush=True)
+            continue
+
+        print(f"→ {short}: скачиваю план…", flush=True)
+
+        def fetch_plan():
+            with urllib.request.urlopen(f"{CROPS}/{name}.png", timeout=120) as r:
+                return r.read()
+
+        png = with_retries(fetch_plan, short)
+
+        print(f"→ {short}: генерирую рендер (несколько минут, не прерывайте)…", flush=True)
+        fields = {
+            "model": "gpt-image-1",
+            "prompt": prompt,
+            "input_fidelity": "high",   # сохраняет геометрию плана — не понижаем
+            "size": "1024x1536",
+            "quality": quality,
+        }
+        try:
+            payload = with_retries(
+                lambda: post_multipart(f"{base_url}/images/edits", api_key, fields, png),
+                short,
+            )
+        except urllib.error.HTTPError as e:
+            print(f"✗ {short}: ошибка API {e.code}: {e.read().decode()[:600]}", file=sys.stderr)
+            return 1
+        except (urllib.error.URLError, socket.timeout, ConnectionError, OSError) as e:
+            print(f"✗ {short}: связь так и не восстановилась ({e}). "
+                  f"Запустите команду ещё раз — готовые файлы пропустятся.", file=sys.stderr)
+            return 1
+
+        try:
+            image = base64.b64decode(payload["data"][0]["b64_json"])
+        except (KeyError, IndexError, TypeError):
+            print(f"✗ {short}: неожиданный ответ: {str(payload)[:600]}", file=sys.stderr)
+            return 1
+
+        out = f"{short}_render_{quality}.png"
+        with open(out, "wb") as f:
+            f.write(image)
+        print(f"✓ {out} готов ({len(image) // 1024} КБ)", flush=True)
+
+    print(f"\nГотово. Файлы здесь: {os.getcwd()}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
