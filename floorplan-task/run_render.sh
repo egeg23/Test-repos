@@ -13,10 +13,17 @@
 # Результат: living_room_render.png и bedroom_render.png в этой папке.
 set -euo pipefail
 
-if [[ $# -ge 1 && -f "$1" ]]; then
-  set -a; source "$1"; set +a
+ENV_FILE="${1:-}"
+# Без аргумента — ищем .env проекта seller-ai сами.
+if [[ -z "$ENV_FILE" && -z "${OPENAI_API_KEY:-}" ]]; then
+  ENV_FILE=$(ls -1 /opt/seller-ai*/.env /srv/seller-ai*/.env /root/seller-ai*/.env 2>/dev/null | head -1 || true)
+  [[ -n "$ENV_FILE" ]] && echo "Использую ключ из $ENV_FILE"
+fi
+
+if [[ -n "$ENV_FILE" && -f "$ENV_FILE" ]]; then
+  set -a; source "$ENV_FILE"; set +a
   # В .env seller-ai ключ для gpt-image может лежать в GPT_IMAGE_API_KEY
-  export OPENAI_API_KEY="${GPT_IMAGE_API_KEY:-${OPENAI_API_KEY:?в $1 нет ни GPT_IMAGE_API_KEY, ни OPENAI_API_KEY}}"
+  export OPENAI_API_KEY="${GPT_IMAGE_API_KEY:-${OPENAI_API_KEY:?в $ENV_FILE нет ни GPT_IMAGE_API_KEY, ни OPENAI_API_KEY}}"
   export OPENAI_BASE_URL="${GPT_IMAGE_BASE_URL:-${OPENAI_BASE_URL:-https://api.proxyapi.ru/openai/v1}}"
 fi
 : "${OPENAI_API_KEY:?задайте OPENAI_API_KEY или передайте путь к .env первым аргументом}"
