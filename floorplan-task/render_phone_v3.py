@@ -15,7 +15,9 @@
 import base64
 import json
 import os
+import socket
 import sys
+import time
 import urllib.error
 import urllib.request
 import uuid
@@ -93,6 +95,26 @@ def post_multipart(url: str, api_key: str, fields: dict, png: bytes) -> dict:
         return json.loads(resp.read().decode())
 
 
+def with_retries(action, what: str, attempts: int = 4):
+    """Мобильная сеть рвёт длинные загрузки — повторяем с паузой."""
+    for attempt in range(1, attempts + 1):
+        try:
+            return action()
+        except urllib.error.HTTPError as e:
+            # 4xx (кроме 429) — наша вина, повторять бессмысленно.
+            if e.code != 429 and e.code < 500:
+                raise
+            if attempt == attempts:
+                raise
+            body = e.read().decode(errors="replace")[:200]
+            print(f"  {what}: сервер ответил {e.code} ({body}); повтор {attempt}/{attempts - 1}…", flush=True)
+        except (urllib.error.URLError, socket.timeout, ConnectionError, OSError) as e:
+            if attempt == attempts:
+                raise
+            print(f"  {what}: связь оборвалась ({e}); повтор {attempt}/{attempts - 1}…", flush=True)
+        time.sleep(5 * attempt)
+
+
 def main() -> int:
     api_key = (sys.argv[1] if len(sys.argv) > 1 else os.environ.get("OPENAI_API_KEY", "")).strip()
     if not api_key:
@@ -103,9 +125,20 @@ def main() -> int:
 
     for name, prompt in PROMPTS.items():
         short = name.replace("_pad", "")
+        out = f"{short}_render_v3.png"
+
+        # Уже отрисовано в прошлый раз (например, до обрыва связи) — не переделываем.
+        if os.path.exists(out) and os.path.getsize(out) > 0:
+            print(f"✓ {out} уже готов, пропускаю", flush=True)
+            continue
+
         print(f"→ {short}: скачиваю план…", flush=True)
-        with urllib.request.urlopen(f"{CROPS}/{name}.png", timeout=120) as r:
-            png = r.read()
+
+        def fetch_plan():
+            with urllib.request.urlopen(f"{CROPS}/{name}.png", timeout=120) as r:
+                return r.read()
+
+        png = with_retries(fetch_plan, short)
 
         print(f"→ {short}: генерирую рендер (несколько минут, не прерывайте)…", flush=True)
         fields = {
@@ -116,9 +149,16 @@ def main() -> int:
             "quality": "high",
         }
         try:
-            payload = post_multipart(f"{base_url}/images/edits", api_key, fields, png)
+            payload = with_retries(
+                lambda: post_multipart(f"{base_url}/images/edits", api_key, fields, png),
+                short,
+            )
         except urllib.error.HTTPError as e:
             print(f"✗ {short}: ошибка API {e.code}: {e.read().decode()[:600]}", file=sys.stderr)
+            return 1
+        except (urllib.error.URLError, socket.timeout, ConnectionError, OSError) as e:
+            print(f"✗ {short}: связь так и не восстановилась ({e}). "
+                  f"Запустите команду ещё раз — готовые файлы пропустятся.", file=sys.stderr)
             return 1
 
         try:
