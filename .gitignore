@@ -40,3 +40,6 @@ htmlcov/
 tmp/
 temp/
 *.tmp
+# сборка игр
+games/*/build/
+games/*/node_modules/

@@ -1,0 +1,26 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;width:512px;height:512px;overflow:hidden}
+/* Иконка каталога. Проверялась в 32 px — на этом размере читается только
+   крупный силуэт, поэтому элементов минимум и контраст максимальный:
+   тёмный фон, один доминирующий светлый бочонок, мешок как опорный силуэт. */
+.i{width:512px;height:512px;position:relative;overflow:hidden;
+  background:radial-gradient(circle at 34% 26%,#4E3A26,#241A11 72%);
+  font-family:'PT Serif','Liberation Serif',Georgia,serif}
+.bag{position:absolute;left:-14px;bottom:-26px;width:290px;height:250px;
+  background:linear-gradient(160deg,#8A7150,#5C4A33 72%);
+  border-radius:46% 46% 30% 30%/56% 56% 26% 26%;
+  box-shadow:inset -12px -14px 26px rgba(0,0,0,.4)}
+.tie{position:absolute;left:2px;bottom:196px;width:258px;height:40px;
+  background:linear-gradient(180deg,#6B563A,#48381F);border-radius:20px}
+.b{position:absolute;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 33% 26%,#FFF0CE,#EFCE92 52%,#C9A05C);
+  color:#2A1D10;font-weight:700;
+  box-shadow:inset 0 -8px 16px rgba(0,0,0,.2),0 12px 26px rgba(0,0,0,.6)}
+.b1{width:296px;height:296px;font-size:190px;right:14px;top:26px}
+.b2{width:132px;height:132px;font-size:76px;right:206px;bottom:34px}
+</style></head><body>
+<div class="i">
+  <div class="bag"></div><div class="tie"></div>
+  <div class="b b2">21</div>
+  <div class="b b1">7</div>
+</div></body></html>

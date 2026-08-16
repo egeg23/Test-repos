@@ -1,0 +1,102 @@
+// Сохранения. Пишем и в localStorage (мгновенно, работает для неавторизованных),
+// и в облако Яндекса (переносится между устройствами).
+//
+// Важное ограничение платформы: setData перезаписывает объект целиком и лимит
+// запросов невелик. Поэтому облачная запись отложенная и не чаще раза в 5 секунд.
+
+import * as sdk from './sdk.js';
+
+const KEY = 'bochonki.save.v1';
+const CLOUD_THROTTLE_MS = 5000;
+
+export const DEFAULT_SAVE = {
+  v: 1,
+  gamesPlayed: 0,       // определяет, какие правила открыты
+  best: 0,
+  achievements: '',     // битовая маска в base64
+  history: [],          // последние 30 партий: { score, day, mode }
+  streak: 0,
+  lastDailyKey: '',
+  dailyBest: {},        // ключ дня -> лучший результат
+  seenRules: 0,         // сколько правил игрок уже видел в объяснении
+  muted: false,
+  lang: '',
+};
+
+let cache = { ...DEFAULT_SAVE };
+let cloudTimer = null;
+let lastCloudWrite = 0;
+let dirty = false;
+
+function readLocal() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+function writeLocal(save) {
+  try { localStorage.setItem(KEY, JSON.stringify(save)); } catch {}
+}
+
+function merge(a, b) {
+  if (!a) return b;
+  if (!b) return a;
+  // При расхождении устройств выигрывает более сыгранный профиль.
+  const pick = (b.gamesPlayed || 0) > (a.gamesPlayed || 0) ? b : a;
+  const other = pick === a ? b : a;
+  return {
+    ...DEFAULT_SAVE, ...other, ...pick,
+    best: Math.max(a.best || 0, b.best || 0),
+    streak: Math.max(a.streak || 0, b.streak || 0),
+    history: (pick.history || []).slice(-30),
+  };
+}
+
+export async function load() {
+  const local = readLocal();
+  const cloud = await sdk.loadData();
+  cache = { ...DEFAULT_SAVE, ...merge(local, cloud) };
+  if (!Array.isArray(cache.history)) cache.history = [];
+  return cache;
+}
+
+export function get() { return cache; }
+
+export function update(patch) {
+  cache = { ...cache, ...patch };
+  writeLocal(cache);
+  dirty = true;
+  scheduleCloud();
+  return cache;
+}
+
+function scheduleCloud() {
+  if (cloudTimer) return;
+  const wait = Math.max(0, CLOUD_THROTTLE_MS - (Date.now() - lastCloudWrite));
+  cloudTimer = setTimeout(async () => {
+    cloudTimer = null;
+    if (!dirty) return;
+    dirty = false;
+    lastCloudWrite = Date.now();
+    await sdk.saveData(cache);
+  }, wait);
+}
+
+// Досрочный сброс в облако — на закрытии вкладки и после партии.
+export async function flush() {
+  if (cloudTimer) { clearTimeout(cloudTimer); cloudTimer = null; }
+  if (!dirty) return;
+  dirty = false;
+  lastCloudWrite = Date.now();
+  await sdk.saveData(cache);
+}
+
+export function recordGame(entry) {
+  const history = [...(cache.history || []), entry].slice(-30);
+  return update({
+    history,
+    gamesPlayed: (cache.gamesPlayed || 0) + 1,
+    best: Math.max(cache.best || 0, entry.score || 0),
+  });
+}

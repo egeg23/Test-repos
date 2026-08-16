@@ -1,0 +1,145 @@
+// Обёртка над Yandex Games SDK.
+//
+// Вне платформы (локальный запуск, другая площадка) SDK отсутствует — тогда
+// каждый вызов молча деградирует до безопасной заглушки. Игровой код не должен
+// знать, где он выполняется, и не должен падать, если SDK не загрузился:
+// по требованиям модерации игра обязана оставаться играбельной.
+
+const noop = () => {};
+
+let ysdk = null;
+let player = null;
+let leaderboards = null;
+let ready = false;
+
+export const state = {
+  available: false,      // SDK загрузился
+  authorized: false,     // игрок вошёл в аккаунт
+  lang: 'ru',
+  deviceType: 'desktop',
+  serverTimeOffset: 0,   // мс: серверное время минус локальное
+};
+
+export async function init() {
+  if (typeof YaGames === 'undefined') {
+    detectLangOffline();
+    return false;
+  }
+  try {
+    ysdk = await YaGames.init();
+    state.available = true;
+    state.lang = (ysdk.environment?.i18n?.lang || 'ru').slice(0, 2);
+    state.deviceType = ysdk.deviceInfo?.type || 'desktop';
+
+    try {
+      const t = await ysdk.serverTime();
+      if (typeof t === 'number') state.serverTimeOffset = t - Date.now();
+    } catch { /* серверное время недоступно — считаем по локальному */ }
+
+    try {
+      player = await ysdk.getPlayer({ scopes: false });
+      state.authorized = player.getMode() !== 'lite';
+    } catch { player = null; }
+
+    try { leaderboards = await ysdk.getLeaderboards(); } catch { leaderboards = null; }
+    return true;
+  } catch (e) {
+    console.warn('[sdk] init не удался, играем без платформы:', e);
+    detectLangOffline();
+    return false;
+  }
+}
+
+function detectLangOffline() {
+  const l = (navigator.language || 'ru').slice(0, 2).toLowerCase();
+  state.lang = ['ru', 'en', 'tr'].includes(l) ? l : 'en';
+  state.deviceType = matchMedia('(pointer: coarse)').matches ? 'mobile' : 'desktop';
+}
+
+// Требование платформы: сообщить, что игра загрузилась и готова к вводу.
+// Вызывать ровно один раз и как можно раньше — иначе отказ модерации.
+export function loadingReady() {
+  if (ready) return;
+  ready = true;
+  try { ysdk?.features?.LoadingAPI?.ready(); } catch { /* не критично */ }
+}
+
+// Границы активного геймплея. Платформа по ним решает, когда можно
+// показывать рекламу, и приглушает фоновые звуки.
+export function gameplayStart() { try { ysdk?.features?.GameplayAPI?.start(); } catch {} }
+export function gameplayStop()  { try { ysdk?.features?.GameplayAPI?.stop();  } catch {} }
+
+// Серверное время — общая для всех точка отсчёта «дня». Без него мешок дня
+// можно было бы подкрутить переводом часов на устройстве.
+export function now() { return Date.now() + state.serverTimeOffset; }
+
+export async function loadData() {
+  if (!player) return null;
+  try {
+    const d = await player.getData(['save']);
+    return d?.save ?? null;
+  } catch { return null; }
+}
+
+export async function saveData(save) {
+  if (!player) return false;
+  try { await player.setData({ save }, false); return true; }
+  catch { return false; }
+}
+
+// Полноэкранная реклама. Показывается только там, где геймплей объективно
+// остановлен (экран результата), и никогда внутри партии.
+export function showFullscreen(onDone = noop) {
+  if (!ysdk?.adv) { onDone(false); return; }
+  let settled = false;
+  const finish = (shown) => { if (!settled) { settled = true; onDone(shown); } };
+  try {
+    ysdk.adv.showFullscreenAdv({
+      callbacks: {
+        onClose: (wasShown) => finish(!!wasShown),
+        onError: () => finish(false),
+      },
+    });
+  } catch { finish(false); }
+}
+
+// Rewarded — строго по желанию игрока. Награда выдаётся только по onRewarded.
+export function showRewarded(onReward = noop, onClose = noop) {
+  if (!ysdk?.adv) { onClose(false); return; }
+  let rewarded = false;
+  try {
+    ysdk.adv.showRewardedVideo({
+      callbacks: {
+        onRewarded: () => { rewarded = true; onReward(); },
+        onClose: () => onClose(rewarded),
+        onError: () => onClose(false),
+      },
+    });
+  } catch { onClose(false); }
+}
+
+export function hasAds() { return !!ysdk?.adv; }
+
+export async function submitScore(board, score) {
+  if (!leaderboards || !state.authorized) return false;
+  try { await leaderboards.setLeaderboardScore(board, Math.max(0, Math.round(score))); return true; }
+  catch { return false; }
+}
+
+export async function topEntries(board, quantity = 20) {
+  if (!leaderboards) return null;
+  try {
+    const r = await leaderboards.getLeaderboardEntries(board, {
+      quantityTop: quantity, includeUser: true, quantityAround: 3,
+    });
+    return r?.entries ?? null;
+  } catch { return null; }
+}
+
+// Предложение добавить игру на рабочий стол — заметный прирост возвратов.
+export async function canReview() {
+  try { const r = await ysdk?.feedback?.canReview(); return !!r?.value; } catch { return false; }
+}
+export async function requestReview() {
+  try { await ysdk?.feedback?.requestReview(); } catch {}
+}
