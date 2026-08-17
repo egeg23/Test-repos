@@ -10,6 +10,7 @@ const noop = () => {};
 let ysdk = null;
 let player = null;
 let leaderboards = null;
+let lbApi = null;      // 'modern' | 'legacy'
 let ready = false;
 
 export const state = {
@@ -41,7 +42,16 @@ export async function init() {
       state.authorized = player.getMode() !== 'lite';
     } catch { player = null; }
 
-    try { leaderboards = await ysdk.getLeaderboards(); } catch { leaderboards = null; }
+    // Актуальный API — объект ysdk.leaderboards. Инициализация через
+    // getLeaderboards() помечена в документации как устаревшая и держится
+    // здесь только как запасной путь для старых сборок SDK.
+    if (ysdk.leaderboards) {
+      leaderboards = ysdk.leaderboards;
+      lbApi = 'modern';
+    } else {
+      try { leaderboards = await ysdk.getLeaderboards(); lbApi = 'legacy'; }
+      catch { leaderboards = null; }
+    }
     return true;
   } catch (e) {
     console.warn('[sdk] init не удался, играем без платформы:', e);
@@ -122,16 +132,21 @@ export function hasAds() { return !!ysdk?.adv; }
 
 export async function submitScore(board, score) {
   if (!leaderboards || !state.authorized) return false;
-  try { await leaderboards.setLeaderboardScore(board, Math.max(0, Math.round(score))); return true; }
-  catch { return false; }
+  const value = Math.max(0, Math.round(score));
+  try {
+    if (lbApi === 'modern') await leaderboards.setScore(board, value);
+    else await leaderboards.setLeaderboardScore(board, value);
+    return true;
+  } catch { return false; }
 }
 
 export async function topEntries(board, quantity = 20) {
   if (!leaderboards) return null;
+  const opts = { quantityTop: quantity, includeUser: true, quantityAround: 3 };
   try {
-    const r = await leaderboards.getLeaderboardEntries(board, {
-      quantityTop: quantity, includeUser: true, quantityAround: 3,
-    });
+    const r = lbApi === 'modern'
+      ? await leaderboards.getEntries(board, opts)
+      : await leaderboards.getLeaderboardEntries(board, opts);
     return r?.entries ?? null;
   } catch { return null; }
 }

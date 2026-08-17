@@ -1,0 +1,55 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;width:1600px;height:940px;overflow:hidden}
+/* Обложка каталога: без рамок и скруглений (требование платформы).
+   Слева — мешок, из которого дугой сыплются бочонки; справа — название
+   и карточка 5×5 как намёк на второй режим. Ключевое держится в центре
+   кадра с запасом по краям, чтобы пережить кроп под другое соотношение. */
+.c{width:1600px;height:940px;position:relative;overflow:hidden;
+  background:radial-gradient(ellipse at 38% 40%,#57402A,#1D150E 76%);
+  font-family:'PT Serif','Liberation Serif',Georgia,serif;color:#F5E7CA}
+/* мешок: тулово + горловина + завязка */
+.bag{position:absolute;left:78px;bottom:78px;width:330px;height:290px;
+  background:linear-gradient(150deg,#A48A63,#6B5539 74%);
+  border-radius:44% 44% 34% 34%/40% 40% 30% 30%;
+  box-shadow:inset -22px -20px 44px rgba(0,0,0,.44),0 22px 46px rgba(0,0,0,.5)}
+.neck{position:absolute;left:168px;bottom:318px;width:118px;height:104px;
+  background:linear-gradient(150deg,#B0966E,#6F5940);
+  border-radius:52% 48% 22% 22%/64% 64% 20% 20%;
+  transform:rotate(-8deg)}
+.tie{position:absolute;left:132px;bottom:300px;width:222px;height:48px;
+  background:linear-gradient(180deg,#7C6444,#4A3A22);border-radius:24px;
+  box-shadow:0 6px 14px rgba(0,0,0,.45)}
+/* бочонки дугой из горловины */
+.b{position:absolute;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 33% 26%,#FFF3D6,#F0CF93 52%,#C49A54);
+  color:#291C0F;font-weight:700;
+  box-shadow:inset 0 -10px 20px rgba(0,0,0,.2),0 16px 34px rgba(0,0,0,.55)}
+.b1{width:104px;height:104px;font-size:58px;left:318px;top:392px}
+.b2{width:150px;height:150px;font-size:86px;left:432px;top:250px}
+.b3{width:214px;height:214px;font-size:130px;left:596px;top:120px}
+/* название */
+.txt{position:absolute;right:112px;top:150px;text-align:right;width:660px}
+.txt h1{font-size:124px;margin:0;line-height:.96;letter-spacing:-.015em;
+  text-shadow:0 6px 22px rgba(0,0,0,.5)}
+.txt p{font-size:38px;margin:18px 0 0;color:#CBAF85}
+/* карточка мастера 5×5 */
+.card{position:absolute;right:112px;bottom:78px;display:grid;
+  grid-template-columns:repeat(5,62px);gap:8px;padding:14px;
+  background:#EFE2C8;box-shadow:0 14px 34px rgba(0,0,0,.5)}
+.card i{width:62px;height:62px;background:#E3D3B4;border:1px solid #C9B593;
+  display:grid;place-items:center;font-size:28px;font-weight:700;
+  color:#2A2118;font-style:normal}
+.card i.g{background:#BFDCC9;border-color:#2F6B4F}
+</style></head><body>
+<div class="c">
+  <div class="bag"></div><div class="neck"></div><div class="tie"></div>
+  <div class="b b1">9</div><div class="b b2">21</div><div class="b b3">7</div>
+  <div class="txt"><h1>Бочонки</h1><p>Лото и карточка мастера</p></div>
+  <div class="card">
+    <i class="g">4</i><i class="g">18</i><i class="g">29</i><i class="g">46</i><i class="g">72</i>
+    <i>31</i><i>8</i><i></i><i>55</i><i>12</i>
+    <i></i><i>27</i><i>63</i><i></i><i>40</i>
+    <i>15</i><i></i><i>34</i><i>68</i><i></i>
+    <i>6</i><i>22</i><i></i><i>51</i><i>79</i>
+  </div>
+</div></body></html>
