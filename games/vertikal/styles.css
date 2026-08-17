@@ -1,11 +1,14 @@
-/* Вертикаль. Шесть красок, плоские заливки, жирный контур.
-   Ни одного растрового ассета. Аудитория платформы возрастная,
-   поэтому зоны нажатия от 56 px и крупные цифры. */
+/* Вертикаль. Трафаретная печать ведомственной брошюры: ограниченная палитра,
+   но у краски есть свет и тень, а красная форма идёт со сдвигом — приводка
+   не сошлась. Ни одного растрового ассета: фактура собрана из повторяющихся
+   градиентов, они композитятся на GPU и перерисовок не боятся.
+   Аудитория платформы возрастная: зоны нажатия от 56 px и крупные цифры. */
 
 :root{
   --paper:#F2E4C9; --ink:#1A1A18; --red:#C8452F;
   --brass:#D9A441; --slate:#2B4C5C; --khaki:#7A8F6B;
-  --bg:#141311; --panel:#1F1D1A; --line:#3A362F;
+  --bg:#141311; --panel:#1F1D1A; --panel-hi:#2A2722; --line:#3A362F;
+  --lift:0 1px 0 rgba(242,228,201,.06) inset,0 2px 6px rgba(0,0,0,.35);
   --tap:56px;
   --sans:system-ui,-apple-system,'Segoe UI',Roboto,'Liberation Sans',Arial,sans-serif;
   --serif:'PT Serif','Noto Serif','Liberation Serif',Georgia,serif;
@@ -34,13 +37,18 @@ button[disabled]{opacity:.4;pointer-events:none}
 .menu{display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:14px;flex:1;text-align:center;padding:16px 0}
 .menu h1{font-family:var(--serif);font-size:clamp(40px,12vw,68px);margin:0;line-height:1;
-  letter-spacing:.02em;color:var(--brass)}
+  letter-spacing:.02em;color:var(--brass);text-shadow:-3px 3px 0 rgba(200,69,47,.8)}
 .menu__sub{color:var(--khaki);margin:0 0 10px;font-size:15px;letter-spacing:.14em;text-transform:uppercase}
 .btn{min-height:var(--tap);padding:14px 26px;border-radius:4px;font-size:19px;font-weight:600;
-  background:var(--panel);border:2px solid var(--line);width:min(360px,92vw);transition:filter .15s}
+  background:linear-gradient(180deg,var(--panel-hi),var(--panel));
+  border:2px solid var(--line);width:min(360px,92vw);box-shadow:var(--lift);
+  transition:filter .15s,transform .08s}
 .btn:hover{filter:brightness(1.25)}
-.btn--main{background:var(--brass);color:var(--ink);border-color:var(--ink);font-weight:700}
-.btn--red{background:var(--red);color:var(--paper);border-color:var(--ink)}
+.btn--main{background:linear-gradient(180deg,#EBC169,var(--brass) 62%,#B8862C);
+  color:var(--ink);border-color:var(--ink);font-weight:700;
+  box-shadow:0 2px 0 #8A6420,0 4px 10px rgba(0,0,0,.42)}
+.btn--red{background:linear-gradient(180deg,#DB6047,var(--red) 60%,#9C3120);
+  color:var(--paper);border-color:var(--ink);box-shadow:0 2px 0 #78261A,0 4px 10px rgba(0,0,0,.42)}
 .btn__note{display:block;font-size:13px;font-weight:400;opacity:.75;margin-top:2px}
 .disclaimer{color:var(--khaki);font-size:13px;max-width:44ch;line-height:1.5;margin:8px 0 0}
 
@@ -56,45 +64,59 @@ button[disabled]{opacity:.4;pointer-events:none}
 .bar--foot .btn--main{flex:1 1 auto}
 .bar__spacer{flex:1}
 .pill{display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:5px 12px;border-radius:4px;background:var(--panel);border:1px solid var(--line);min-height:48px}
+  padding:5px 12px;border-radius:4px;min-height:48px;
+  background:linear-gradient(180deg,var(--panel-hi),var(--panel));
+  border:1px solid var(--line);box-shadow:var(--lift)}
 .pill__k{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--khaki);white-space:nowrap}
-.pill__v{font-family:var(--serif);font-size:22px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.pill__v{font-family:var(--serif);font-size:22px;font-weight:700;line-height:1.1;
+  font-variant-numeric:tabular-nums;color:var(--paper)}
 .iconbtn{min-width:var(--tap);min-height:var(--tap);border-radius:4px;display:grid;place-items:center;
-  background:var(--panel);border:1px solid var(--line);font-size:20px}
+  background:linear-gradient(180deg,var(--panel-hi),var(--panel));
+  border:1px solid var(--line);font-size:20px;box-shadow:var(--lift)}
 
 /* --- сцена --- */
-.scene{width:100%;display:block;border:3px solid var(--ink);border-radius:2px;max-height:24vh}
-.stage{flex:none}
+.scene{width:100%;display:block;border-radius:2px;max-height:24vh;
+  border:3px solid var(--ink);outline:1px solid var(--line);outline-offset:3px}
+.stage{flex:none;padding:3px 0 1px}
 
 /* --- шкала ощущения --- */
 .gauge{display:flex;gap:4px;align-items:center;flex:none}
-.gauge__c{flex:1;height:10px;background:var(--panel);border:1px solid var(--line)}
-.gauge__c.on{background:var(--red);border-color:var(--red)}
+.gauge__c{flex:1;height:12px;border:1px solid var(--line);border-radius:1px;
+  background:linear-gradient(180deg,#141311,#242118)}
+.gauge__c.on{border-color:#8E2E1E;
+  background:linear-gradient(180deg,#E4735A,var(--red) 55%,#94301F)}
 .gauge__t{font-size:13px;color:var(--khaki);min-width:11ch;text-align:right}
 
 /* --- работа --- */
 .work{display:flex;gap:8px;align-items:stretch;flex:none}
-.work__click{flex:1;min-height:var(--tap);border-radius:4px;background:var(--khaki);color:var(--ink);
-  border:2px solid var(--ink);font-weight:700;font-size:18px}
-.work__click:active{transform:translateY(2px)}
+.work__click{flex:1;min-height:var(--tap);border-radius:4px;color:var(--ink);
+  background:linear-gradient(180deg,#9BAE8B,var(--khaki) 60%,#5C6E50);
+  border:2px solid var(--ink);font-weight:700;font-size:18px;
+  box-shadow:0 3px 0 #47563D,0 5px 12px rgba(0,0,0,.4)}
+.work__click:active{transform:translateY(3px);box-shadow:0 0 0 #47563D,0 2px 6px rgba(0,0,0,.4)}
 
 /* --- люди --- */
-.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-.person{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:8px;
-  display:flex;gap:10px;align-items:center}
+.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:8px}
+.person>div{min-width:0}
+.person__n{overflow-wrap:anywhere}
+.person{background:linear-gradient(180deg,var(--panel-hi),var(--panel));
+  border:1px solid var(--line);border-left:4px solid var(--line);border-radius:4px;padding:8px;
+  display:flex;gap:10px;align-items:center;box-shadow:var(--lift)}
 .person__n{font-weight:600;font-size:15px}
-.person__b{font-size:12px;color:var(--khaki)}
 .face{flex:none;width:48px;height:48px}
 
 /* --- действия --- */
 .acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin:6px 0}
-.act{min-height:var(--tap);padding:10px 12px;border-radius:4px;background:var(--panel);
-  border:1px solid var(--line);text-align:left;font-size:15px}
+.act{min-height:var(--tap);padding:10px 12px;border-radius:4px;text-align:left;font-size:15px;
+  background:linear-gradient(180deg,var(--panel-hi),var(--panel));
+  border:1px solid var(--line);border-top-color:#4A453C;box-shadow:var(--lift)}
+.act:active{transform:translateY(1px)}
 .act b{display:block;font-size:12px;color:var(--brass);font-weight:600;margin-top:2px}
 
 /* --- событие и финал --- */
-.sheet{background:var(--panel);border:2px solid var(--line);border-radius:4px;padding:20px;
-  width:min(94vw,460px);margin:auto}
+.sheet{background:linear-gradient(180deg,var(--panel-hi),var(--panel));
+  border:2px solid var(--line);border-radius:4px;padding:20px;
+  width:min(94vw,460px);margin:auto;box-shadow:0 10px 34px rgba(0,0,0,.5)}
 .sheet h2{font-family:var(--serif);font-size:26px;margin:0 0 10px;color:var(--brass)}
 .sheet p{margin:0 0 16px;line-height:1.5}
 .big{font-family:var(--serif);font-size:56px;font-weight:700;text-align:center;line-height:1;
@@ -110,6 +132,33 @@ button[disabled]{opacity:.4;pointer-events:none}
 .log{font-size:13px;color:var(--khaki);line-height:1.6}
 h3{font-family:var(--serif);font-size:19px;margin:16px 0 8px;color:var(--brass)}
 .center{text-align:center}
+
+
+/* --- фактура и отделка ------------------------------------------------
+   Бумажная сетка поверх всего: один композитный слой, кликам не мешает.
+   Отдельного растра под неё нет — только повторяющиеся градиенты. */
+.app::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:60;
+  background-image:
+    repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.055) 2px 3px),
+    repeating-linear-gradient(90deg,transparent 0 2px,rgba(0,0,0,.045) 2px 3px);}
+body{background:
+  radial-gradient(120% 90% at 50% 0%,#1D1B17 0%,var(--bg) 62%) fixed}
+
+/* Кромка карточки по отношению к игроку. */
+.person--enemy{border-left-color:#7E2617}
+.person--grudge{border-left-color:var(--red)}
+.person--neutral{border-left-color:var(--line)}
+.person--friend{border-left-color:var(--khaki)}
+.person--inner{border-left-color:var(--brass)}
+.person__b{font-size:12px;color:var(--khaki);letter-spacing:.05em;text-transform:uppercase}
+
+/* Печать на финальном экране. */
+.stamp{display:block;margin:0 auto -6px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+
+/* Ведомственный ярлык: подпись под сценой, как на подшитом деле. */
+.plate{display:flex;align-items:baseline;gap:8px;font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--khaki);padding:2px 2px 0}
+.plate__l{flex:1;height:1px;background:var(--line);transform:translateY(-3px)}
 
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 @media (max-width:560px){.pill{padding:4px 9px}.pill__k{font-size:9px}.pill__v{font-size:19px}}

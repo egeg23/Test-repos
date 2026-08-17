@@ -23,7 +23,6 @@ let flash = '';
 const PLAY_VIEWS = ['play', 'event', 'end'];
 const isPlay = (v) => PLAY_VIEWS.includes(v);
 
-const LOCATION_BY_RANK = ['chancel', 'chancel', 'corridor', 'office', 'office2'];
 const FACE = {
   alla: ['dress', Art.PALETTE.brass, 'АТ'],
   proshkin: ['uniform', Art.PALETTE.slate, 'ВП'],
@@ -114,7 +113,7 @@ function renderHow() {
 function renderPrologue() {
   return `<div class="scroll"><div class="sheet">
     <h2>${esc(t('prologueTitle'))}</h2>
-    ${Art.location('chancel', 400, 200)}
+    ${Art.location(0)}
     <p>${esc(t('prologueText'))}</p>
     <div class="actions">
       <button class="btn" data-act="pro" data-v="report">${esc(t('prologueReport'))}</button>
@@ -140,7 +139,8 @@ function renderPlay() {
   const people = Loy.PEOPLE.map((p) => {
     const st = g.people[p.id];
     const [kind, color, ini] = FACE[p.id];
-    return `<div class="person">${Art.portrait(kind, color, ini, 48)}
+    const bnd = Loy.band(st.value);
+    return `<div class="person person--${bnd}">${Art.portrait(kind, color, ini, 48, bnd)}
       <div><div class="person__n">${esc(p.name)}</div>
       <div class="person__b">${esc(t('band_' + Loy.band(st.value)))}${st.defendant ? ' · фигурант' : ''}</div></div></div>`;
   }).join('');
@@ -164,7 +164,9 @@ function renderPlay() {
     <button class="iconbtn" data-act="sound">${isMuted() ? '🔇' : '🔊'}</button>
   </div>
 
-  <div class="stage">${Art.location(LOCATION_BY_RANK[g.rankIndex], 400, 120)}</div>
+  <div class="stage">${Art.location(g.rankIndex)}
+    <div class="plate"><span>${esc(r.name)}</span><span class="plate__l"></span>
+      <span>${esc(t('rank'))} ${r.id}</span></div></div>
 
   <div class="gauge">${cells}<span class="gauge__t">${esc(t('gauge_' + gauge))}</span></div>
 
@@ -204,7 +206,7 @@ function renderEvent() {
   }).join('');
   return `<div class="scroll"><div class="sheet">
     <h2>${esc(e.title)}</h2>
-    ${Art.location(LOCATION_BY_RANK[g.rankIndex], 400, 160)}
+    ${Art.location(g.rankIndex)}
     <p>${esc(e.text)}</p>
     <div class="actions">${opts}</div>
   </div></div>`;
@@ -225,7 +227,8 @@ function renderEnd() {
     : (s.defendants.length ? t('endTitle_quiet_list') : t('endTitle_quiet'));
 
   return `<div class="scroll"><div class="sheet">
-    <h2>${esc(title)}</h2>
+    ${Art.stamp(caught ? 'ДЕЛО ЗАВЕДЕНО' : 'ДЕЛО ЗАКРЫТО', 116)}
+    <h2 class="center">${esc(title)}</h2>
     <div class="big">${s.points}</div>
     <p class="note center">${esc(t('endScore'))}</p>
     <h3>${esc(t('endDefendants'))}</h3>
