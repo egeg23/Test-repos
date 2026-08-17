@@ -26,7 +26,7 @@ export const DEFAULT_SAVE = {
   dailyBest: {},        // ключ дня -> лучший результат
   seenRules: 0,         // сколько правил игрок уже видел в объяснении
   muted: false,
-  lang: '',
+  // lang в сохранении не держим: язык всегда берётся из SDK (требование 2.14)
 };
 
 let cache = { ...DEFAULT_SAVE };

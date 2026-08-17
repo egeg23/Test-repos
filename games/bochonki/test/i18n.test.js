@@ -47,3 +47,27 @@ test('у каждого достижения есть название на вс
     assert.equal(Object.keys(titles).length, TOTAL, `${lang}: лишние или недостающие названия`);
   }
 });
+
+// Требование 2.14: автоопределение языка при запуске через SDK.
+// Модерация переключает языки через debug-панель и проверяет каждый заявленный.
+import { setLang, getLang, t } from '../src/i18n.js';
+
+test('неподдерживаемый язык откатывается на резервный, а не ломает интерфейс', () => {
+  for (const lang of ['de', 'zh', 'pt', 'ja', '', null, undefined]) {
+    const got = setLang(lang);
+    assert.ok(LANGS.includes(got), `язык «${lang}» дал «${got}» вне списка поддерживаемых`);
+    assert.ok(t('title').length > 0, `для «${lang}» пропали строки`);
+  }
+});
+
+test('каждый заявленный язык переключается и отдаёт свои строки', () => {
+  const seen = new Set();
+  for (const lang of LANGS) {
+    assert.equal(setLang(lang), lang);
+    const s = t('tagline');
+    assert.ok(s.length > 0);
+    assert.ok(!seen.has(s), `строка для «${lang}» повторяет другой язык — перевод не подставился`);
+    seen.add(s);
+  }
+  setLang('ru');
+});

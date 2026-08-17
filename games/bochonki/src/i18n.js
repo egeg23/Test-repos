@@ -7,6 +7,7 @@
 const RU = {
   title: 'Бочонки',
   tagline: 'Лото и карточка мастера',
+  load_failed: 'Не удалось загрузить игру. Обновите страницу.',
   play_lotto: 'Классическое лото',
   play_master: 'Карточка мастера',
   play_drum: 'Барабан',
@@ -95,6 +96,7 @@ const RU = {
 const EN = {
   title: 'Barrels',
   tagline: 'Lotto and the master card',
+  load_failed: 'The game failed to load. Please refresh the page.',
   play_lotto: 'Classic lotto',
   play_master: 'Master card',
   play_drum: 'The drum',
@@ -183,6 +185,7 @@ const EN = {
 const TR = {
   title: 'Fıçılar',
   tagline: 'Tombala ve usta kartı',
+  load_failed: 'Oyun yüklenemedi. Lütfen sayfayı yenileyin.',
   play_lotto: 'Klasik tombala',
   play_master: 'Usta kartı',
   play_drum: 'Tambur',
@@ -275,7 +278,11 @@ let current = 'ru';
 
 export function setLang(lang) {
   current = DICTS[lang] ? lang : 'en';
-  document.documentElement.setAttribute('lang', current);
+  // Атрибут lang обновляем, только если DOM есть: модуль локализации
+  // не должен требовать документа, иначе его не проверить тестами.
+  if (typeof document !== 'undefined') {
+    document.documentElement.setAttribute('lang', current);
+  }
   return current;
 }
 

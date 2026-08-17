@@ -32,8 +32,10 @@ async function boot() {
   await sdk.init();
   save = await store.load();
 
-  const lang = save.lang || sdk.state.lang;
-  setLang(lang);
+  // Требование 2.14: язык берётся из environment.i18n.lang при запуске.
+  // Сохранённое значение НЕ должно перебивать язык платформы — иначе модерация,
+  // переключая языки через debug-панель, не увидит изменений.
+  setLang(sdk.state.lang);
   setMuted(!!save.muted);
 
   go('menu');
@@ -771,7 +773,10 @@ app.addEventListener('click', (e) => {
 
 boot().catch((e) => {
   console.error(e);
-  app.innerHTML = `<div class="menu"><h1>Бочонки</h1>
-    <p class="menu__sub">Не удалось загрузить игру. Обновите страницу.</p></div>`;
+  // Даже аварийный экран показываем на языке игрока: непереведённая строка
+  // на любом из заявленных языков — нарушение требования 2.14.
+  try { setLang(sdk.state.lang); } catch {}
+  app.innerHTML = `<div class="menu"><h1>${esc(t('title'))}</h1>
+    <p class="menu__sub">${esc(t('load_failed'))}</p></div>`;
   sdk.loadingReady();
 });
