@@ -16,6 +16,26 @@ IMPORT_NAMED = re.compile(r"^import\s*\{([^}]*)\}\s*from\s+'\./(\w+)\.js';?\s*$"
 IMPORT_DEFAULT = re.compile(r"^import\s+\w+\s+from\s+'[^']+';?\s*$", re.M)
 EXPORT_LIST = re.compile(r"^export\s*\{([^}]*)\};?\s*$", re.M)
 
+def named_binding(m):
+    """`import { a, b as c } from './mod.js'` -> `var {a, b: c} = __m['mod'];`
+
+    Псевдоним в деструктуризации пишется через двоеточие, а не через `as`.
+    Дословная подстановка спецификаторов давала `{suspend as audioSuspend}` —
+    невалидный JS, из-за которого опубликованная сборка падала целиком.
+    """
+    specs = []
+    for part in m.group(1).split(','):
+        part = part.strip()
+        if not part:
+            continue
+        if ' as ' in part:
+            src, dst = part.split(' as ', 1)
+            specs.append('%s: %s' % (src.strip(), dst.strip()))
+        else:
+            specs.append(part)
+    return "var {%s} = __m['%s'];" % (', '.join(specs), m.group(2))
+
+
 def exports_of(code):
     names = []
     for m in re.finditer(r"^export\s+(?:async\s+)?function\s+(\w+)", code, re.M):
@@ -50,8 +70,7 @@ for name in ORDER:
     names = exports_of(code)
 
     code = IMPORT_NS.sub(lambda m: "var %s = __m['%s'];" % (m.group(1), m.group(2)), code)
-    code = IMPORT_NAMED.sub(
-        lambda m: "var {%s} = __m['%s'];" % (' '.join(m.group(1).split()), m.group(2)), code)
+    code = IMPORT_NAMED.sub(named_binding, code)
     code = IMPORT_DEFAULT.sub('', code)
     code = EXPORT_LIST.sub('', code)
     code = re.sub(r"^export\s+", '', code, flags=re.M)
@@ -60,6 +79,25 @@ for name in ORDER:
     parts.append("__m['%s'] = (function(){\n%s\n%s\n})();\n" % (name, code, ret))
 parts.append("})();")
 bundle = ''.join(parts)
+
+# Страховка от невалидного бандла: публиковать сборку, которая падает в браузере,
+# нельзя. Один раз мы это уже сделали — проверяли исходники и архив, но не
+# однофайловую страницу, ровно ту, что ушла игроку.
+def _syntax_check(js):
+    import subprocess, tempfile
+    with tempfile.NamedTemporaryFile('w', suffix='.js', encoding='utf-8', delete=False) as f:
+        f.write(js); tmp = f.name
+    try:
+        p = subprocess.run(['node', '--check', tmp], capture_output=True, text=True)
+    except OSError:
+        print('node не найден, синтаксис бандла не проверен'); return
+    finally:
+        os.unlink(tmp)
+    if p.returncode != 0:
+        raise SystemExit('бандл невалиден:\n' + (p.stderr or p.stdout))
+    print('синтаксис бандла: ок')
+
+_syntax_check(bundle)
 
 css = io.open(os.path.join(os.path.dirname(SRC.rstrip(os.sep)), 'styles.css'), encoding='utf-8').read()
 OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'build')
