@@ -323,7 +323,11 @@ function renderDrum() {
     ${stage}
     <div class="grid">${cells}</div>
   </div>
-  <div class="hint">${esc(hint)}</div>`;
+  <div class="hint">${esc(hint)}</div>
+  <div class="bar">
+    <button class="btn btn--ghost" data-act="reroll"
+      ${g.rerollUsed || held != null ? 'disabled' : ''}>${esc(t('reroll'))}</button>
+  </div>`;
 }
 
 // Дельта для клетки при выбранном бочонке — тот же расчёт, что и везде.
@@ -441,7 +445,11 @@ function renderLotto() {
     </div>
     <div class="lcard">${cells}</div>
   </div>
-  <div class="hint">${esc(t('lotto_mark'))}</div>`;
+  <div class="hint">${esc(t('lotto_mark'))}</div>
+  <div class="bar">
+    <button class="btn btn--ghost" data-act="recover"
+      ${L.canRecover(lotto) ? '' : 'disabled'}>${esc(t('recover'))}</button>
+  </div>`;
 }
 
 function finishLotto() {
@@ -716,6 +724,26 @@ app.addEventListener('click', (e) => {
     return sdk.showRewarded(
       () => { M.undo(game); },
       () => { sdk.gameplayStart(); render(); }
+    );
+  }
+  if (act === 'reroll') {
+    stopLottoTimer();
+    if (!sdk.hasAds()) { D.reroll(drum); sfx.roll(); return render(); }
+    sdk.gameplayStop();
+    return sdk.showRewarded(
+      () => { D.reroll(drum); },
+      () => { sdk.gameplayStart(); sfx.roll(); render(); }
+    );
+  }
+  if (act === 'recover') {
+    // Пауза в розыгрыше на время ролика — иначе ведущий продолжит доставать бочонки.
+    stopLottoTimer();
+    const resume = () => { sdk.gameplayStart(); render(); if (!lotto.finished) scheduleLotto(); };
+    if (!sdk.hasAds()) { L.recoverMissed(lotto); sfx.good(); return resume(); }
+    sdk.gameplayStop();
+    return sdk.showRewarded(
+      () => { L.recoverMissed(lotto); sfx.good(); },
+      () => { if (lotto.finished) finishLotto(); else resume(); }
     );
   }
   if (act === 'peek') {

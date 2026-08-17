@@ -29,6 +29,8 @@ export function createLotto({ seed, rivals = 2 }) {
     called: [],
     pending: null,       // число, которое игрок ещё может отметить
     missed: 0,
+    missedNumbers: [],   // какие именно числа упущены — нужны для возврата
+    recoverUsed: false,  // возврат пропущенного — один раз за партию
     finished: false,
     result: null,        // 'player' | 'rival'
   };
@@ -44,6 +46,7 @@ export function callNext(l) {
 
   if (l.pending != null && !l.marked.has(l.pending)) {
     l.missed++;
+    l.missedNumbers.push(l.pending);
     l.pending = null;
   }
 
@@ -83,6 +86,22 @@ function checkWin(l) {
 function decideOnExhaust(l) {
   const best = Math.max(...l.rivalMarked.map((s) => s.size));
   return l.marked.size >= best ? 'player' : 'rival';
+}
+
+// Вернуть самое раннее пропущенное число. Одна попытка за партию.
+// Награда честная: возвращает уже потерянное, а не даёт преимущество над соперниками.
+export function recoverMissed(l) {
+  if (l.finished || l.recoverUsed || !l.missedNumbers.length) return null;
+  const n = l.missedNumbers.shift();
+  l.marked.add(n);
+  l.missed--;
+  l.recoverUsed = true;
+  checkWin(l);
+  return n;
+}
+
+export function canRecover(l) {
+  return !l.finished && !l.recoverUsed && l.missedNumbers.length > 0;
 }
 
 export function progress(l) {

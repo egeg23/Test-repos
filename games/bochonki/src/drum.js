@@ -28,6 +28,7 @@ export function createGame({ seed, gamesPlayed }) {
     rules: activeRules(gamesPlayed),
     placements: [],
     skipped: 0,               // сколько бочонков возвращено в мешок
+    rerollUsed: false,        // перекат барабана — один раз за партию
     finished: false,
   };
   deal(g);
@@ -75,6 +76,21 @@ export function place(g, row, cell) {
     deal(g);
   }
   return { value, delta: d.delta, changed: d.changed, finished: g.finished };
+}
+
+// Перекатить барабан: вся тройка уходит обратно в мешок, выкатывается новая.
+// Одна попытка за партию, только пока бочонок не взят.
+export function reroll(g) {
+  if (g.finished || g.rerollUsed || g.held != null || !g.cands.length) return false;
+  const back = g.cands;
+  g.pool = g.pool.slice(g.cands.length);
+  for (const v of back) {
+    const at = Math.floor(g.rnd() * (g.pool.length + 1));
+    g.pool.splice(at, 0, v);
+  }
+  g.rerollUsed = true;
+  deal(g);
+  return true;
 }
 
 export function currentBarrel(g) { return g.held; }

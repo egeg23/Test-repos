@@ -85,3 +85,34 @@ test('лото: прогресс не превышает 15 у любой сто
   assert.ok(p.player <= TO_CLOSE);
   assert.ok(p.rivals.every((r) => r <= TO_CLOSE));
 });
+
+test('лото: возврат пропущенного числа даётся один раз и не даёт преимущества', async () => {
+  const { recoverMissed, canRecover } = await import('../src/lotto.js');
+  const l = createLotto({ seed: 7 });
+  // играем невнимательно, чтобы накопились пропуски
+  let guard = 0;
+  while (l.missed < 2 && guard++ < 90) callNext(l);
+  assert.ok(l.missed >= 2, 'пропуски накопились');
+
+  assert.equal(canRecover(l), true);
+  const missedBefore = l.missed;
+  const markedBefore = l.marked.size;
+  const n = recoverMissed(l);
+
+  assert.ok(n != null, 'число возвращено');
+  assert.equal(l.marked.has(n), true, 'возвращённое число отмечено');
+  assert.equal(l.missed, missedBefore - 1, 'счётчик пропусков уменьшился');
+  assert.equal(l.marked.size, markedBefore + 1);
+  assert.ok(l.playerNumbers.has(n), 'возвращено именно своё число, а не чужое');
+
+  assert.equal(canRecover(l), false, 'вторая попытка не даётся');
+  assert.equal(recoverMissed(l), null);
+});
+
+test('лото: возвращать нечего, если ничего не пропущено', async () => {
+  const { canRecover, recoverMissed } = await import('../src/lotto.js');
+  const l = createLotto({ seed: 9 });
+  callNext(l);
+  assert.equal(canRecover(l), false);
+  assert.equal(recoverMissed(l), null);
+});

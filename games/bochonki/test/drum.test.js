@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createGame, pick, place, currentBarrel, bestDelta, score, POOL, CANDS, TURNS } from '../src/drum.js';
+import { createGame, pick, place, currentBarrel, bestDelta, score, reroll, POOL, CANDS, TURNS } from '../src/drum.js';
 import { SIZE, EMPTY, emptyCells, isFull, scoreGrid } from '../src/scoring.js';
 
 const fresh = (seed = 1, played = 5) => createGame({ seed, gamesPlayed: played });
@@ -144,4 +144,27 @@ test('выбор из трёх реально даёт преимущество 
   assert.ok(greedyTotal > blindTotal,
     `выбор должен что-то значить: осознанный ${greedyTotal}, случайный ${blindTotal}`);
   console.log(`      осознанный выбор ${greedyTotal} против случайного ${blindTotal} за 40 партий`);
+});
+
+test('перекат барабана: одна попытка за партию, тройка меняется', () => {
+  const g = fresh(21);
+  const before = [...g.cands];
+  const poolBefore = g.pool.length;
+  assert.equal(reroll(g), true);
+  assert.equal(g.rerollUsed, true);
+  assert.equal(g.cands.length, 3);
+  assert.notDeepEqual(g.cands, before, 'выкатилась новая тройка');
+  // cands — это первые элементы самого мешка, а не отдельная копия,
+  // поэтому считаем только мешок: перекат ничего не отнимает и не добавляет.
+  assert.equal(g.pool.length, poolBefore, 'перекат изменил размер мешка');
+  const alive = new Set(g.pool);
+  for (const v of before) assert.ok(alive.has(v), `бочонок ${v} пропал при перекате`);
+  assert.equal(new Set(g.pool).size, g.pool.length, 'в мешке появились дубликаты');
+  assert.equal(reroll(g), false, 'вторая попытка не даётся');
+});
+
+test('перекат недоступен после выбора бочонка', () => {
+  const g = fresh(22);
+  pick(g, 0);
+  assert.equal(reroll(g), false);
 });
