@@ -91,9 +91,12 @@ export async function loadData() {
   } catch { return null; }
 }
 
-export async function saveData(save) {
+// flush=true отправляет немедленно, false — ставит в очередь.
+// Очередь дешевле по лимитам, но при закрытии вкладки может не уехать,
+// поэтому финальное сохранение всегда немедленное.
+export async function saveData(save, immediate = false) {
   if (!player) return false;
-  try { await player.setData({ save }, false); return true; }
+  try { await player.setData({ save }, immediate); return true; }
   catch { return false; }
 }
 

@@ -7,7 +7,13 @@
 import * as sdk from './sdk.js';
 
 const KEY = 'bochonki.save.v1';
+// Лимит платформы — 100 записей за 5 минут. Пауза в 5 секунд даёт максимум 60,
+// то есть держимся с почти двукратным запасом.
 const CLOUD_THROTTLE_MS = 5000;
+// Лимит платформы на объём данных игрока — 200 КБ. Наше сохранение на порядки
+// меньше, но история партий растёт, поэтому размер проверяется явно.
+const MAX_SAVE_BYTES = 200 * 1024;
+const HISTORY_LIMIT = 30;
 
 export const DEFAULT_SAVE = {
   v: 1,
@@ -79,21 +85,41 @@ function scheduleCloud() {
     if (!dirty) return;
     dirty = false;
     lastCloudWrite = Date.now();
-    await sdk.saveData(cache);
+    await sdk.saveData(trim(cache), false);
   }, wait);
 }
 
 // Досрочный сброс в облако — на закрытии вкладки и после партии.
+// Досрочный сброс: закрытие вкладки, уход в фон, конец партии.
+// Здесь запись немедленная — очередь может не успеть уехать.
 export async function flush() {
   if (cloudTimer) { clearTimeout(cloudTimer); cloudTimer = null; }
   if (!dirty) return;
   dirty = false;
   lastCloudWrite = Date.now();
-  await sdk.saveData(cache);
+  await sdk.saveData(trim(cache), true);
 }
 
+// Страховка от разрастания: история обрезается, и если сохранение всё же
+// не влезает в лимит платформы, история отбрасывается целиком —
+// прогресс и коллекция важнее статистики.
+export function saveSize(save) {
+  try { return new TextEncoder().encode(JSON.stringify(save)).length; }
+  catch { return JSON.stringify(save).length; }
+}
+
+export function trim(save) {
+  let out = { ...save, history: (save.history || []).slice(-HISTORY_LIMIT) };
+  if (saveSize(out) <= MAX_SAVE_BYTES) return out;
+  out = { ...out, history: out.history.slice(-10) };
+  if (saveSize(out) <= MAX_SAVE_BYTES) return out;
+  return { ...out, history: [] };
+}
+
+export { MAX_SAVE_BYTES, HISTORY_LIMIT };
+
 export function recordGame(entry) {
-  const history = [...(cache.history || []), entry].slice(-30);
+  const history = [...(cache.history || []), entry].slice(-HISTORY_LIMIT);
   return update({
     history,
     gamesPlayed: (cache.gamesPlayed || 0) + 1,
