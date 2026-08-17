@@ -19,6 +19,10 @@ export const state = {
   lang: 'ru',
   deviceType: 'desktop',
   serverTimeOffset: 0,   // мс: серверное время минус локальное
+  // Подтверждено ли время сервером. Если нет, «день» определяется часами
+  // устройства, а их игрок волен перевести — тогда результат партии дня
+  // в общую таблицу не отправляем.
+  timeVerified: false,
 };
 
 export async function init() {
@@ -34,8 +38,11 @@ export async function init() {
 
     try {
       const t = await ysdk.serverTime();
-      if (typeof t === 'number') state.serverTimeOffset = t - Date.now();
-    } catch { /* серверное время недоступно — считаем по локальному */ }
+      if (typeof t === 'number') {
+        state.serverTimeOffset = t - Date.now();
+        state.timeVerified = true;
+      }
+    } catch { /* серверное время недоступно — день считаем по локальному, но не соревнуемся */ }
 
     try {
       player = await ysdk.getPlayer({ scopes: false });

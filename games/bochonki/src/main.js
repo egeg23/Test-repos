@@ -229,8 +229,11 @@ function finishMaster() {
   store.recordGame({ score: s.total, day: today, mode: game.mode });
   save = store.get();
 
-  if (game.mode === 'daily') sdk.submitScore('daily', s.total);
-  sdk.submitScore('best', save.best);
+  // В лидерборд уходит только счёт реально сыгранной партии. Раньше сюда шёл
+  // save.best — поле из localStorage, которое игрок правит руками, и подменённое
+  // значение попадало в таблицу. Рекорд отправляем лишь когда он действительно побит.
+  if (game.mode === 'daily' && sdk.state.timeVerified) sdk.submitScore('daily', s.total);
+  if (newBest) sdk.submitScore('best', s.total);
 
   lastResult = { kind: 'master', s, newBest, pct, fresh: result.fresh };
   if (newBest) sfx.win(); else sfx.good();
