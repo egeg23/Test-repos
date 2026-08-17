@@ -73,8 +73,7 @@ const RU = {
   peek: 'Подсмотреть три бочонка',
   reroll: 'Перекатить барабан',
   recover: 'Вернуть пропущенное',
-  ad_reward_undo: 'Посмотреть рекламу и вернуть ход',
-  ad_reward_peek: 'Посмотреть рекламу и увидеть следующие бочонки',
+  ad_note: 'смотреть рекламу',
   ad_unavailable: 'Реклама сейчас недоступна',
   used_up: 'Уже использовано в этой партии',
 
@@ -162,8 +161,7 @@ const EN = {
   peek: 'Peek at three barrels',
   reroll: 'Spin the drum again',
   recover: 'Recover a missed number',
-  ad_reward_undo: 'Watch an ad and take the move back',
-  ad_reward_peek: 'Watch an ad and see the next barrels',
+  ad_note: 'watch an ad',
   ad_unavailable: 'No ad available right now',
   used_up: 'Already used this game',
 
@@ -251,8 +249,7 @@ const TR = {
   peek: 'Üç fıçıya göz at',
   reroll: 'Tamburu tekrar çevir',
   recover: 'Kaçırılan sayıyı geri al',
-  ad_reward_undo: 'Reklam izle ve hamleyi geri al',
-  ad_reward_peek: 'Reklam izle ve sonraki fıçıları gör',
+  ad_note: 'reklam izle',
   ad_unavailable: 'Şu anda reklam yok',
   used_up: 'Bu oyunda zaten kullanıldı',
 

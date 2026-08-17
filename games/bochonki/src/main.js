@@ -10,7 +10,7 @@ import * as D from './drum.js';
 import * as L from './lotto.js';
 import * as ach from './achievements.js';
 import * as stats from './stats.js';
-import { sfx, setMuted, isMuted } from './audio.js';
+import { sfx, setMuted, isMuted, suspend as audioSuspend, resume as audioResume } from './audio.js';
 
 const app = document.getElementById('app');
 
@@ -43,7 +43,26 @@ async function boot() {
   sdk.loadingReady();
 
   window.addEventListener('beforeunload', () => { store.flush(); });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) store.flush(); });
+
+  // Требование 1.3: при уходе со вкладки звук замолкает. Заодно замораживаем
+  // розыгрыш лото — иначе ведущий доставал бы бочонки, пока игрока нет,
+  // и он вернулся бы к проигранной партии.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      store.flush();
+      audioSuspend();
+      stopLottoTimer();
+    } else {
+      audioResume();
+      if (view === 'lotto' && lotto && !lotto.finished) scheduleLotto(1200);
+    }
+  });
+  window.addEventListener('blur', audioSuspend);
+  window.addEventListener('focus', audioResume);
+
+  // Требование 1.6: контекстное меню браузера не должно перехватывать
+  // правый клик и долгий тап по игровому полю.
+  app.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 
 const PLAY_VIEWS = ['master', 'lotto', 'drum'];
@@ -100,6 +119,14 @@ function renderMenu() {
     <button class="btn btn--ghost" data-act="ach">${esc(t('achievements'))} · ${unlocked}/${ach.TOTAL}</button>
     <button class="btn btn--ghost" data-act="stats">${esc(t('stats'))}</button>
   </div>`;
+}
+
+// Кнопка бонуса за рекламу. Требование 4.5: игрок должен явно согласиться,
+// поэтому на самой кнопке написано, что последует ролик. Пометка не рисуется,
+// когда реклама недоступна — тогда бонус выдаётся бесплатно и обещать нечего.
+function adBtn(act, label, disabled) {
+  const note = sdk.hasAds() ? `<span class="btn__note">▶ ${esc(t('ad_note'))}</span>` : '';
+  return `<button class="btn btn--ghost" data-act="${act}" ${disabled ? 'disabled' : ''}>${esc(label)}${note}</button>`;
 }
 
 // ---------------------------------------------------------------- карточка мастера
@@ -164,10 +191,8 @@ function renderMaster() {
   ${peekRow}
 
   <div class="bar">
-    <button class="btn btn--ghost" data-act="undo" ${game.undoUsed || !game.placements.length ? 'disabled' : ''}>
-      ${esc(t('undo'))}</button>
-    <button class="btn btn--ghost" data-act="peek" ${game.peekUsed ? 'disabled' : ''}>
-      ${esc(t('peek'))}</button>
+    ${adBtn('undo', t('undo'), game.undoUsed || !game.placements.length)}
+    ${adBtn('peek', t('peek'), game.peekUsed)}
   </div>`;
 }
 
@@ -340,8 +365,7 @@ function renderDrum() {
   </div>
   <div class="hint">${esc(hint)}</div>
   <div class="bar">
-    <button class="btn btn--ghost" data-act="reroll"
-      ${g.rerollUsed || held != null ? 'disabled' : ''}>${esc(t('reroll'))}</button>
+    ${adBtn('reroll', t('reroll'), g.rerollUsed || held != null)}
   </div>`;
 }
 
@@ -462,8 +486,7 @@ function renderLotto() {
   </div>
   <div class="hint">${esc(t('lotto_mark'))}</div>
   <div class="bar">
-    <button class="btn btn--ghost" data-act="recover"
-      ${L.canRecover(lotto) ? '' : 'disabled'}>${esc(t('recover'))}</button>
+    ${adBtn('recover', t('recover'), !L.canRecover(lotto))}
   </div>`;
 }
 
