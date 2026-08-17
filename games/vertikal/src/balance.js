@@ -29,12 +29,24 @@ export const RANKS = [
 
 // Требования к повышению. Бубли НЕ входят: ранг не покупается деньгами,
 // иначе бесконечный кликер превратил бы игру в тест на выносливость пальца.
+// Пороги считаются от суммы лояльности четырёх небытовых связей (максимум 400).
+// Стартовая сумма — 170, поэтому первый порог обязан быть выше неё, иначе
+// повышение выдаётся мгновенно на первом же ходу.
 export const PROMOTION = {
-  6: { loyaltySum: 90,  turns: 4 },
-  7: { loyaltySum: 150, turns: 8 },
-  8: { loyaltySum: 220, turns: 14 },
-  9: { loyaltySum: 300, turns: 20 },
+  6: { loyaltySum: 200, turns: 4 },
+  7: { loyaltySum: 245, turns: 10 },
+  8: { loyaltySum: 290, turns: 18 },
+  9: { loyaltySum: 335, turns: 28 },
 };
+
+// Схемы — источник денег и подозрения. Размен всей игры: скорость
+// покупается риском, а не деньгами.
+export const SCHEMES = [
+  { id: 'careful', label: 'Осторожно', income: 80000,  suspicion: 2,  papers: 1, points: 2 },
+  { id: 'greedy',  label: 'Жадно',     income: 400000, suspicion: 11, papers: 3, points: 2 },
+];
+
+export const ACTION_COSTS = { greet: 1, gift: 1, party: 1, cover: 1, scheme: 2 };
 
 export const PROMOTION_SUSPICION = 5;
 

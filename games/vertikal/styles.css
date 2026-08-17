@@ -1,0 +1,115 @@
+/* Вертикаль. Шесть красок, плоские заливки, жирный контур.
+   Ни одного растрового ассета. Аудитория платформы возрастная,
+   поэтому зоны нажатия от 56 px и крупные цифры. */
+
+:root{
+  --paper:#F2E4C9; --ink:#1A1A18; --red:#C8452F;
+  --brass:#D9A441; --slate:#2B4C5C; --khaki:#7A8F6B;
+  --bg:#141311; --panel:#1F1D1A; --line:#3A362F;
+  --tap:56px;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,'Liberation Sans',Arial,sans-serif;
+  --serif:'PT Serif','Noto Serif','Liberation Serif',Georgia,serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none}
+body{background:var(--bg);color:var(--paper);font-family:var(--sans);
+  font-size:17px;line-height:1.45;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;padding:0}
+button:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+button[disabled]{opacity:.4;pointer-events:none}
+
+.app{position:fixed;inset:0;display:flex;flex-direction:column;
+  padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right))
+          max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
+.boot{position:absolute;inset:0;display:grid;place-items:center;background:var(--bg);z-index:50}
+.boot__mark{width:96px;height:96px;border-radius:6px;display:grid;place-items:center;
+  background:var(--brass);color:var(--ink);font-family:var(--serif);font-size:56px;font-weight:700;
+  animation:bob 1.4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+.screen{flex:1;display:flex;flex-direction:column;min-height:0;gap:10px}
+.scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;flex:1}
+
+/* --- меню --- */
+.menu{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;flex:1;text-align:center;padding:16px 0}
+.menu h1{font-family:var(--serif);font-size:clamp(40px,12vw,68px);margin:0;line-height:1;
+  letter-spacing:.02em;color:var(--brass)}
+.menu__sub{color:var(--khaki);margin:0 0 10px;font-size:15px;letter-spacing:.14em;text-transform:uppercase}
+.btn{min-height:var(--tap);padding:14px 26px;border-radius:4px;font-size:19px;font-weight:600;
+  background:var(--panel);border:2px solid var(--line);width:min(360px,92vw);transition:filter .15s}
+.btn:hover{filter:brightness(1.25)}
+.btn--main{background:var(--brass);color:var(--ink);border-color:var(--ink);font-weight:700}
+.btn--red{background:var(--red);color:var(--paper);border-color:var(--ink)}
+.btn__note{display:block;font-size:13px;font-weight:400;opacity:.75;margin-top:2px}
+.disclaimer{color:var(--khaki);font-size:13px;max-width:44ch;line-height:1.5;margin:8px 0 0}
+
+/* --- шапка --- */
+.bar{display:flex;align-items:center;gap:6px;flex:none;min-height:var(--tap)}
+/* Шапка не переносится: перенос отправлял кнопку звука на отдельную строку
+   и съедал высоту, которой на телефоне и так нет. */
+.bar--top{overflow:hidden}
+.bar--top .pill{flex:1 1 0;min-width:0;padding:5px 6px}
+/* Нижняя панель: кнопки по содержимому, а не во всю ширину, иначе они
+   выстраиваются в три строки и закрывают список людей. */
+.bar--foot .btn{width:auto;flex:none;padding:12px 14px;font-size:15px;min-height:48px}
+.bar--foot .btn--main{flex:1 1 auto}
+.bar__spacer{flex:1}
+.pill{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:5px 12px;border-radius:4px;background:var(--panel);border:1px solid var(--line);min-height:48px}
+.pill__k{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--khaki);white-space:nowrap}
+.pill__v{font-family:var(--serif);font-size:22px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.iconbtn{min-width:var(--tap);min-height:var(--tap);border-radius:4px;display:grid;place-items:center;
+  background:var(--panel);border:1px solid var(--line);font-size:20px}
+
+/* --- сцена --- */
+.scene{width:100%;display:block;border:3px solid var(--ink);border-radius:2px;max-height:24vh}
+.stage{flex:none}
+
+/* --- шкала ощущения --- */
+.gauge{display:flex;gap:4px;align-items:center;flex:none}
+.gauge__c{flex:1;height:10px;background:var(--panel);border:1px solid var(--line)}
+.gauge__c.on{background:var(--red);border-color:var(--red)}
+.gauge__t{font-size:13px;color:var(--khaki);min-width:11ch;text-align:right}
+
+/* --- работа --- */
+.work{display:flex;gap:8px;align-items:stretch;flex:none}
+.work__click{flex:1;min-height:var(--tap);border-radius:4px;background:var(--khaki);color:var(--ink);
+  border:2px solid var(--ink);font-weight:700;font-size:18px}
+.work__click:active{transform:translateY(2px)}
+
+/* --- люди --- */
+.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.person{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:8px;
+  display:flex;gap:10px;align-items:center}
+.person__n{font-weight:600;font-size:15px}
+.person__b{font-size:12px;color:var(--khaki)}
+.face{flex:none;width:48px;height:48px}
+
+/* --- действия --- */
+.acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin:6px 0}
+.act{min-height:var(--tap);padding:10px 12px;border-radius:4px;background:var(--panel);
+  border:1px solid var(--line);text-align:left;font-size:15px}
+.act b{display:block;font-size:12px;color:var(--brass);font-weight:600;margin-top:2px}
+
+/* --- событие и финал --- */
+.sheet{background:var(--panel);border:2px solid var(--line);border-radius:4px;padding:20px;
+  width:min(94vw,460px);margin:auto}
+.sheet h2{font-family:var(--serif);font-size:26px;margin:0 0 10px;color:var(--brass)}
+.sheet p{margin:0 0 16px;line-height:1.5}
+.big{font-family:var(--serif);font-size:56px;font-weight:700;text-align:center;line-height:1;
+  margin:10px 0;font-variant-numeric:tabular-nums;color:var(--brass)}
+.rows{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.row{display:flex;justify-content:space-between;gap:12px;padding-bottom:7px;
+  border-bottom:1px solid var(--line);font-size:15px}
+.row b{font-family:var(--serif);font-size:18px;font-variant-numeric:tabular-nums}
+.actions{display:flex;flex-direction:column;gap:10px;align-items:center;margin-top:16px}
+.note{color:var(--khaki);font-size:14px;line-height:1.5}
+.note--red{color:var(--red)}
+.hint{min-height:24px;text-align:center;color:var(--khaki);font-size:14px;flex:none}
+.log{font-size:13px;color:var(--khaki);line-height:1.6}
+h3{font-family:var(--serif);font-size:19px;margin:16px 0 8px;color:var(--brass)}
+.center{text-align:center}
+
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@media (max-width:560px){.pill{padding:4px 9px}.pill__k{font-size:9px}.pill__v{font-size:19px}}
