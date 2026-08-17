@@ -212,8 +212,41 @@ h3{font-family:var(--num);font-size:21px;margin:18px 0 8px}
    На узких экранах ужимаются счётчики, а не кнопки: у кнопок зона нажатия
    обязана остаться 56 px, счётчики же не интерактивны. */
 @media (max-width:560px){
+  /* Подпись всегда под схемой: при подписи сбоку раскладка скакала —
+     широкая карточка лото переносила её вниз, а узкие схемы оставляли справа. */
+  .how__b{flex-direction:column;align-items:flex-start;gap:10px}
+  .how__t{flex:1 1 auto}
   .pill--opt{display:none}
   .pill{padding:4px 9px;min-width:0}
   .pill__k{font-size:9px;letter-spacing:.04em;white-space:nowrap}
   .pill__v{font-size:19px}
 }
+
+/* --- экран «Как играть»: схемы вместо описаний --- */
+.how{padding:0 2px 10px}
+.how h3{margin:26px 0 10px}
+.how h3:first-child{margin-top:6px}
+.how__b{display:flex;align-items:center;gap:16px;margin:0 0 16px;flex-wrap:wrap}
+.how__dia{display:flex;align-items:center;gap:10px;flex:none}
+.how__t{margin:0;flex:1 1 190px;font-size:15px;line-height:1.4;color:var(--paper)}
+
+/* миниатюрное поле 5×5 */
+.mg{display:grid;grid-template-columns:repeat(5,30px);gap:3px;padding:5px;
+  background:var(--card);border-radius:7px;flex:none}
+.mgl{display:grid;grid-template-columns:repeat(9,22px);gap:2px;padding:5px;
+  background:var(--card);border-radius:7px;flex:none}
+.mg__c{width:100%;aspect-ratio:1;border-radius:4px;background:#E3D3B4;
+  border:1px solid var(--card-line);display:grid;place-items:center;
+  font-family:var(--num);font-size:12px;font-weight:700;color:var(--card-ink);
+  font-variant-numeric:tabular-nums;font-style:normal}
+.mgl .mg__c{font-size:10px}
+.mg__c--blank{background:#D6C4A2;border-color:#C2AC87}
+.mg__c--on{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.mg__c--hit{background:var(--gold);animation:pulse 1.6s ease-in-out infinite}
+.mg__d{font-family:var(--sans);font-size:10px;font-weight:700;color:var(--mute);opacity:.6}
+.mg__d--good{color:var(--good);opacity:1}
+.pts{font-family:var(--num);font-size:26px;font-weight:700;color:var(--good-soft);
+  font-variant-numeric:tabular-nums;flex:none}
+.how__pair,.how__cands{display:flex;align-items:center;gap:9px}
+.how__arr{font-size:20px;color:var(--mute)}
+.barrel--take{outline:3px solid var(--gold);outline-offset:3px}

@@ -55,7 +55,7 @@ function go(next) {
 function render() {
   const html = {
     menu: renderMenu, master: renderMaster, lotto: renderLotto, drum: renderDrum,
-    result: renderResult, achievements: renderAch, stats: renderStats,
+    result: renderResult, achievements: renderAch, stats: renderStats, how: renderHow,
   }[view]();
   app.innerHTML = html;
 }
@@ -84,6 +84,7 @@ function renderMenu() {
       <span class="btn__note">${esc(t('play_master'))}</span></button>
     <button class="btn" data-act="drum">${esc(t('play_drum'))}
       <span class="btn__note">${esc(t('drum_sub'))}</span></button>
+    <button class="btn btn--ghost" data-act="how">${esc(t('how_to'))}</button>
     <button class="btn btn--ghost" data-act="ach">${esc(t('achievements'))} · ${unlocked}/${ach.TOTAL}</button>
     <button class="btn btn--ghost" data-act="stats">${esc(t('stats'))}</button>
   </div>`;
@@ -567,6 +568,115 @@ function renderStats() {
   </div>`;
 }
 
+// ---------------------------------------------------------------- как играть
+
+// Экран объясняет схемами, а не текстом: миниатюрное поле 5×5 с подсвеченной
+// линией показывает правило нагляднее любого описания.
+// Сетка строится кодом, поэтому в билд не добавляется ни одной картинки.
+
+function miniGrid(cells, highlight) {
+  const on = new Set(highlight.map(([r, c]) => r * SIZE + c));
+  let out = '';
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const v = cells[r * SIZE + c];
+      const cls = on.has(r * SIZE + c) ? ' mg__c--on' : (v ? ' mg__c--set' : '');
+      out += `<i class="mg__c${cls}">${v || ''}</i>`;
+    }
+  }
+  return `<div class="mg" aria-hidden="true">${out}</div>`;
+}
+
+const blank = () => Array(SIZE * SIZE).fill(0);
+
+function ruleRow() {
+  const g = blank();
+  [4, 18, 29, 46, 72].forEach((v, i) => { g[2 * SIZE + i] = v; });
+  return miniGrid(g, [[2, 0], [2, 1], [2, 2], [2, 3], [2, 4]]);
+}
+function ruleCol() {
+  const g = blank();
+  [31, 35, 33, 38, 30].forEach((v, i) => { g[i * SIZE + 2] = v; });
+  return miniGrid(g, [[0, 2], [1, 2], [2, 2], [3, 2], [4, 2]]);
+}
+function ruleDiag() {
+  const g = blank();
+  [4, 18, 46, 72, 90].forEach((v, i) => { g[i * SIZE + i] = v; });
+  return miniGrid(g, [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4]]);
+}
+
+function hintDemo() {
+  // Клетка с подсказкой: показываем ровно то, что игрок увидит в партии.
+  const g = blank();
+  g[1 * SIZE + 1] = 18;
+  g[1 * SIZE + 3] = 46;
+  let out = '';
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const v = g[r * SIZE + c];
+      if (v) { out += `<i class="mg__c mg__c--set">${v}</i>`; continue; }
+      const good = r === 1 && c === 2;
+      out += `<i class="mg__c"><b class="mg__d${good ? ' mg__d--good' : ''}">${good ? '+6' : '0'}</b></i>`;
+    }
+  }
+  return `<div class="mg" aria-hidden="true">${out}</div>`;
+}
+
+function step(diagram, text, points) {
+  return `<div class="how__b">
+    <div class="how__dia">${diagram}${points ? `<span class="pts">${points}</span>` : ''}</div>
+    <p class="how__t">${esc(text)}</p>
+  </div>`;
+}
+
+function renderHow() {
+  const lottoCard = `<div class="mgl" aria-hidden="true">${
+    [[0, 14, 0, 36, 44, 0, 0, 77, 83],
+     [8, 17, 0, 0, 47, 52, 63, 0, 0],
+     [0, 0, 28, 0, 48, 0, 68, 78, 86]]
+      .flatMap((row) => row.map((n) =>
+        n === 63 ? `<i class="mg__c mg__c--hit">63</i>`
+                 : `<i class="mg__c${n ? ' mg__c--set' : ' mg__c--blank'}">${n || ''}</i>`)).join('')
+  }</div>`;
+
+  const drum = `<div class="how__cands" aria-hidden="true">
+      <span class="barrel barrel--sm">33</span>
+      <span class="barrel barrel--sm barrel--take">7</span>
+      <span class="barrel barrel--sm">54</span>
+    </div>`;
+
+  const master = `<div class="how__pair" aria-hidden="true">
+      <span class="barrel barrel--sm">29</span><span class="how__arr">→</span>${
+        miniGrid((() => { const g = blank(); g[2 * SIZE + 0] = 4; g[2 * SIZE + 1] = 18; return g; })(),
+                 [[2, 2]])}
+    </div>`;
+
+  return `
+  <div class="bar">
+    <button class="iconbtn" data-act="menu" aria-label="${esc(t('back'))}">←</button>
+    <div class="bar__spacer"></div>
+  </div>
+  <div class="scroll how">
+    <h3>${esc(t('play_lotto'))}</h3>
+    ${step(lottoCard, t('how_lotto'))}
+
+    <h3>${esc(t('play_master'))}</h3>
+    ${step(master, t('how_master'))}
+    ${step(hintDemo(), t('how_hint'))}
+
+    <h3>${esc(t('play_drum'))}</h3>
+    ${step(drum, t('how_drum'))}
+
+    <h3>${esc(t('how_rules'))}</h3>
+    ${step(ruleRow(), t('how_rows'), '+25')}
+    ${step(ruleCol(), t('how_cols'), '+30')}
+    ${step(ruleDiag(), t('how_diags'), '+18')}
+    <p class="note center">${esc(t('how_more'))}</p>
+    <p class="note center">${esc(t('how_ladder'))}</p>
+    <div class="actions"><button class="btn btn--main" data-act="menu">${esc(t('back'))}</button></div>
+  </div>`;
+}
+
 // ---------------------------------------------------------------- ввод
 
 app.addEventListener('click', (e) => {
@@ -581,6 +691,7 @@ app.addEventListener('click', (e) => {
   if (act === 'drum')  return startDrum();
   if (act === 'ach')   return go('achievements');
   if (act === 'stats') return go('stats');
+  if (act === 'how')   return go('how');
 
   if (act === 'sound') {
     setMuted(!isMuted());

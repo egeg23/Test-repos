@@ -219,7 +219,7 @@ tambur. Günlük oyun, liderlik tablosu, toplanacak 40 başarım.
 |---|---|
 | Иконка | `icon-1024.png` (или `icon-512.png`, если форма требует меньше) |
 | Обложка | `cover-1600x940.png` |
-| Скриншоты RU | `shot-ru-1-menu`, `shot-ru-2-master`, `shot-ru-3-drum`, `shot-ru-4-lotto` |
+| Скриншоты RU | `shot-ru-1-menu`, `shot-ru-2-master`, `shot-ru-3-drum`, `shot-ru-4-lotto`, `shot-ru-5-howto` |
 | Скриншоты EN | `shot-en-*` — те же четыре экрана |
 | Скриншоты TR | `shot-tr-*` — те же четыре экрана |
 
