@@ -5,6 +5,8 @@
 // знать, где он выполняется, и не должен падать, если SDK не загрузился:
 // по требованиям модерации игра обязана оставаться играбельной.
 
+import * as audio from './audio.js';
+
 const noop = () => {};
 
 let ysdk = null;
@@ -107,15 +109,30 @@ export async function saveData(save, immediate = false) {
   catch { return false; }
 }
 
+// Сколько ждём хоть какой-то реакции SDK, прежде чем считать показ несостоявшимся.
+// Сторож нужен на случай, когда не приходит ни onClose, ни onError: без него игра
+// застыла бы на переходе к результату. При onOpen сторож снимается — иначе он
+// оборвал бы реально идущий ролик.
+const ADV_WATCHDOG_MS = 8000;
+
 // Полноэкранная реклама. Показывается только там, где геймплей объективно
 // остановлен (экран результата), и никогда внутри партии.
 export function showFullscreen(onDone = noop) {
   if (!ysdk?.adv) { onDone(false); return; }
   let settled = false;
-  const finish = (shown) => { if (!settled) { settled = true; onDone(shown); } };
+  let timer = setTimeout(() => finish(false), ADV_WATCHDOG_MS);
+  const clear = () => { if (timer) { clearTimeout(timer); timer = null; } };
+  function finish(shown) {
+    if (settled) return;
+    settled = true;
+    clear();
+    audio.resume();
+    onDone(shown);
+  }
   try {
     ysdk.adv.showFullscreenAdv({
       callbacks: {
+        onOpen: () => { clear(); audio.suspend(); },
         onClose: (wasShown) => finish(!!wasShown),
         onError: () => finish(false),
       },
@@ -127,15 +144,43 @@ export function showFullscreen(onDone = noop) {
 export function showRewarded(onReward = noop, onClose = noop) {
   if (!ysdk?.adv) { onClose(false); return; }
   let rewarded = false;
+  let settled = false;
+  let timer = setTimeout(() => finish(), ADV_WATCHDOG_MS);
+  const clear = () => { if (timer) { clearTimeout(timer); timer = null; } };
+  function finish() {
+    if (settled) return;      // onClose и onError могут прийти оба — закрываем один раз
+    settled = true;
+    clear();
+    audio.resume();
+    onClose(rewarded);
+  }
   try {
     ysdk.adv.showRewardedVideo({
       callbacks: {
+        onOpen: () => { clear(); audio.suspend(); },
         onRewarded: () => { rewarded = true; onReward(); },
-        onClose: () => onClose(rewarded),
-        onError: () => onClose(false),
+        onClose: () => finish(),
+        onError: () => finish(),
       },
     });
-  } catch { onClose(false); }
+  } catch { finish(); }
+}
+
+// --- sticky-баннер ---
+// Появляется по умолчанию при запуске и управляется через API. Держим его на
+// экранах вне партии и убираем на время игры: поле 5×5 и карточка лото занимают
+// экран целиком, баннер поверх них мешал бы попадать по клеткам.
+
+export async function showBanner() {
+  try { await ysdk?.adv?.showBannerAdv?.(); } catch {}
+}
+
+export async function hideBanner() {
+  try { await ysdk?.adv?.hideBannerAdv?.(); } catch {}
+}
+
+export async function bannerStatus() {
+  try { return (await ysdk?.adv?.getBannerAdvStatus?.()) ?? null; } catch { return null; }
 }
 
 export function hasAds() { return !!ysdk?.adv; }

@@ -16,6 +16,11 @@ function ac() {
 }
 
 export function setMuted(v) { muted = !!v; }
+
+// Приглушение на время рекламы. Не трогает выбор игрока в настройках:
+// приостанавливаем сам аудиоконтекст и потом возвращаем как было.
+export function suspend() { try { ctx && ctx.state === 'running' && ctx.suspend(); } catch {} }
+export function resume()  { try { ctx && ctx.state === 'suspended' && ctx.resume(); } catch {} }
 export function isMuted() { return muted; }
 
 function tone({ freq = 220, dur = 0.12, type = 'triangle', gain = 0.25, sweep = 0 }) {

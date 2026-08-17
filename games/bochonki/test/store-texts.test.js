@@ -63,3 +63,30 @@ test('партия дня не отправляется, пока время н�
   assert.ok(/sdk\.state\.timeVerified/.test(main),
     'без проверки серверного времени день задают часы устройства');
 });
+
+// Регрессии к сверке с документацией SDK (docs/ADV_REVIEW.md).
+test('реклама вызывается в форме { callbacks: ... }, как в документации', () => {
+  const sdk = read('src/sdk.js');
+  for (const fn of ['showFullscreenAdv', 'showRewardedVideo']) {
+    const call = new RegExp(fn + '\\(\\s*\\{\\s*\\n?\\s*callbacks:', 'm');
+    assert.ok(call.test(sdk), `${fn} должен получать объект с полем callbacks`);
+  }
+});
+
+test('у показа рекламы есть сторож от неотработавших колбэков', () => {
+  const sdk = read('src/sdk.js');
+  assert.ok(/ADV_WATCHDOG_MS/.test(sdk), 'без сторожа молчащий SDK подвесит игру');
+  assert.ok(/onOpen: \(\) => \{ clear\(\)/.test(sdk),
+    'onOpen должен снимать сторож, иначе он оборвёт идущий ролик');
+});
+
+test('звук приглушается на время рекламы', () => {
+  const sdk = read('src/sdk.js');
+  assert.ok(/audio\.suspend\(\)/.test(sdk) && /audio\.resume\(\)/.test(sdk));
+});
+
+test('sticky-баннер прячется на время партии', () => {
+  const main = read('src/main.js');
+  assert.ok(/sdk\.hideBanner\(\)/.test(main) && /sdk\.showBanner\(\)/.test(main),
+    'баннер должен скрываться в партии и возвращаться вне её');
+});

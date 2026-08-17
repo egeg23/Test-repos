@@ -44,12 +44,22 @@ async function boot() {
   document.addEventListener('visibilitychange', () => { if (document.hidden) store.flush(); });
 }
 
+const PLAY_VIEWS = ['master', 'lotto', 'drum'];
+const isPlayView = (v) => PLAY_VIEWS.includes(v);
+
 function go(next) {
-  if (view === 'master' || view === 'lotto' || view === 'drum') sdk.gameplayStop();
+  if (isPlayView(view)) sdk.gameplayStop();
   stopLottoTimer();
   view = next;
   render();
-  if (view === 'master' || view === 'lotto' || view === 'drum') sdk.gameplayStart();
+  if (isPlayView(view)) {
+    sdk.gameplayStart();
+    // Баннер убираем на время партии: поле занимает экран целиком,
+    // и перекрытие мешало бы попадать по клеткам.
+    sdk.hideBanner();
+  } else {
+    sdk.showBanner();
+  }
 }
 
 function render() {
