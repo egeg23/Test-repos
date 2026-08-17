@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { makeBoard, VARIANTS, growRegions } from '../src/units.js';
+import { makeBoard, PRESETS, growRegions, specKey } from '../src/units.js';
 import { countSolutions } from '../src/solver.js';
 import { grade, nextStep, TECHNIQUES } from '../src/techniques.js';
 import { generate } from '../src/generator.js';
 import { mulberry32 } from '../src/rng.js';
 
-const NAMES = Object.keys(VARIANTS);
+const NAMES = Object.keys(PRESETS);
 
 test('поле каждого варианта структурно корректно', () => {
   for (const v of NAMES) {
@@ -59,7 +59,7 @@ test('у выданной задачи решение единственно', (
 // Поле восстанавливаем из областей задачи: у кривых областей нарезка своя
 // на каждую задачу, и заново её не сгенерировать.
 function makeBoardFor(r) {
-  const n = r.variant === 'small' ? 6 : 9;
+  const n = r.n;
   const units = r.units;
   const unitsOf = [...Array(n * n)].map(() => []);
   units.forEach((u) => u.forEach((c) => unitsOf[c].push(u)));
@@ -68,7 +68,8 @@ function makeBoardFor(r) {
     unitsOf[c].forEach((u) => u.forEach((x) => { if (x !== c) s.add(x); }));
     return [...s];
   });
-  return { variant: r.variant, n, cells: n * n, units, unitSets: units.map((u) => new Set(u)),
+  return { spec: r.spec, variant: r.spec.regions === 'jigsaw' ? 'jigsaw' : 'boxes',
+           key: r.key, n, cells: n * n, units, unitSets: units.map((u) => new Set(u)),
            unitsOf, peers, full: (1 << n) - 1 };
 }
 
@@ -150,4 +151,42 @@ test('объяснения не ломают падежи', () => {
     }
   }
   assert.ok(checked > 50, `проверено всего ${checked} объяснений — мало`);
+});
+
+test('порог подсказок соблюдается', () => {
+  // Ползунок обещает «не меньше N подсказок». Если движок снимет больше —
+  // интерфейс соврал игроку, а это наш худший класс бага.
+  for (const min of [30, 40, 50]) {
+    const r = generate({ size: 9, regions: 'boxes' }, 'easy', mulberry32(min * 3), { minClues: min });
+    assert.ok(r, `порог ${min}: задача не сгенерирована`);
+    assert.ok(r.clues >= min, `порог ${min}, а подсказок ${r.clues}`);
+  }
+});
+
+test('симметрия расположения подсказок настоящая', () => {
+  const maps = {
+    central:    (n, r, q) => [n - 1 - r, n - 1 - q],
+    horizontal: (n, r, q) => [n - 1 - r, q],
+    vertical:   (n, r, q) => [r, n - 1 - q],
+    diagonal:   (n, r, q) => [q, r],
+  };
+  for (const [key, map] of Object.entries(maps)) {
+    const res = generate({ size: 9, regions: 'boxes' }, 'medium', mulberry32(key.length * 41),
+      { symmetry: key });
+    assert.ok(res, `${key}: задача не сгенерирована`);
+    const n = res.n;
+    for (let c = 0; c < n * n; c++) {
+      const [r2, q2] = map(n, Math.floor(c / n), c % n);
+      const mirror = r2 * n + q2;
+      assert.equal(Boolean(res.puzzle[c]), Boolean(res.puzzle[mirror]),
+        `${key}: клетка ${c} и её зеркало ${mirror} расходятся`);
+    }
+  }
+});
+
+test('невозможные наборы правил отбиваются, а не молча портят поле', () => {
+  assert.throws(() => makeBoard({ size: 6, hyper: true }), /гипер/);
+  assert.throws(() => makeBoard({ size: 7 }), /размер/);
+  assert.throws(() => makeBoard('нет такого'), /неизвестные правила/);
+  assert.equal(specKey({ size: 9, regions: 'jigsaw', diagonal: true }), '9x9-jigsaw-diag');
 });

@@ -57,9 +57,12 @@ function connected(cellsOfRegion, n) {
 }
 
 export function growRegions(rnd, n = 9, swaps = 1200) {
+  // Стартовая нарезка — обычные блоки: у них размер и связность верны
+  // по построению. На 6x6 блок 2x3, на 9x9 — 3x3.
+  const [bh, bw] = n === 6 ? [2, 3] : [3, 3];
   const owner = new Int8Array(n * n);
   for (let c = 0; c < n * n; c++) {
-    owner[c] = Math.floor(Math.floor(c / n) / 3) * 3 + Math.floor((c % n) / 3);
+    owner[c] = Math.floor(Math.floor(c / n) / bh) * (n / bw) + Math.floor((c % n) / bw);
   }
   const members = (i) => [...Array(n * n).keys()].filter((c) => owner[c] === i);
   const nbrsOf = (c) => {
@@ -114,39 +117,60 @@ const hyper = (n) => {
   return out;
 };
 
-export const VARIANTS = {
-  classic:  { n: 9, build: () => [...rowsCols(9), ...boxes(9, 3, 3)] },
-  diagonal: { n: 9, build: () => [...rowsCols(9), ...boxes(9, 3, 3), ...diagonals(9)] },
-  hyper:    { n: 9, build: () => [...rowsCols(9), ...boxes(9, 3, 3), ...hyper(9)] },
-  jigsaw:   { n: 9, build: (rnd) => [...rowsCols(9), ...growRegions(rnd)] },
-  small:    { n: 6, build: () => [...rowsCols(6), ...boxes(6, 2, 3)] },
+// Правила складываются, а не выбираются из списка. Это и есть основа
+// конструктора: диагональ, гипер и кривые области — независимые галочки,
+// а не пять отдельных игр. Движок про их смысл по-прежнему не знает.
+export const PRESETS = {
+  classic:  { size: 9, regions: 'boxes' },
+  diagonal: { size: 9, regions: 'boxes',  diagonal: true },
+  hyper:    { size: 9, regions: 'boxes',  hyper: true },
+  jigsaw:   { size: 9, regions: 'jigsaw' },
+  small:    { size: 6, regions: 'boxes' },
 };
 
-/** Поле варианта: области, области каждой клетки и её соседи. */
-export function makeBoard(variant, rnd = Math.random) {
-  const v = VARIANTS[variant];
-  if (!v) throw new Error('неизвестный вариант: ' + variant);
-  const n = v.n, cells = n * n;
-  const units = v.build(rnd);
+/** Читаемый и устойчивый ключ набора правил — для витрины и лидерборда. */
+export function specKey(spec) {
+  const s = normalize(spec);
+  return [`${s.size}x${s.size}`, s.regions, s.diagonal && 'diag', s.hyper && 'hyper']
+    .filter(Boolean).join('-');
+}
+
+export function normalize(spec) {
+  const raw = typeof spec === 'string' ? PRESETS[spec] : spec;
+  if (!raw) throw new Error('неизвестные правила: ' + spec);
+  const s = { size: 9, regions: 'boxes', diagonal: false, hyper: false, ...raw };
+  if (s.size !== 6 && s.size !== 9) throw new Error('размер только 6 или 9');
+  // Гипер-квадраты сдвинуты внутрь поля 9x9 и на 6x6 просто не помещаются.
+  if (s.hyper && s.size !== 9) throw new Error('гипер только на поле 9x9');
+  return s;
+}
+
+/** Поле по набору правил: области, области каждой клетки и её соседи. */
+export function makeBoard(spec, rnd = Math.random) {
+  const s = normalize(spec);
+  const n = s.size, cells = n * n;
+  const [bh, bw] = n === 6 ? [2, 3] : [3, 3];
+
+  const units = [...rowsCols(n)];
+  units.push(...(s.regions === 'jigsaw' ? growRegions(rnd, n) : boxes(n, bh, bw)));
+  if (s.diagonal) units.push(...diagonals(n));
+  if (s.hyper) units.push(...hyper(n));
 
   const unitsOf = [...Array(cells)].map(() => []);
   units.forEach((u) => u.forEach((c) => unitsOf[c].push(u)));
 
   const peers = [...Array(cells)].map((_, c) => {
-    const s = new Set();
-    unitsOf[c].forEach((u) => u.forEach((x) => { if (x !== c) s.add(x); }));
-    return [...s];
+    const t = new Set();
+    unitsOf[c].forEach((u) => u.forEach((x) => { if (x !== c) t.add(x); }));
+    return [...t];
   });
 
-  // Инвариант варианта: у каждой клетки есть хотя бы одна область, и в любой
-  // области ровно n клеток. Кривые области растятся случайно — без проверки
-  // кривой генератор молча выдаст поле без решения.
+  // Инварианты набора правил. Кривые области растятся случайно — без проверки
+  // битая нарезка молча уехала бы в генератор и дала поле без решений.
   if (units.some((u) => u.length !== n)) throw new Error('область не из ' + n + ' клеток');
   if (unitsOf.some((u) => !u.length)) throw new Error('клетка вне областей');
 
-  // Множества для горячего пути: проверка «клетка в области» идёт
-  // тысячи раз за одну задачу, по массиву это заметно дороже.
-  const unitSets = units.map((u) => new Set(u));
-
-  return { variant, n, cells, units, unitSets, unitsOf, peers, full: (1 << n) - 1 };
+  return { spec: s, variant: s.regions === 'jigsaw' ? 'jigsaw' : 'boxes', key: specKey(s),
+           n, cells, units, unitSets: units.map((u) => new Set(u)), unitsOf, peers,
+           full: (1 << n) - 1 };
 }
