@@ -6,6 +6,7 @@ import { t, setLang, achTitle } from './i18n.js';
 import { daySeed, dayKey } from './rng.js';
 import { SIZE, EMPTY } from './scoring.js';
 import * as M from './master.js';
+import * as D from './drum.js';
 import * as L from './lotto.js';
 import * as ach from './achievements.js';
 import * as stats from './stats.js';
@@ -44,16 +45,16 @@ async function boot() {
 }
 
 function go(next) {
-  if (view === 'master' || view === 'lotto') sdk.gameplayStop();
+  if (view === 'master' || view === 'lotto' || view === 'drum') sdk.gameplayStop();
   stopLottoTimer();
   view = next;
   render();
-  if (view === 'master' || view === 'lotto') sdk.gameplayStart();
+  if (view === 'master' || view === 'lotto' || view === 'drum') sdk.gameplayStart();
 }
 
 function render() {
   const html = {
-    menu: renderMenu, master: renderMaster, lotto: renderLotto,
+    menu: renderMenu, master: renderMaster, lotto: renderLotto, drum: renderDrum,
     result: renderResult, achievements: renderAch, stats: renderStats,
   }[view]();
   app.innerHTML = html;
@@ -81,6 +82,8 @@ function renderMenu() {
     </button>
     <button class="btn" data-act="free">${esc(t('play_free'))}
       <span class="btn__note">${esc(t('play_master'))}</span></button>
+    <button class="btn" data-act="drum">${esc(t('play_drum'))}
+      <span class="btn__note">${esc(t('drum_sub'))}</span></button>
     <button class="btn btn--ghost" data-act="ach">${esc(t('achievements'))} · ${unlocked}/${ach.TOTAL}</button>
     <button class="btn btn--ghost" data-act="stats">${esc(t('stats'))}</button>
   </div>`;
@@ -245,6 +248,134 @@ function maybeFullscreenAd(done) {
   } else done();
 }
 
+// ---------------------------------------------------------------- барабан
+
+let drum = null;
+
+function startDrum() {
+  drum = D.createGame({ seed: (Math.floor(Math.random() * 1e9) | 0), gamesPlayed: save.gamesPlayed || 0 });
+  go('drum');
+  sfx.roll();
+}
+
+function renderDrum() {
+  const g = drum;
+  const sc = D.score(g);
+  const held = D.currentBarrel(g);
+
+  // Пока бочонок не выбран — поле показывает готовые числа без подсказок:
+  // подсказывать некуда, ставить нечего.
+  let cells = '';
+  const preview = new Map();
+  if (held != null) {
+    for (let r = 0; r < SIZE; r++) {
+      for (let c = 0; c < SIZE; c++) {
+        if (g.grid[r][c] !== EMPTY) continue;
+        preview.set(r * SIZE + c, scoreDeltaFor(g, r, c, held));
+      }
+    }
+  }
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const v = g.grid[r][c];
+      if (v !== EMPTY) { cells += `<div class="cell" data-r="${r}" data-c="${c}">${v}</div>`; continue; }
+      if (held == null) { cells += `<div class="cell cell--empty" data-r="${r}" data-c="${c}"></div>`; continue; }
+      const d = preview.get(r * SIZE + c) ?? 0;
+      const cls = d > 0 ? '' : (d < 0 ? ' cell__delta--bad' : ' cell__delta--zero');
+      cells += `<button class="cell cell--empty" data-act="drumplace" data-r="${r}" data-c="${c}"
+        aria-label="${r + 1}-${c + 1}"><span class="cell__delta${cls}">${d > 0 ? '+' : ''}${d}</span></button>`;
+    }
+  }
+
+  const deltas = g.cands.map((v) => D.bestDelta(g, v));
+  const allZero = deltas.every((d) => d === 0);
+
+  const stage = held == null
+    ? `<div class="cands">${g.cands.map((v, i) => {
+         const d = deltas[i];
+         return `<button class="cand" data-act="drumpick" data-i="${i}">
+           <span class="barrel barrel--lg barrel--roll">${v}</span>
+           <span class="cand__d${d > 0 ? ' cand__d--good' : ''}">${d > 0 ? '+' : ''}${d}</span>
+         </button>`;
+       }).join('')}</div>`
+    : `<div class="barrel barrel--lg barrel--roll">${held}</div>`;
+
+  // Когда все кандидаты дают ноль, «выберите один» звучит издевательски —
+  // вместо этого объясняем, чем они на самом деле различаются.
+  const hint = held == null
+    ? (allZero ? t('drum_early') : `${t('drum_pick')}. ${t('drum_note')}`)
+    : (isMobile() ? t('place_hint_mobile') : t('place_hint'));
+
+  return `
+  <div class="bar">
+    <button class="iconbtn" data-act="menu" aria-label="${esc(t('back'))}">←</button>
+    <div class="pill"><span class="pill__k">${esc(t('bag_left'))}</span>
+      <span class="pill__v">${D.barrelsLeft(g)}</span></div>
+    <div class="bar__spacer"></div>
+    <div class="pill pill--opt"><span class="pill__k">${esc(t('drum_returned'))}</span>
+      <span class="pill__v">${g.skipped}</span></div>
+    <div class="pill"><span class="pill__k">${esc(t('score'))}</span>
+      <span class="pill__v">${sc.total}</span></div>
+    <button class="iconbtn" data-act="sound">${isMuted() ? '🔇' : '🔊'}</button>
+  </div>
+  <div class="play">
+    ${stage}
+    <div class="grid">${cells}</div>
+  </div>
+  <div class="hint">${esc(hint)}</div>`;
+}
+
+// Дельта для клетки при выбранном бочонке — тот же расчёт, что и везде.
+function scoreDeltaFor(g, r, c, value) {
+  const before = D.score(g).total;
+  g.grid[r][c] = value;
+  const after = D.score(g).total;
+  g.grid[r][c] = EMPTY;
+  return after - before;
+}
+
+function doDrumPlace(r, c) {
+  const res = D.place(drum, r, c);
+  if (!res) return;
+  sfx.place();
+  const gained = res.changed.filter((l) => l.delta > 0);
+  render();
+  if (gained.length) sfx.line();
+  if (res.finished) setTimeout(finishDrum, gained.length ? 600 : 250);
+}
+
+function finishDrum() {
+  const s = M.summary(drum);
+  const prev = save.best || 0;
+  const pct = stats.percentile(save.history, s.total);
+  const prevAvg = stats.summarize(save.history);
+
+  const result = ach.evaluate(save.achievements, {
+    gamesPlayed: (save.gamesPlayed || 0) + 1,
+    score: s.total,
+    fullRows: s.fullRows, fullCols: s.fullCols, fullDiags: s.fullDiags,
+    rowPoints: s.rowPoints, colPoints: s.colPoints, diagPoints: s.diagPoints,
+    dailyPlayed: 0, streak: save.streak || 0,
+    usedUndo: true, newBest: s.total > prev, percentile: pct,
+    ascendingFull: s.ascendingFull, decadeFive: s.decadeFive, parityFive: s.parityFive,
+    lottoWins: save.lottoWins || 0, lottoMissed: null, lottoWon: false,
+    improvedBy: prevAvg ? s.total - prevAvg.median : 0,
+    rulesActive: drum.rules.length,
+  });
+
+  store.update({ achievements: result.encoded });
+  store.recordGame({ score: s.total, day: todayKey(), mode: 'drum' });
+  save = store.get();
+
+  // Отдельная таблица: очки барабана и «Карточки мастера» несопоставимы.
+  sdk.submitScore('drum', s.total);
+
+  lastResult = { kind: 'master', s, newBest: s.total > prev, pct, fresh: result.fresh, again: 'drum' };
+  if (s.total > prev) sfx.win(); else sfx.good();
+  store.flush();
+  maybeFullscreenAd(() => go('result'));
+}
+
 // ---------------------------------------------------------------- лото
 
 function startLotto() {
@@ -378,7 +509,7 @@ function renderResult() {
       ${fresh}
     </div>
     <div class="actions">
-      <button class="btn btn--main" data-act="free">${esc(t('play_again'))}</button>
+      <button class="btn btn--main" data-act="${r.again === 'drum' ? 'drum' : 'free'}">${esc(t('play_again'))}</button>
       <button class="btn btn--ghost" data-act="stats">${esc(t('stats'))}</button>
       <button class="btn btn--ghost" data-act="menu">${esc(t('to_menu'))}</button>
     </div>
@@ -447,6 +578,7 @@ app.addEventListener('click', (e) => {
   if (act === 'lotto') return startLotto();
   if (act === 'daily') return startMaster('daily');
   if (act === 'free')  return startMaster('free');
+  if (act === 'drum')  return startDrum();
   if (act === 'ach')   return go('achievements');
   if (act === 'stats') return go('stats');
 
@@ -458,6 +590,8 @@ app.addEventListener('click', (e) => {
   }
 
   if (act === 'place') return doPlace(+btn.dataset.r, +btn.dataset.c);
+  if (act === 'drumpick') { D.pick(drum, +btn.dataset.i); sfx.roll(); return render(); }
+  if (act === 'drumplace') return doDrumPlace(+btn.dataset.r, +btn.dataset.c);
 
   if (act === 'mark') {
     if (L.markPlayer(lotto, +btn.dataset.n)) { sfx.tick(); if (lotto.finished) finishLotto(); else render(); }

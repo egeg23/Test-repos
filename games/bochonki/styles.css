@@ -57,7 +57,8 @@ button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--gold);outl
 .scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;flex:1}
 
 /* --- шапка --- */
-.bar{display:flex;align-items:center;gap:10px;flex:none;min-height:var(--tap)}
+.bar{display:flex;align-items:center;gap:10px;flex:none;min-height:var(--tap);min-width:0}
+.bar>*{flex:none}
 .bar__spacer{flex:1}
 .iconbtn{min-width:var(--tap);min-height:var(--tap);border-radius:12px;display:grid;place-items:center;
   background:rgba(255,255,255,.06);font-size:20px;transition:background .15s}
@@ -192,4 +193,27 @@ h3{font-family:var(--num);font-size:21px;margin:18px 0 8px}
   .play{flex-direction:row;gap:18px}
   .grid{width:min(58vh,340px)}
   .menu h1{font-size:40px}
+}
+
+/* --- барабан: три кандидата --- */
+.cands{display:flex;gap:clamp(10px,3vw,22px);justify-content:center;align-items:flex-end;flex-wrap:wrap}
+.cand{display:flex;flex-direction:column;align-items:center;gap:7px;padding:8px 6px 6px;
+  border-radius:14px;transition:transform .12s,background .15s}
+.cand:hover{background:rgba(255,255,255,.07);transform:translateY(-4px)}
+.cand:active{transform:translateY(0)}
+.cand__d{font-family:var(--sans);font-size:14px;font-weight:700;color:var(--mute);
+  font-variant-numeric:tabular-nums}
+.cand__d--good{color:var(--good-soft)}
+
+/* Идёт в конце файла осознанно: медиазапрос обязан стоять ПОСЛЕ базовых
+   правил .pill, иначе они его перекроют — одинаковая специфичность,
+   побеждает последнее объявление.
+
+   На узких экранах ужимаются счётчики, а не кнопки: у кнопок зона нажатия
+   обязана остаться 56 px, счётчики же не интерактивны. */
+@media (max-width:560px){
+  .pill--opt{display:none}
+  .pill{padding:4px 9px;min-width:0}
+  .pill__k{font-size:9px;letter-spacing:.04em;white-space:nowrap}
+  .pill__v{font-size:19px}
 }

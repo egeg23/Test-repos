@@ -8,7 +8,7 @@
 import io, re, os, json
 
 SRC = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'src') + os.sep
-ORDER = ['rng', 'scoring', 'lottoCard', 'master', 'lotto', 'stats',
+ORDER = ['rng', 'scoring', 'lottoCard', 'master', 'drum', 'lotto', 'stats',
          'achievements', 'i18n', 'audio', 'sdk', 'storage', 'main']
 
 IMPORT_NS = re.compile(r"^import\s+\*\s+as\s+(\w+)\s+from\s+'\./(\w+)\.js';?\s*$", re.M)
@@ -33,6 +33,16 @@ def exports_of(code):
         if n not in seen:
             seen.add(n); out.append(n)
     return out
+
+# Страховка от забытого модуля: любой './x.js', на который ссылается импорт,
+# обязан быть в ORDER, иначе бандл соберётся с undefined вместо модуля.
+referenced = set()
+for name in ORDER:
+    src = io.open(SRC + name + '.js', encoding='utf-8').read()
+    referenced |= set(re.findall(r"from\s+'\./(\w+)\.js'", src))
+missing = sorted(referenced - set(ORDER))
+if missing:
+    raise SystemExit('в ORDER не хватает модулей: %s' % ', '.join(missing))
 
 parts = ["(function(){\n'use strict';\nvar __m = {};\n"]
 for name in ORDER:
