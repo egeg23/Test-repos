@@ -44,7 +44,7 @@ html,body{margin:0;width:1600px;height:940px;overflow:hidden}
 <div class="c">
   <div class="bag"></div><div class="neck"></div><div class="tie"></div>
   <div class="b b1">9</div><div class="b b2">21</div><div class="b b3">7</div>
-  <div class="txt"><h1>Бочонки</h1><p>Лото и карточка мастера</p></div>
+  <div class="txt"><h1 id="t"></h1><p id="s"></p></div>
   <div class="card">
     <i class="g">4</i><i class="g">18</i><i class="g">29</i><i class="g">46</i><i class="g">72</i>
     <i>31</i><i>8</i><i></i><i>55</i><i>12</i>
@@ -52,4 +52,18 @@ html,body{margin:0;width:1600px;height:940px;overflow:hidden}
     <i>15</i><i></i><i>34</i><i>68</i><i></i>
     <i>6</i><i>22</i><i></i><i>51</i><i>79</i>
   </div>
-</div></body></html>
+</div><script>
+// Название и подпись подставляются по ?lang=. Промоматериалы обязаны быть
+// локализованы под каждый заявленный язык, а название на обложке — совпадать
+// с названием игры в консоли для этого же языка.
+var L = {
+  ru: ['Бочонки', 'Лото и карточка мастера'],
+  en: ['Barrels', 'Lotto and the master card'],
+  tr: ['Fıçılar', 'Tombala ve usta kartı']
+};
+var q = (location.search.match(/lang=(\w+)/) || [])[1] || 'ru';
+var v = L[q] || L.ru;
+document.getElementById('t').textContent = v[0];
+document.getElementById('s').textContent = v[1];
+</script>
+</body></html>

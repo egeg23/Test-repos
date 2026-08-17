@@ -59,12 +59,25 @@ function merge(a, b) {
   };
 }
 
-export async function load() {
-  const local = readLocal();
-  const cloud = await sdk.loadData();
-  cache = { ...DEFAULT_SAVE, ...merge(local, cloud) };
+// Мгновенное чтение из localStorage — без сети. Меню рисуется по нему,
+// поэтому загрузка игры не зависит от скорости соединения.
+export function loadLocal() {
+  cache = { ...DEFAULT_SAVE, ...(readLocal() || {}) };
   if (!Array.isArray(cache.history)) cache.history = [];
   return cache;
+}
+
+// Облачное сохранение догоняет в фоне, уже после показа меню.
+// Возвращает true, если облако принесло что-то новее локального.
+export async function syncCloud() {
+  const cloud = await sdk.loadData();
+  if (!cloud) return false;
+  const merged = { ...DEFAULT_SAVE, ...merge(cache, cloud) };
+  if (!Array.isArray(merged.history)) merged.history = [];
+  const changed = JSON.stringify(merged) !== JSON.stringify(cache);
+  cache = merged;
+  if (changed) writeLocal(cache);
+  return changed;
 }
 
 export function get() { return cache; }

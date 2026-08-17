@@ -27,6 +27,9 @@ export const state = {
   timeVerified: false,
 };
 
+// Быстрая часть инициализации: только то, без чего нельзя нарисовать меню.
+// Ни одного лишнего сетевого запроса — от этого напрямую зависит момент
+// вызова Game Ready API (требование 1.19).
 export async function init() {
   if (typeof YaGames === 'undefined') {
     detectLangOffline();
@@ -37,36 +40,44 @@ export async function init() {
     state.available = true;
     state.lang = (ysdk.environment?.i18n?.lang || 'ru').slice(0, 2);
     state.deviceType = ysdk.deviceInfo?.type || 'desktop';
-
-    try {
-      const t = await ysdk.serverTime();
-      if (typeof t === 'number') {
-        state.serverTimeOffset = t - Date.now();
-        state.timeVerified = true;
-      }
-    } catch { /* серверное время недоступно — день считаем по локальному, но не соревнуемся */ }
-
-    try {
-      player = await ysdk.getPlayer({ scopes: false });
-      state.authorized = player.getMode() !== 'lite';
-    } catch { player = null; }
-
-    // Актуальный API — объект ysdk.leaderboards. Инициализация через
-    // getLeaderboards() помечена в документации как устаревшая и держится
-    // здесь только как запасной путь для старых сборок SDK.
-    if (ysdk.leaderboards) {
-      leaderboards = ysdk.leaderboards;
-      lbApi = 'modern';
-    } else {
-      try { leaderboards = await ysdk.getLeaderboards(); lbApi = 'legacy'; }
-      catch { leaderboards = null; }
-    }
     return true;
   } catch (e) {
     console.warn('[sdk] init не удался, играем без платформы:', e);
     detectLangOffline();
     return false;
   }
+}
+
+// Всё, что ходит в сеть: серверное время, игрок, лидерборды. Запускается
+// после показа меню, потому что для отрисовки меню ничего из этого не нужно,
+// а ожидание сети задержало бы Game Ready API.
+export async function initDeferred() {
+  if (!ysdk) return false;
+
+  try {
+    const t = await ysdk.serverTime();
+    if (typeof t === 'number') {
+      state.serverTimeOffset = t - Date.now();
+      state.timeVerified = true;
+    }
+  } catch { /* серверное время недоступно — день считаем по локальному, но не соревнуемся */ }
+
+  try {
+    player = await ysdk.getPlayer({ scopes: false });
+    state.authorized = player.getMode() !== 'lite';
+  } catch { player = null; }
+
+  // Актуальный API — объект ysdk.leaderboards. Инициализация через
+  // getLeaderboards() помечена в документации как устаревшая и держится
+  // здесь только как запасной путь для старых сборок SDK.
+  if (ysdk.leaderboards) {
+    leaderboards = ysdk.leaderboards;
+    lbApi = 'modern';
+  } else {
+    try { leaderboards = await ysdk.getLeaderboards(); lbApi = 'legacy'; }
+    catch { leaderboards = null; }
+  }
+  return true;
 }
 
 function detectLangOffline() {

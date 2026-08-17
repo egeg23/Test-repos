@@ -40,12 +40,29 @@ test('тексты для консоли перечисляют все три л
   }
 });
 
-test('название игры совпадает во всех материалах', () => {
+test('названия на обложках совпадают с названиями для консоли по каждому языку', () => {
+  // Платформа требует совпадения названия на промоматериалах с названием
+  // в консоли для того же языка. Обложки локализованы, значит расхождение
+  // возможно в трёх местах сразу — сверяем таблицы напрямую.
   const fields = read('store/console-fields.md');
   const cover = read('store/cover.html');
-  assert.ok(fields.includes('**Название:** `Бочонки`'), 'название в текстах для консоли изменилось');
-  assert.ok(cover.includes('<h1>Бочонки</h1>'),
-    'название на обложке разошлось с консолью — платформа требует совпадения');
+  const expected = { ru: 'Бочонки', en: 'Barrels', tr: 'Fıçılar' };
+
+  for (const [lang, name] of Object.entries(expected)) {
+    assert.ok(fields.includes('`' + name + '`'),
+      `в текстах для консоли нет названия «${name}» (${lang})`);
+    const row = new RegExp(lang + ":\\s*\\['" + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + "'");
+    assert.ok(row.test(cover),
+      `на обложке для «${lang}» название разошлось с консолью`);
+  }
+});
+
+test('обложка отрисована для каждого заявленного языка', () => {
+  // Черновик не уходит на модерацию, пока медиа заполнены не для всех языков.
+  for (const lang of ['ru', 'en', 'tr']) {
+    const f = join(root, 'store', `cover-${lang}-800x470.png`);
+    assert.doesNotThrow(() => readFileSync(f), `нет обложки для языка «${lang}»`);
+  }
 });
 
 // Регрессия к SEC-001: в лидерборд не должно уходить значение из сохранения.
@@ -112,7 +129,7 @@ test('аварийный экран тоже переведён', () => {
 // чем его отсутствие: следующая игра будет сделана по устаревшему тексту.
 test('правила проекта перечисляют все пункты чек-листа, что закрыты в коде', () => {
   const rules = readFileSync(join(root, '..', 'CLAUDE.md'), 'utf8');
-  const must = ['§1.1', '§1.19.2', '§2.14', '§1.14', '§1.15', '§1.9', '§1.10',
+  const must = ['§1.1', '§1.19', '§2.14', '§1.14', '§1.15', '§1.9', '§1.10',
                 '§1.6', '§1.3', '§4.7', '§4.4', '§4.5', '§2.7', '§5.12',
                 '§2.3', '§2.10', '§3.4', '§3.5', '§3.6', '§2.9'];
   const missing = must.filter((p) => !rules.includes(p));
@@ -125,4 +142,39 @@ test('правила проекта не разошлись с фактичес�
   assert.ok(/800×470/.test(rules), 'потерян подтверждённый размер обложки');
   assert.ok(/5 секунд/.test(rules) && /200 КБ/.test(rules), 'потеряны лимиты сохранений');
   assert.ok(/56 px/.test(rules) && /28 px/.test(rules), 'потеряны требования к размерам элементов');
+  assert.ok(/requestAnimationFrame/.test(rules),
+    'потеряно точное правило вызова Game Ready API — на нём был отказ модерации');
+  assert.ok(/на КАЖДЫЙ заявленный язык/.test(rules),
+    'потеряно правило про комплект медиа на каждый язык — на нём был отказ модерации');
+});
+
+// Требование 1.19: Game Ready API вызывается ровно тогда, когда игрок может
+// начать играть. Модерация уже отклоняла сборку, где сеть стояла в критическом
+// пути и меню (а с ним и сигнал) ждало ответа сервера.
+test('в критическом пути до показа меню нет сетевых вызовов', () => {
+  const main = read('src/main.js');
+  const boot = main.slice(main.indexOf('async function boot'), main.indexOf("go('menu')"));
+  assert.ok(!/store\.load\(\)/.test(boot),
+    'загрузка облачного сохранения снова блокирует показ меню');
+  assert.ok(/store\.loadLocal\(\)/.test(boot),
+    'локальное сохранение должно читаться синхронно');
+  assert.ok(!/initDeferred/.test(boot),
+    'сетевая часть SDK не должна выполняться до показа меню');
+});
+
+test('сигнал готовности привязан к кадру, в котором появилось меню', () => {
+  const main = read('src/main.js');
+  const idxMenu = main.indexOf("go('menu')");
+  const idxReady = main.indexOf('loadingReady');
+  assert.ok(idxMenu > 0 && idxReady > idxMenu, 'ready() должен идти после отрисовки меню');
+  assert.ok(/requestAnimationFrame\(\(\) => sdk\.loadingReady\(\)\)/.test(main),
+    'ready() должен вызываться в requestAnimationFrame — не раньше кадра с меню и не позже');
+});
+
+test('сетевая инициализация вынесена в отложенную фазу', () => {
+  const sdk = read('src/sdk.js');
+  const init = sdk.slice(sdk.indexOf('export async function init'), sdk.indexOf('export async function initDeferred'));
+  for (const call of ['serverTime', 'getPlayer', 'getLeaderboards']) {
+    assert.ok(!init.includes(call), `${call} остался в быстрой инициализации`);
+  }
 });
