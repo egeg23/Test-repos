@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { makeBoard, PRESETS, growRegions, specKey } from '../src/units.js';
+import { makeBoard, boardFromUnits, PRESETS, growRegions, specKey } from '../src/units.js';
 import { countSolutions } from '../src/solver.js';
 import { grade, nextStep, TECHNIQUES } from '../src/techniques.js';
 import { generate } from '../src/generator.js';
@@ -58,20 +58,7 @@ test('у выданной задачи решение единственно', (
 
 // Поле восстанавливаем из областей задачи: у кривых областей нарезка своя
 // на каждую задачу, и заново её не сгенерировать.
-function makeBoardFor(r) {
-  const n = r.n;
-  const units = r.units;
-  const unitsOf = [...Array(n * n)].map(() => []);
-  units.forEach((u) => u.forEach((c) => unitsOf[c].push(u)));
-  const peers = [...Array(n * n)].map((_, c) => {
-    const s = new Set();
-    unitsOf[c].forEach((u) => u.forEach((x) => { if (x !== c) s.add(x); }));
-    return [...s];
-  });
-  return { spec: r.spec, variant: r.spec.regions === 'jigsaw' ? 'jigsaw' : 'boxes',
-           key: r.key, n, cells: n * n, units, unitSets: units.map((u) => new Set(u)),
-           unitsOf, peers, full: (1 << n) - 1 };
-}
+const makeBoardFor = (r) => boardFromUnits(r.units, r.n, r.spec);
 
 test('заявленная сложность настоящая: ниже уровнем задача не решается', () => {
   // Главная гарантия проекта. В каталоге «сложные» задачи сплошь и рядом
@@ -189,4 +176,55 @@ test('невозможные наборы правил отбиваются, а 
   assert.throws(() => makeBoard({ size: 7 }), /размер/);
   assert.throws(() => makeBoard('нет такого'), /неизвестные правила/);
   assert.equal(specKey({ size: 9, regions: 'jigsaw', diagonal: true }), '9x9-jigsaw-diag');
+});
+
+test('отобранные нарезки корректны', async () => {
+  const { JIGSAW_LAYOUTS, layoutUnits } = await import('../src/jigsawLayouts.js');
+  assert.ok(JIGSAW_LAYOUTS.length >= 12, `нарезок всего ${JIGSAW_LAYOUTS.length}`);
+  for (const [i, layout] of JIGSAW_LAYOUTS.entries()) {
+    assert.equal(layout.length, 81, `нарезка ${i}: не 81 клетка`);
+    const units = layoutUnits(layout);
+    assert.equal(units.length, 9);
+    for (const u of units) {
+      assert.equal(u.length, 9, `нарезка ${i}: область из ${u.length} клеток`);
+      const set = new Set(u), seen = new Set([u[0]]), stack = [u[0]];
+      while (stack.length) {
+        const c = stack.pop(), r = Math.floor(c / 9), q = c % 9;
+        for (const [dr, dq] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+          const nr = r + dr, nq = q + dq;
+          if (nr < 0 || nq < 0 || nr > 8 || nq > 8) continue;
+          const p = nr * 9 + nq;
+          if (set.has(p) && !seen.has(p)) { seen.add(p); stack.push(p); }
+        }
+      }
+      assert.equal(seen.size, 9, `нарезка ${i}: область разорвана`);
+    }
+  }
+});
+
+test('бюджет перебора отсекает дорогую задачу, а не врёт про решения', () => {
+  // Пустое поле 9x9 при мизерном бюджете обязано сказать «не знаю»
+  // (exhausted), а не «решений нет». Спутать эти два ответа — значит выдать
+  // игроку задачу с непроверенной единственностью.
+  const b = makeBoard({ size: 9, regions: 'boxes' }, mulberry32(1));
+  const tight = countSolutions(b, new Array(81).fill(0), 2, null, 3);
+  assert.equal(tight.exhausted, true, 'бюджет не сработал');
+
+  const fair = countSolutions(b, new Array(81).fill(0), 2, null, 500000);
+  assert.equal(fair.exhausted, false);
+  assert.ok(fair.count >= 1);
+});
+
+test('генерация укладывается в бюджет узлов на всех наборах правил', () => {
+  // Числом узлов, а не миллисекундами: узлы одинаковы на любом устройстве,
+  // поэтому этот порог что-то значит и на телефоне игрока.
+  for (const spec of [{ size: 9, regions: 'boxes' }, { size: 9, regions: 'jigsaw' },
+                      { size: 9, regions: 'jigsaw', diagonal: true }]) {
+    const r = generate(spec, 'hard', mulberry32(specKey(spec).length * 29), { attempts: 3 });
+    assert.ok(r, `${specKey(spec)}: задача не сгенерирована`);
+    const b = makeBoardFor(r);
+    const check = countSolutions(b, r.puzzle, 2);
+    assert.equal(check.exhausted, false, `${specKey(spec)}: проверка не уложилась в бюджет`);
+    assert.equal(check.count, 1);
+  }
 });

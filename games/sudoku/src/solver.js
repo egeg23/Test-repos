@@ -71,18 +71,28 @@ function hardest(b, cands) {
   return best;
 }
 
+// Бюджет перебора. Меряем в УЗЛАХ, а не в миллисекундах, и это принципиально:
+// миллисекунды зависят от устройства, поэтому на телефоне игрока бюджет вёл бы
+// себя не так, как на нашей машине, и воспроизвести отказ было бы нечем.
+// Число узлов детерминировано — одинаково везде и закрывается тестом.
+//
+// Повод: у кривых областей время резки разошлось от 64 мс (медиана) до часов
+// на отдельных нарезках. Без потолка такая нарезка вешает игру намертво.
+export const DEFAULT_NODE_BUDGET = 200_000;
+
 /**
  * Сколько решений у задачи, но не больше limit.
- * Генератору хватает ответа «одно или больше одного», считать все незачем.
+ * exhausted: true — бюджет исчерпан, ответ неполный. Вызывающий обязан
+ * трактовать это как «задача слишком дорогая», а не как «решений мало».
  */
-export function countSolutions(b, grid, limit = 2, order = null) {
+export function countSolutions(b, grid, limit = 2, order = null, budget = DEFAULT_NODE_BUDGET) {
   const start = fromGrid(b, grid);
-  if (!start) return 0;
-  let found = 0;
-  let first = null;
+  if (!start) return { count: 0, solution: null, exhausted: false, nodes: 0 };
+  let found = 0, nodes = 0, first = null, exhausted = false;
 
   (function search(cands) {
-    if (found >= limit) return;
+    if (found >= limit || exhausted) return;
+    if (++nodes > budget) { exhausted = true; return; }
     if (solved(b, cands)) { found++; if (!first) first = toGrid(b, cands); return; }
     const c = hardest(b, cands);
     const vals = [];
@@ -91,22 +101,23 @@ export function countSolutions(b, grid, limit = 2, order = null) {
     for (const v of vals) {
       const copy = cands.slice();
       if (assign(b, copy, c, v)) search(copy);
-      if (found >= limit) return;
+      if (found >= limit || exhausted) return;
     }
   })(start);
 
-  return { count: found, solution: first };
+  return { count: found, solution: first, exhausted, nodes };
 }
 
 /** Полностью заполненная сетка — основа будущей задачи. */
-export function fullGrid(b, rnd) {
+export function fullGrid(b, rnd, budget = DEFAULT_NODE_BUDGET) {
   const shuffle = (a) => {
     for (let i = a.length - 1; i > 0; i--) {
       const j = Math.floor(rnd() * (i + 1));
       [a[i], a[j]] = [a[j], a[i]];
     }
   };
-  const r = countSolutions(b, new Array(b.cells).fill(0), 1, shuffle);
-  if (!r.solution) throw new Error('поле варианта не имеет решений');
+  const r = countSolutions(b, new Array(b.cells).fill(0), 1, shuffle, budget);
+  if (r.exhausted) return null;                 // нарезка слишком дорогая
+  if (!r.solution) throw new Error('этот набор правил не имеет решений');
   return r.solution;
 }

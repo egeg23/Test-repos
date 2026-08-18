@@ -7,7 +7,7 @@
 //      и рядом закрываются одними одиночками — мы так не делаем.
 
 import { makeBoard, specKey } from './units.js';
-import { countSolutions, fullGrid } from './solver.js';
+import { countSolutions, fullGrid, DEFAULT_NODE_BUDGET } from './solver.js';
 import { grade } from './techniques.js';
 
 // Полосы сложности по максимальной необходимой технике.
@@ -64,7 +64,7 @@ function orbits(n, symKey) {
  * перевалив за потолок сложности. Потолок проверяется на каждом шаге: резать
  * вслепую и потом надеяться попасть в полосу стоило десятки секунд на задачу.
  */
-function carve(b, solution, rnd, maxLevel, symKey, minClues) {
+function carve(b, solution, rnd, maxLevel, symKey, minClues, budget) {
   const puzzle = solution.slice();
   let clues = b.cells;
   for (const orbit of shuffled(orbits(b.n, symKey), rnd)) {
@@ -77,7 +77,10 @@ function carve(b, solution, rnd, maxLevel, symKey, minClues) {
     const keep = orbit.map((c) => puzzle[c]);
     orbit.forEach((c) => { puzzle[c] = 0; });
     const restore = () => orbit.forEach((c, i) => { puzzle[c] = keep[i]; });
-    if (countSolutions(b, puzzle, 2).count !== 1) { restore(); continue; }
+    const cnt = countSolutions(b, puzzle, 2, null, budget);
+    // Исчерпанный бюджет — это «не знаю», а не «решение одно». Принять такую
+    // клетку значило бы выдать игроку задачу с непроверенной единственностью.
+    if (cnt.exhausted || cnt.count !== 1) { restore(); continue; }
     const g = grade(b, puzzle);
     if (!g.solved || g.level > maxLevel) { restore(); continue; }
     clues -= orbit.length;
@@ -86,15 +89,17 @@ function carve(b, solution, rnd, maxLevel, symKey, minClues) {
 }
 
 export function generate(spec, bandKey, rnd, opts = {}) {
-  const { symmetry = 'none', attempts = 8, minClues = 0 } = opts;
+  const { symmetry = 'none', attempts = 8, minClues = 0,
+          budget = DEFAULT_NODE_BUDGET } = opts;
   const band = BANDS.find((x) => x.key === bandKey);
   if (!band) throw new Error('неизвестная сложность: ' + bandKey);
 
   let closest = null;
   for (let i = 0; i < attempts; i++) {
     const b = makeBoard(spec, rnd);
-    const solution = fullGrid(b, rnd);
-    const puzzle = carve(b, solution, rnd, band.levels[1], symmetry, minClues);
+    const solution = fullGrid(b, rnd, budget);
+    if (!solution) continue;                       // нарезка не уложилась в бюджет
+    const puzzle = carve(b, solution, rnd, band.levels[1], symmetry, minClues, budget);
     const g = grade(b, puzzle);
     if (!g.solved) continue;
 

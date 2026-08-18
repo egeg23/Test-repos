@@ -6,6 +6,8 @@
 // Решатель, счётчик решений и оценщик сложности про варианты не знают
 // вообще ничего. Новый вариант стоит одну функцию, а не новую игру.
 
+import { JIGSAW_LAYOUTS, layoutUnits } from './jigsawLayouts.js';
+
 export const ALL = 0b111111111;          // маска «возможны все девять»
 export const bit = (v) => 1 << (v - 1);
 export const popcount = (m) => { let c = 0; while (m) { m &= m - 1; c++; } return c; };
@@ -145,17 +147,9 @@ export function normalize(spec) {
   return s;
 }
 
-/** Поле по набору правил: области, области каждой клетки и её соседи. */
-export function makeBoard(spec, rnd = Math.random) {
-  const s = normalize(spec);
-  const n = s.size, cells = n * n;
-  const [bh, bw] = n === 6 ? [2, 3] : [3, 3];
-
-  const units = [...rowsCols(n)];
-  units.push(...(s.regions === 'jigsaw' ? growRegions(rnd, n) : boxes(n, bh, bw)));
-  if (s.diagonal) units.push(...diagonals(n));
-  if (s.hyper) units.push(...hyper(n));
-
+/** Поле из готового списка областей. Общий низ для makeBoard, отбора и тестов. */
+export function boardFromUnits(units, n, spec = {}) {
+  const cells = n * n;
   const unitsOf = [...Array(cells)].map(() => []);
   units.forEach((u) => u.forEach((c) => unitsOf[c].push(u)));
 
@@ -165,12 +159,46 @@ export function makeBoard(spec, rnd = Math.random) {
     return [...t];
   });
 
-  // Инварианты набора правил. Кривые области растятся случайно — без проверки
-  // битая нарезка молча уехала бы в генератор и дала поле без решений.
+  // Инварианты набора правил. Без проверки битая нарезка молча уехала бы
+  // в генератор и дала поле без решений.
   if (units.some((u) => u.length !== n)) throw new Error('область не из ' + n + ' клеток');
   if (unitsOf.some((u) => !u.length)) throw new Error('клетка вне областей');
 
-  return { spec: s, variant: s.regions === 'jigsaw' ? 'jigsaw' : 'boxes', key: specKey(s),
-           n, cells, units, unitSets: units.map((u) => new Set(u)), unitsOf, peers,
-           full: (1 << n) - 1 };
+  return { spec, variant: spec.regions === 'jigsaw' ? 'jigsaw' : 'boxes',
+           key: spec.size ? specKey(spec) : `${n}x${n}-custom`,
+           n, cells, units, unitSets: units.map((u) => new Set(u)),
+           unitsOf, peers, full: (1 << n) - 1 };
 }
+
+/** Поле по набору правил: области, области каждой клетки и её соседи. */
+export function makeBoard(spec, rnd = Math.random) {
+  const s = normalize(spec);
+  const n = s.size;
+  const [bh, bw] = n === 6 ? [2, 3] : [3, 3];
+
+  const units = [...rowsCols(n)];
+  if (s.regions === 'jigsaw') {
+    // Нарезку берём из отобранных, а не растим на месте. Среди случайных
+    // нарезок попадаются такие, на которых решатель уходит в часы — замер
+    // по сорока штукам дал максимум около двух с половиной часов при
+    // медиане 64 мс. Отбор — в tools/vet-layouts.mjs, по числу узлов.
+    // На 6x6 отобранных нарезок пока нет, там растим по-старому.
+    if (n === 9) {
+      const i = (s.layout != null ? s.layout : Math.floor(rnd() * JIGSAW_LAYOUTS.length))
+        % JIGSAW_LAYOUTS.length;
+      units.push(...layoutUnits(JIGSAW_LAYOUTS[i]));
+      s.layout = i;
+    } else {
+      units.push(...growRegions(rnd, n));
+    }
+  } else {
+    units.push(...boxes(n, bh, bw));
+  }
+  if (s.diagonal) units.push(...diagonals(n));
+  if (s.hyper) units.push(...hyper(n));
+
+  return boardFromUnits(units, n, s);
+}
+
+/** Строки и столбцы — общая часть любого набора правил. Нужна инструменту отбора. */
+export const linesOf = (n) => rowsCols(n);
