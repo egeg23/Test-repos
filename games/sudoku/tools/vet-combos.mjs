@@ -12,7 +12,9 @@ import { specKey } from '../src/units.js';
 import { mulberry32 } from '../src/rng.js';
 import { writeFileSync } from 'node:fs';
 
-const SEEDS = Number(process.argv[2] || 3);
+const SEEDS = Number(process.argv[2] || 6);
+// Порог надёжности: ниже — сочетание в конструкторе не показываем.
+const MIN_RATE = Number(process.argv[3] || 0.5);
 
 const rules = [];
 for (const size of [9, 6]) {
@@ -29,26 +31,37 @@ const reachable = {};
 let ok = 0, total = 0, slowest = 0, slowestName = '';
 for (const spec of rules) {
   const key = specKey(spec);
-  reachable[key] = [];
+  reachable[key] = {};
   for (const band of BANDS) {
     for (const sym of SYMMETRIES) {
       total++;
-      // Сочетание считается рабочим, если полоса берётся хотя бы с одного
-      // сида: разброс есть, и одного неудачного сида мало для приговора.
-      let hit = false;
-      for (let s = 0; s < SEEDS && !hit; s++) {
+      // Считаем ДОЛЮ попаданий, а не факт «сработало хоть раз». Разница
+      // принципиальная: критерий «хотя бы на одном сиде из трёх» помечает
+      // достижимым и то, что берётся в трети случаев — игрок выбирал бы
+      // сочетание и регулярно получал не ту полосу, что заказывал.
+      let hits = 0, tried = 0;
+      for (let s = 0; s < SEEDS; s++) {
+        // Ранний выход. Если порог уже недостижим арифметически — даже
+        // попадание на всех оставшихся сидах не вытянет долю до MIN_RATE —
+        // добивать бессмысленно. Именно недостижимые сочетания стоят дороже
+        // всего: генератор честно жжёт все попытки и уходит ни с чем.
+        if ((hits + (SEEDS - s)) / SEEDS < MIN_RATE) break;
         const t0 = Date.now();
         let r = null;
-        try { r = generate(spec, band.key, mulberry32(total * 7919 + s), { symmetry: sym.key, attempts: 3 }); }
+        try { r = generate(spec, band.key, mulberry32(total * 7919 + s), { symmetry: sym.key, attempts: 2 }); }
         catch { r = null; }
         const ms = Date.now() - t0;
         if (ms > slowest) { slowest = ms; slowestName = `${key} / ${band.name} / ${sym.name}`; }
-        if (r && r.band.key === band.key) hit = true;
+        if (r && r.band.key === band.key) hits++;
+        tried++;
       }
-      if (hit) { reachable[key].push(`${band.key}:${sym.key}`); ok++; }
+      // Доля считается от опробованных сидов: при раннем выходе делить на
+      // полное число сидов значило бы занизить долю у рабочих сочетаний.
+      const rate = tried ? hits / tried : 0;
+      if (rate >= MIN_RATE) { reachable[key][`${band.key}:${sym.key}`] = rate; ok++; }
     }
   }
-  console.log(`${key.padEnd(24)} ${reachable[key].length}/25`);
+  console.log(`${key.padEnd(24)} ${Object.keys(reachable[key]).length}/25`);
 }
 
 console.log(`\nвсего сочетаний: ${total} · достижимо: ${ok} · недостижимо: ${total - ok}`);
@@ -56,21 +69,27 @@ console.log(`самая долгая попытка: ${slowest} мс — ${slowe
 
 writeFileSync(new URL('../src/combos.js', import.meta.url),
 `// Достижимые сочетания правил, сложности и симметрии.
-// Сгенерировано tools/vet-combos.mjs (${SEEDS} сида на сочетание).
+// Сгенерировано tools/vet-combos.mjs (${SEEDS} сидов, порог надёжности ${MIN_RATE}).
 //
-// Конструктор обязан сверяться с этой таблицей и не предлагать того, чего
-// на выбранных правилах не существует. Это не только честность интерфейса:
-// самая долгая генерация уходила именно на попытки добыть недостижимую
-// полосу — до 15,8 секунды впустую.
+// Значение — ДОЛЯ попаданий в заказанную полосу, а не факт «сработало хоть
+// раз». Разница принципиальная: критерий «хотя бы раз из трёх» помечал
+// достижимым и то, что берётся в трети случаев, и игрок регулярно получал бы
+// не ту полосу, что заказывал. Поймано тестом на живой таблице.
 //
-// Достижимо ${ok} сочетаний из ${total}.
+// Конструктор обязан сверяться с таблицей и не предлагать того, чего на
+// выбранных правилах нет: самая долгая генерация уходила ровно на попытки
+// добыть недостижимую полосу — больше десяти секунд впустую.
+//
+// Достижимо ${ok} сочетаний из ${total} при пороге ${MIN_RATE}.
 
 export const REACHABLE = ${JSON.stringify(reachable, null, 2)};
 
-/** Доступна ли пара «сложность + симметрия» на этом наборе правил. */
-export function isReachable(key, band, symmetry) {
-  return (REACHABLE[key] || []).includes(\`\${band}:\${symmetry}\`);
+/** Доля попаданий в заказанную полосу, 0 — сочетание не предлагаем. */
+export function hitRate(key, band, symmetry) {
+  return (REACHABLE[key] || {})[\`\${band}:\${symmetry}\`] || 0;
 }
+
+export const isReachable = (key, band, symmetry) => hitRate(key, band, symmetry) > 0;
 
 /** Сколько всего рабочих сочетаний — число из описания игры. */
 export const TOTAL_REACHABLE = ${ok};

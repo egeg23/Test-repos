@@ -228,3 +228,72 @@ test('генерация укладывается в бюджет узлов н�
     assert.equal(check.count, 1);
   }
 });
+
+// Таблица достижимости — генерируемый артефакт (tools/vet-combos.mjs).
+// Пока её не собрали, проверки по ней обязаны честно сказать «пропущено»,
+// а не падать: отсутствие артефакта — не дефект движка.
+async function combosOrNull() {
+  try { return await import('../src/combos.js'); }
+  catch { return null; }
+}
+const NO_TABLE = 'таблица не собрана: node tools/vet-combos.mjs';
+
+test('таблица достижимости корректна по форме', async (t) => {
+  const combos = await combosOrNull();
+  if (!combos) return t.skip(NO_TABLE);
+  const { REACHABLE, TOTAL_REACHABLE, hitRate } = combos;
+  const { BANDS, SYMMETRIES } = await import('../src/generator.js');
+  const bands = new Set(BANDS.map((b) => b.key));
+  const syms = new Set(SYMMETRIES.map((x) => x.key));
+
+  let sum = 0;
+  for (const [key, entries] of Object.entries(REACHABLE)) {
+    assert.match(key, /^[69]x[69]-(boxes|jigsaw)(-diag)?(-hyper)?$/, `странный ключ: ${key}`);
+    for (const [pair, rate] of Object.entries(entries)) {
+      const [band, sym] = pair.split(':');
+      assert.ok(bands.has(band), `${key}: неизвестная полоса ${band}`);
+      assert.ok(syms.has(sym), `${key}: неизвестная симметрия ${sym}`);
+      assert.ok(rate > 0 && rate <= 1, `${key}/${pair}: доля ${rate} вне (0,1]`);
+    }
+    sum += Object.keys(entries).length;
+  }
+  assert.equal(sum, TOTAL_REACHABLE, 'итог не сходится со списками');
+  assert.equal(hitRate('6x6-jigsaw-diag', 'easy', 'none'), 0);
+});
+
+test('название «101 Sudoku» не расходится с игрой', async (t) => {
+  // §2.3: описание обязано соответствовать тому, что в игре есть. Название —
+  // утверждение в описании, поэтому закрывается тестом наравне с подсказкой.
+  // Упадёт число рабочих сочетаний ниже 101 — упадёт и тест, а не выяснится
+  // на модерации.
+  const combos = await combosOrNull();
+  if (!combos) return t.skip(NO_TABLE);
+  assert.ok(combos.TOTAL_REACHABLE > 101,
+    `рабочих сочетаний ${combos.TOTAL_REACHABLE}, названию «101» верить нельзя`);
+});
+
+test('надёжные сочетания действительно берутся', async (t) => {
+  const combos = await combosOrNull();
+  if (!combos) return t.skip(NO_TABLE);
+  // Проверяем только те, что таблица объявила надёжными. Сочетание с долей
+  // 0.5 честно берётся через раз, и требовать от него попадания с четырёх
+  // попыток — значит проверять удачу, а не движок. Ровно на этом упала
+  // первая версия теста: критерий таблицы был «сработало хоть раз».
+  const samples = [['9x9-boxes', { size: 9, regions: 'boxes' }],
+                   ['9x9-jigsaw', { size: 9, regions: 'jigsaw' }]];
+  let checked = 0;
+  for (const [key, spec] of samples) {
+    const solid = Object.entries(combos.REACHABLE[key] || {}).filter(([, r]) => r >= 0.8);
+    if (!solid.length) continue;
+    const [pair] = solid[0];
+    const [band, symmetry] = pair.split(':');
+    let hit = false;
+    for (let s = 0; s < 4 && !hit; s++) {
+      const r = generate(spec, band, mulberry32(s * 61 + key.length), { symmetry, attempts: 3 });
+      if (r && r.band.key === band) hit = true;
+    }
+    assert.ok(hit, `${key}/${pair}: доля ≥0.8, но за четыре попытки не взялось`);
+    checked++;
+  }
+  if (!checked) return t.skip('надёжных сочетаний в таблице нет');
+});
