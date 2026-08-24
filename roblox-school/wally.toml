@@ -1,0 +1,8 @@
+[package]
+name = "egeg23/roblox-school"
+version = "0.1.0"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+
+[dependencies]
+ProfileStore = "loleris/profilestore@1.0.0"
