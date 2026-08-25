@@ -106,11 +106,19 @@ export type TeacherState = {
 	rating: number,
 	ratingCount: number,
 	classIds: { string },
-	--- Lifetime payout already drawn from each student. Caps a teacher farming a
-	--- small circle of friends indefinitely.
-	studentPayouts: { [string]: number },
-	--- Completions per student, driving uniqueness decay.
-	studentCompletions: { [string]: number },
+	--- Points earned from teaching that have not yet been moved into `points`.
+	pendingPayout: number,
+}
+
+--- What this player owes a given teacher's decay curve, keyed by teacher user id.
+---
+--- These counters live on the *student* rather than the teacher because lessons
+--- are asynchronous: the teacher is usually offline when their lesson is taken,
+--- so their profile is not available to read a decay factor out of. The student
+--- is by definition present. The pair is symmetric, so either side can hold it.
+export type TeacherHistoryEntry = {
+	completions: number,
+	paid: number,
 }
 
 export type ProfileData = {
@@ -120,11 +128,19 @@ export type ProfileData = {
 	playSeconds: number,
 	points: number,
 	grade: number,
+	--- Lessons passed since entering the current grade. Reset on advance, so the
+	--- grade requirement can grow without rewriting history.
+	lessonsThisGrade: number,
 	graduatedCount: number,
+	--- Set when the last grade is finished and cleared once the player picks what
+	--- to do next. Graduation is a branch the player chooses, not an event that
+	--- happens to them.
+	awaitingGraduation: boolean,
 	subjects: { [string]: SubjectProgress },
 	achievements: { [string]: boolean },
 	role: Role,
 	teacher: TeacherState,
+	teacherHistory: { [string]: TeacherHistoryEntry },
 	--- Receipt ids already granted, mapped to when. Makes ProcessReceipt
 	--- idempotent across the retries Roblox performs when a grant is not
 	--- acknowledged.

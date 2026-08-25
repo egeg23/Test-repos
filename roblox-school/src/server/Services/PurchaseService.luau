@@ -43,11 +43,7 @@ local function pruneReceipts(data: Types.ProfileData)
 	local granted = data.grantedReceipts
 	local keys: { string } = {}
 
-	-- The casts are load-bearing: iterating a `{ [string]: number }` yields
-	-- optional key and value types, and this map is never sparse in practice.
-	for rawId, rawStamp in granted do
-		local receiptId: string = rawId :: any
-		local stamp: number = rawStamp :: any
+	for receiptId, stamp in granted do
 		if now - stamp > RECEIPT_RETENTION_SECONDS then
 			granted[receiptId] = nil
 		else
@@ -61,10 +57,8 @@ local function pruneReceipts(data: Types.ProfileData)
 
 	-- Oldest first, so the entries dropped are the ones least likely to still be
 	-- inside Roblox's retry window.
-	table.sort(keys, function(a: string, b: string): boolean
-		local stampA: number = granted[a] or 0
-		local stampB: number = granted[b] or 0
-		return stampA < stampB
+	table.sort(keys, function(a, b)
+		return granted[a] < granted[b]
 	end)
 
 	for index = 1, #keys - RECEIPT_MAX_ENTRIES do

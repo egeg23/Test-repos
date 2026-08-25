@@ -13,8 +13,11 @@ Remotes.Names = {
 	RequestAd = "RequestAd",
 	AdState = "AdState",
 	StartLesson = "StartLesson",
+	LessonQuestion = "LessonQuestion",
 	SubmitAnswer = "SubmitAnswer",
-	FinishLesson = "FinishLesson",
+	AnswerResult = "AnswerResult",
+	LessonFinished = "LessonFinished",
+	LessonRejected = "LessonRejected",
 	ClassDirectory = "ClassDirectory",
 	JoinClass = "JoinClass",
 }

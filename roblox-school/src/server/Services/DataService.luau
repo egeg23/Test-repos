@@ -16,6 +16,9 @@ local DataService = {}
 
 local SCHEMA_VERSION = 1
 local STORE_NAME = "PlayerData_v1"
+--- Played time feeds the anti-alt gate on teacher payouts, so it is accumulated
+--- server-side on a tick rather than trusted from the client.
+local PLAYTIME_TICK_SECONDS = 15
 
 local TEMPLATE: Types.ProfileData = {
 	schemaVersion = SCHEMA_VERSION,
@@ -24,7 +27,9 @@ local TEMPLATE: Types.ProfileData = {
 	playSeconds = 0,
 	points = 0,
 	grade = 1,
+	lessonsThisGrade = 0,
 	graduatedCount = 0,
+	awaitingGraduation = false,
 	subjects = {},
 	achievements = {},
 	role = "student",
@@ -34,9 +39,9 @@ local TEMPLATE: Types.ProfileData = {
 		rating = 0,
 		ratingCount = 0,
 		classIds = {},
-		studentPayouts = {},
-		studentCompletions = {},
+		pendingPayout = 0,
 	},
+	teacherHistory = {},
 	grantedReceipts = {},
 	adCooldowns = {},
 	adDailyCounts = {},
@@ -141,6 +146,17 @@ function DataService.start()
 	end
 	Players.PlayerAdded:Connect(onPlayerAdded)
 	Players.PlayerRemoving:Connect(onPlayerRemoving)
+
+	task.spawn(function()
+		while true do
+			task.wait(PLAYTIME_TICK_SECONDS)
+			for _, profile in profiles do
+				if profile:IsActive() then
+					profile.Data.playSeconds += PLAYTIME_TICK_SECONDS
+				end
+			end
+		end
+	end)
 end
 
 return DataService

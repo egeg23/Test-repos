@@ -17,6 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 ECONOMY = ROOT / "src/shared/Config/Economy.luau"
+PROGRESSION = ROOT / "src/shared/Config/Progression.luau"
 MONETIZATION = ROOT / "src/shared/Config/Monetization.luau"
 
 # Session lengths where the catch-up promise has to hold. Very short and very
@@ -29,6 +30,24 @@ def parse_economy() -> dict[str, float]:
     text = ECONOMY.read_text(encoding="utf-8")
     found = dict(re.findall(r"^Economy\.(\w+)\s*=\s*([0-9.]+)$", text, re.MULTILINE))
     return {key: float(value) for key, value in found.items()}
+
+
+def parse_progression() -> tuple[int, int]:
+    """Max grade, and the constant in `lessonsForGrade`.
+
+    Parsed rather than copied, and loudly fatal if the shape of that function
+    changes, so this check can never quietly measure a formula the game no
+    longer uses.
+    """
+    text = PROGRESSION.read_text(encoding="utf-8")
+    max_grade = re.search(r"^Progression\.MaxGrade\s*=\s*(\d+)$", text, re.MULTILINE)
+    offset = re.search(r"return\s+(\d+)\s*\+\s*clamped", text)
+    if not max_grade or not offset:
+        raise SystemExit(
+            "simulate_economy: could not read the grade formula out of "
+            "Progression.luau -- update this parser before trusting the result."
+        )
+    return int(max_grade.group(1)), int(offset.group(1))
 
 
 def parse_ad_rewards() -> dict[str, dict[str, float]]:
@@ -179,6 +198,41 @@ def main() -> int:
         print(f"  {label:<18} {share:>6.0%} of honest income   {verdict}")
         if share > 1.0:
             failures.append((label, share))
+
+    print()
+    print("=" * 74)
+    print("Time to graduate")
+    print("=" * 74)
+
+    max_grade, offset = parse_progression()
+    lessons_to_pass = sum(offset + grade for grade in range(1, max_grade + 1))
+    seconds_per_lesson = economy["QuestionsPerLesson"] * economy["ExpectedSecondsPerQuestion"]
+
+    # A player has to *pass* every one of those lessons, and the quality band
+    # targets a pass rate well under 100%, so attempts outnumber passes.
+    band_pass_rate = (economy["QualityBandLow"] + economy["QualityBandHigh"]) / 2
+    attempts_needed = lessons_to_pass / band_pass_rate
+    lesson_hours = attempts_needed * seconds_per_lesson / 3600
+
+    # Menus, picking a class, talking to people, walking around a school.
+    OVERHEAD = 1.5
+    wall_hours = lesson_hours * OVERHEAD
+
+    print(f"  grades                    {max_grade}")
+    print(f"  lessons to pass           {lessons_to_pass}")
+    print(f"  seconds per lesson        {seconds_per_lesson:.0f}")
+    print(f"  assumed pass rate         {band_pass_rate:.0%}  (centre of the quality band)")
+    print(f"  attempts needed           {attempts_needed:.0f}")
+    print(f"  hours of lessons          {lesson_hours:.1f}")
+    print(f"  wall-clock at {OVERHEAD:.1f}x overhead {wall_hours:.1f}")
+    print()
+    print("  A first prestige wants to land within a few weeks of casual play.")
+
+    if not 8 <= wall_hours <= 25:
+        failures.append(("time to graduate", wall_hours))
+        print(f"  <-- OUT OF BAND: {wall_hours:.1f}h is outside 8-25h")
+    else:
+        print(f"  ok: {wall_hours:.1f}h is inside 8-25h")
 
     print()
     if failures:

@@ -7,6 +7,10 @@
       "Shared": { "$path": "src/shared" },
       "Packages": { "$path": "Packages" }
     },
+    "ServerStorage": {
+      "$comment": "Question banks live server-side and are never replicated. They contain the answer keys: putting them in ReplicatedStorage would hand every client a copy of every answer.",
+      "Banks": { "$path": "content/banks" }
+    },
     "ServerScriptService": {
       "Server": { "$path": "src/server" }
     },

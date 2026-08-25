@@ -59,18 +59,28 @@ tools/          checks that run outside Studio
 ```
 
 - `tools/check.sh` parses every Luau file with the upstream Luau binary
-  (downloaded on first run). It catches syntax errors and unused locals. It does
-  **not** typecheck against the Roblox API: luau-lsp's `globalTypes.d.luau` uses
-  `declare class ... with ... end`, which upstream `luau-analyze` cannot parse,
-  so "unknown global" diagnostics are filtered out.
+  (downloaded on first run) and gates on syntax errors and lints.
+
+  It deliberately does **not** gate on type errors, and it is worth knowing why.
+  Requires here are Roblox instance paths (`ReplicatedStorage.Shared.Types`),
+  which no file-based tool can resolve, so every type imported from another
+  module degrades to an error type and the checker then invents a structure from
+  how the value happens to be used. The result is long cascades of
+  confident-looking nonsense — "does not have key 'grade'" about a field that is
+  plainly declared. This was confirmed by handing the checker identical code with
+  a local type declaration, which passes clean. Type diagnostics are counted and
+  suppressed; real typechecking needs luau-lsp with a Rojo sourcemap, in Studio
+  or an editor.
 - `tools/validate_bank.py` enforces the question authoring rules. Besides the
   per-question checks it looks for two bank-wide patterns children find fast: the
   correct answer being uniquely the longest option, and answers clustering in one
   slot. Either turns a test of understanding into a test of pattern-spotting.
 - `tools/simulate_economy.py` reads its constants straight out of the Luau
-  sources, so it cannot drift from the game, and verifies both economic claims —
-  the ad catch-up band, and that every farming route earns less than honest
-  teaching.
+  sources, so it cannot drift from the game. It verifies the ad catch-up band,
+  that every farming route earns less than honest teaching, and that the run to
+  graduation lands in a sane number of hours. If the shape of a parsed formula
+  changes it aborts rather than quietly measuring a formula the game no longer
+  uses.
 
 ## Opening in Studio
 
@@ -118,11 +128,24 @@ git push git@github.com:<owner>/roblox-school.git roblox-school-only:main
 
 ## State
 
-Done: project skeleton, shared types and config, profile storage with session
-locking, idempotent receipts, the rewarded-video flow, rate limiting, a seeded
-question bank and the three checks above.
+Playable loop: a student starts a lesson, is asked six questions drawn from the
+bank with the options shuffled per attempt, sees an explanation after every
+answer, and is marked, paid and advanced a grade when enough lessons are passed.
+Graduation branches into university, teaching or a new run.
 
-Next, in order: subject mechanics (quizzes, obstacle courses, assembly), grade
-progression through to graduation, player teachers and the payout formula in
-`Economy.luau`, the authoring and moderation pipeline, campuses and elections,
-then translation.
+Also done: profile storage with session locking, idempotent receipts, the
+rewarded-video flow, rate limiting, offline teacher payouts, and the checks
+above.
+
+Not done yet: classes and the class directory, teacher-authored lessons and the
+moderation queue, obstacle courses and assembly lessons, campuses and elections,
+translation, and the shop UI.
+
+Two notes for whoever picks this up:
+
+- Lesson pass-rate statistics are server-local. They need to move onto
+  `MemoryStoreService` when classes land, or a quiet server will judge a
+  teacher's lesson on its own small sample.
+- `LessonService` fills teacher fields on an attempt with zeroes, so bank
+  lessons pay nobody. The class system supplies the real author, class fill and
+  rating.

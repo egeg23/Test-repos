@@ -59,6 +59,31 @@ Economy.MinPlaySecondsToCount = 900
 --- not a value scattered through the reward tables.
 Economy.AdCatchUpTarget = 0.55
 
+--- Student-side lesson rewards.
+Economy.QuestionsPerLesson = 6
+Economy.PointsPerCorrect = 8
+Economy.PassBonus = 25
+Economy.DefaultPassFraction = 0.6
+--- Used for the engagement factor and to size the lesson timer. A player well
+--- under this on every question is not quick, they are automated.
+Economy.ExpectedSecondsPerQuestion = 25
+
+--- Points a student takes home. Multipliers stack: prestige, the x2 pass and the
+--- ad boost are independent, so a payer who also watches ads gets both -- which
+--- is the correct outcome, and the reason the catch-up figure compares ad-only
+--- against pass-only rather than against everything at once.
+function Economy.studentReward(
+	correctCount: number,
+	passed: boolean,
+	multiplier: number
+): number
+	local base = Economy.PointsPerCorrect * math.max(correctCount, 0)
+	if passed then
+		base += Economy.PassBonus
+	end
+	return math.floor(base * math.max(multiplier, 0) + 0.5)
+end
+
 export type PayoutInput = {
 	--- Times this student already completed this teacher's lessons.
 	priorCompletions: number,
