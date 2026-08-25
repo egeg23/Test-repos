@@ -56,6 +56,7 @@ export type ObstacleSpec = {
 
 export type ModerationStatus = "draft" | "pending" | "published" | "rejected"
 
+
 export type Lesson = {
 	id: string,
 	authorUserId: number,
@@ -78,14 +79,31 @@ export type Lesson = {
 export type Class = {
 	id: string,
 	teacherUserId: number,
+	teacherName: string,
 	locale: LocaleId,
 	subject: string,
 	title: string,
 	capacity: number,
 	memberUserIds: { number },
-	lessonIds: { string },
+	--- Lessons are embedded rather than stored separately: a class holds a
+	--- handful of them, they are always read together with it, and one read per
+	--- lesson start beats two.
+	lessons: { [string]: Lesson },
 	rating: number,
 	ratingCount: number,
+	--- Unix seconds until which this class is promoted in the directory. Lives on
+	--- the class, not on the teacher's profile, because the promotion has to keep
+	--- working while the teacher is offline -- which is the normal case.
+	promoUntil: number,
+	createdAt: number,
+	updatedAt: number,
+}
+
+--- One student's verdict on a class, kept so a rating can be changed rather than
+--- stacked, and so the same account cannot rate a class twenty times.
+export type ClassRating = {
+	classId: string,
+	stars: number,
 }
 
 export type Role = "student" | "monitor" | "teacher" | "dean" | "director"
@@ -139,6 +157,12 @@ export type ProfileData = {
 	subjects: { [string]: SubjectProgress },
 	achievements: { [string]: boolean },
 	role: Role,
+	--- The class this student is currently enrolled in, if any. One at a time:
+	--- being in six classes at once would make the fill-rate factor meaningless.
+	enrolledClassId: string?,
+	--- Class id -> stars this player gave it. Kept so a rating can be revised
+	--- instead of stacked, and so one account cannot rate a class twenty times.
+	classRatings: { [string]: number },
 	teacher: TeacherState,
 	teacherHistory: { [string]: TeacherHistoryEntry },
 	--- Receipt ids already granted, mapped to when. Makes ProcessReceipt

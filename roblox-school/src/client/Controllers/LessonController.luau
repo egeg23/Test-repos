@@ -211,6 +211,14 @@ function LessonController.start(subject: string)
 	Remotes.event(Remotes.Names.StartLesson):FireServer({ subject = subject })
 end
 
+--- A lesson a teacher assembled, taken inside their class.
+function LessonController.startClassLesson(classId: string, lessonId: string)
+	Remotes.event(Remotes.Names.StartLesson):FireServer({
+		classId = classId,
+		lessonId = lessonId,
+	})
+end
+
 function LessonController.init()
 	screenGui = buildUi()
 

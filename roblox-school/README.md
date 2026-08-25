@@ -71,16 +71,21 @@ tools/          checks that run outside Studio
   a local type declaration, which passes clean. Type diagnostics are counted and
   suppressed; real typechecking needs luau-lsp with a Rojo sourcemap, in Studio
   or an editor.
+- `tools/check_requires.py` looks for circular requires. Luau resolves a cycle by
+  erroring at runtime, and only on the load order that happens to hit it, so one
+  can sit in a build for weeks and then break in front of players. Nothing else
+  here can see it — the syntax checker reads one file at a time.
 - `tools/validate_bank.py` enforces the question authoring rules. Besides the
   per-question checks it looks for two bank-wide patterns children find fast: the
   correct answer being uniquely the longest option, and answers clustering in one
   slot. Either turns a test of understanding into a test of pattern-spotting.
 - `tools/simulate_economy.py` reads its constants straight out of the Luau
   sources, so it cannot drift from the game. It verifies the ad catch-up band,
-  that every farming route earns less than honest teaching, and that the run to
-  graduation lands in a sane number of hours. If the shape of a parsed formula
-  changes it aborts rather than quietly measuring a formula the game no longer
-  uses.
+  that every farming route earns less than honest teaching, that a fuller class
+  pays more per student, that the capacity pass never lowers the buyer's income,
+  and that the run to graduation lands in a sane number of hours. If the shape of
+  a parsed formula changes it aborts rather than quietly measuring a formula the
+  game no longer uses.
 
 ## Opening in Studio
 
@@ -128,24 +133,23 @@ git push git@github.com:<owner>/roblox-school.git roblox-school-only:main
 
 ## State
 
-Playable loop: a student starts a lesson, is asked six questions drawn from the
-bank with the options shuffled per attempt, sees an explanation after every
-answer, and is marked, paid and advanced a grade when enough lessons are passed.
-Graduation branches into university, teaching or a new run.
+The economy is live end to end. A graduate takes the teaching branch and is
+licensed, creates a class, assembles a lesson from bank questions, and is paid
+when students take it — decayed for repeats, scaled by their rating and how full
+the class is, capped per student, and blocked entirely for fresh alts. Payment
+reaches them whether or not they were online for it.
+
+Students browse a ranked class directory for their language, join one class at a
+time, take its lessons, and rate it. Lessons still work with nobody teaching:
+the curated bank runs the school at three in the morning.
 
 Also done: profile storage with session locking, idempotent receipts, the
-rewarded-video flow, rate limiting, offline teacher payouts, and the checks
-above.
+rewarded-video flow, cross-server pass-rate statistics, rate limiting, and text
+filtering on everything a player types before it reaches anyone else.
 
-Not done yet: classes and the class directory, teacher-authored lessons and the
-moderation queue, obstacle courses and assembly lessons, campuses and elections,
-translation, and the shop UI.
+Not done yet: obstacle courses and assembly lessons, teacher-authored *questions*
+(the constructor half of the hybrid works; free text still needs the moderation
+queue), campuses and elections, translation, and the in-game calendar.
 
-Two notes for whoever picks this up:
-
-- Lesson pass-rate statistics are server-local. They need to move onto
-  `MemoryStoreService` when classes land, or a quiet server will judge a
-  teacher's lesson on its own small sample.
-- `LessonService` fills teacher fields on an attempt with zeroes, so bank
-  lessons pay nobody. The class system supplies the real author, class fill and
-  rating.
+Ids in `Monetization.luau` are still `0`, so nothing can actually be sold until
+they are filled in from the Creator Hub.

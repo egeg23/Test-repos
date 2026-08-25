@@ -17,15 +17,12 @@ local BankService = require(script.Parent.BankService)
 local DataService = require(script.Parent.DataService)
 local PayoutService = require(script.Parent.PayoutService)
 local ProgressionService = require(script.Parent.ProgressionService)
+local ClassService = require(script.Parent.ClassService)
+local LessonStatsService = require(script.Parent.LessonStatsService)
 local PurchaseService = require(script.Parent.PurchaseService)
 local RateLimiter = require(script.Parent.RateLimiter)
 
 local LessonService = {}
-
---- Below this many attempts a lesson's pass rate is noise, and the quality factor
---- stays neutral. Judging a new teacher's first lesson on three attempts punishes
---- them for randomness rather than for the lesson.
-local MIN_SAMPLES_FOR_QUALITY = 20
 
 type AttemptQuestion = {
 	questionId: string,
@@ -44,7 +41,6 @@ type Attempt = {
 	statKey: string,
 	teacherUserId: number,
 	classMembers: number,
-	classCapacity: number,
 	teacherRating: number,
 	translated: boolean,
 	questions: { AttemptQuestion },
@@ -54,40 +50,13 @@ type Attempt = {
 	finished: boolean,
 }
 
-type LessonStat = { attempts: number, passes: number }
-
 local attempts: { [Player]: Attempt } = {}
-
---- Server-local for now. Cross-server aggregation belongs on MemoryStoreService
---- and arrives with the class system; until then a busy server's sample is a
---- reasonable stand-in and a quiet one simply stays neutral.
-local stats: { [string]: LessonStat } = {}
 
 local nextToken = 0
 
 local function issueToken(): string
 	nextToken += 1
 	return `a{nextToken}`
-end
-
-local function passRateFor(key: string): number
-	local stat = stats[key]
-	if stat == nil or stat.attempts < MIN_SAMPLES_FOR_QUALITY then
-		return (Economy.QualityBandLow + Economy.QualityBandHigh) / 2
-	end
-	return stat.passes / stat.attempts
-end
-
-local function recordStat(key: string, passed: boolean)
-	local stat = stats[key]
-	if stat == nil then
-		stat = { attempts = 0, passes = 0 }
-		stats[key] = stat
-	end
-	stat.attempts += 1
-	if passed then
-		stat.passes += 1
-	end
 end
 
 local function reject(player: Player, reason: string)
@@ -143,9 +112,8 @@ local function creditTeacher(attempt: Attempt, data: Types.ProfileData, elapsedS
 		lifetimePaidByThisStudent = history.paid,
 		actualSeconds = elapsedSeconds,
 		expectedSeconds = Economy.ExpectedSecondsPerQuestion * #attempt.questions,
-		globalPassRate = passRateFor(attempt.statKey),
+		globalPassRate = LessonStatsService.passRate(attempt.statKey),
 		classMembers = attempt.classMembers,
-		classCapacity = attempt.classCapacity,
 		teacherRating = attempt.teacherRating,
 		isTranslatedCompletion = attempt.translated,
 	})
@@ -163,7 +131,7 @@ local function finish(attempt: Attempt)
 
 	local total = #attempt.questions
 	local passed = total > 0 and (attempt.correctCount / total) >= Economy.DefaultPassFraction
-	recordStat(attempt.statKey, passed)
+	LessonStatsService.record(attempt.statKey, passed)
 
 	local data = DataService.getData(attempt.player)
 	if data == nil then
@@ -177,7 +145,8 @@ local function finish(attempt: Attempt)
 
 	local outcome = ProgressionService.applyLesson(data, attempt.subject, passed, points)
 
-	if attempt.teacherUserId > 0 then
+	-- Teaching yourself pays nothing, and a bank lesson has no author to pay.
+	if attempt.teacherUserId > 0 and attempt.teacherUserId ~= attempt.player.UserId then
 		creditTeacher(attempt, data, os.clock() - attempt.startedAt)
 	end
 
@@ -193,42 +162,10 @@ local function finish(attempt: Attempt)
 	})
 end
 
-local function onStartLesson(player: Player, payload: unknown)
-	-- Three in reserve, then roughly one per seven seconds. Abandoning an attempt
-	-- costs nothing, so without this a client could reroll until it drew an easy
-	-- set of questions.
-	if not RateLimiter.consume(player, "StartLesson", 3, 0.15) then
-		return
-	end
-	if typeof(payload) ~= "table" then
-		return
-	end
-
-	local request = payload :: any
-	local subject = request.subject
-	if typeof(subject) ~= "string" or Subjects.get(subject) == nil then
-		reject(player, "unknownSubject")
-		return
-	end
-
-	local data = DataService.getData(player)
-	if data == nil then
-		reject(player, "notLoaded")
-		return
-	end
-	if data.awaitingGraduation then
-		reject(player, "awaitingGraduation")
-		return
-	end
-
-	local random = Random.new()
-	local drawn =
-		BankService.draw(subject, data.locale, data.grade, Economy.QuestionsPerLesson, random)
-	if #drawn == 0 then
-		reject(player, "noQuestions")
-		return
-	end
-
+--- Turns a list of questions into attempt entries, shuffling the options for
+--- each one. A leaked answer key that says "the answer is B" is worth nothing
+--- once B is somewhere different on every attempt.
+local function buildQuestions(drawn: { Types.Question }, random: Random): { AttemptQuestion }
 	local questions: { AttemptQuestion } = {}
 	for _, question in drawn do
 		local order: { number } = {}
@@ -253,20 +190,148 @@ local function onStartLesson(player: Player, payload: unknown)
 			chosen = nil,
 		})
 	end
+	return questions
+end
+
+type Source = {
+	questions: { AttemptQuestion },
+	subject: string,
+	statKey: string,
+	teacherUserId: number,
+	classMembers: number,
+	teacherRating: number,
+	translated: boolean,
+}
+
+--- A lesson a teacher assembled, taken inside their class.
+local function classSource(
+	player: Player,
+	data: Types.ProfileData,
+	classId: string,
+	lessonId: string,
+	random: Random
+): (Source?, string?)
+	local class = ClassService.get(classId)
+	if class == nil then
+		return nil, "noClass"
+	end
+	-- Enrolment is what makes the fill rate mean anything, so it is required
+	-- rather than implied by knowing the id.
+	if data.enrolledClassId ~= classId then
+		return nil, "notEnrolled"
+	end
+
+	local lesson = class.lessons[lessonId]
+	if lesson == nil then
+		return nil, "noLesson"
+	end
+	local test = lesson.test
+	if test == nil then
+		return nil, "noLesson"
+	end
+
+	local candidates: { Types.Question } = {}
+	for _, questionId in test.poolIds do
+		local question = BankService.get(questionId)
+		if question ~= nil then
+			table.insert(candidates, question)
+		end
+	end
+	if #candidates == 0 then
+		return nil, "noQuestions"
+	end
+
+	local picked = BankService.shuffled(candidates, random)
+	while #picked > math.max(test.draw, 1) do
+		table.remove(picked)
+	end
+
+	return {
+		questions = buildQuestions(picked, random),
+		subject = class.subject,
+		-- Quality is measured per lesson here, not per subject: it is this
+		-- teacher's test being judged.
+		statKey = lessonId,
+		teacherUserId = class.teacherUserId,
+		classMembers = #class.memberUserIds,
+		teacherRating = class.rating,
+		translated = class.locale ~= data.locale,
+	}, nil
+end
+
+--- A lesson drawn straight from the curated bank, run by nobody. This is what
+--- keeps the school playable at three in the morning with no teachers online,
+--- and what a brand new player meets first.
+local function bankSource(
+	data: Types.ProfileData,
+	subject: string,
+	random: Random
+): (Source?, string?)
+	local drawn =
+		BankService.draw(subject, data.locale, data.grade, Economy.QuestionsPerLesson, random)
+	if #drawn == 0 then
+		return nil, "noQuestions"
+	end
+	return {
+		questions = buildQuestions(drawn, random),
+		subject = subject,
+		statKey = subject,
+		teacherUserId = 0,
+		classMembers = 0,
+		teacherRating = 0,
+		translated = false,
+	}, nil
+end
+
+local function onStartLesson(player: Player, payload: unknown)
+	-- Three in reserve, then roughly one per seven seconds. Abandoning an attempt
+	-- costs nothing, so without this a client could reroll until it drew an easy
+	-- set of questions.
+	if not RateLimiter.consume(player, "StartLesson", 3, 0.15) then
+		return
+	end
+	if typeof(payload) ~= "table" then
+		return
+	end
+
+	local request = payload :: any
+	local data = DataService.getData(player)
+	if data == nil then
+		reject(player, "notLoaded")
+		return
+	end
+	if data.awaitingGraduation then
+		reject(player, "awaitingGraduation")
+		return
+	end
+
+	local random = Random.new()
+	local source: Source?
+	local failure: string?
+
+	if typeof(request.classId) == "string" and typeof(request.lessonId) == "string" then
+		source, failure = classSource(player, data, request.classId, request.lessonId, random)
+	elseif typeof(request.subject) == "string" and Subjects.get(request.subject) ~= nil then
+		source, failure = bankSource(data, request.subject, random)
+	else
+		failure = "badRequest"
+	end
+
+	if source == nil then
+		reject(player, failure or "badRequest")
+		return
+	end
 
 	local attempt: Attempt = {
 		player = player,
 		token = issueToken(),
-		subject = subject,
-		statKey = subject,
-		-- Bank lessons have no author, so nobody is paid. Teacher-authored lessons
-		-- fill these in once the class system supplies them.
-		teacherUserId = 0,
-		classMembers = 0,
-		classCapacity = 1,
-		teacherRating = 0,
-		translated = false,
-		questions = questions,
+		subject = source.subject,
+		statKey = source.statKey,
+		teacherUserId = source.teacherUserId,
+		classMembers = source.classMembers,
+		teacherRating = source.teacherRating,
+		translated = source.translated,
+		questions = source.questions,
 		position = 1,
 		correctCount = 0,
 		startedAt = os.clock(),
@@ -337,6 +402,7 @@ end
 
 function LessonService.start()
 	BankService.load()
+	LessonStatsService.start()
 
 	Remotes.event(Remotes.Names.StartLesson).OnServerEvent:Connect(onStartLesson)
 	Remotes.event(Remotes.Names.SubmitAnswer).OnServerEvent:Connect(onSubmitAnswer)

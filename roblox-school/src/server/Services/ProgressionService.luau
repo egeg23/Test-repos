@@ -131,9 +131,14 @@ function ProgressionService.rewardMultiplier(
 	if hasDoublePass then
 		multiplier *= 2
 	end
-	local boostUntil: number = data.activeBoosts.lessonX2 or 0
-	if boostUntil > os.time() then
+	local now = os.time()
+	local doubleUntil: number = data.activeBoosts.lessonX2 or 0
+	if doubleUntil > now then
 		multiplier *= 2
+	end
+	local tripleUntil: number = data.activeBoosts.lessonX3 or 0
+	if tripleUntil > now then
+		multiplier *= 3
 	end
 	return multiplier
 end

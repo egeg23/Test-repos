@@ -170,6 +170,36 @@ function BankService.draw(
 	return everything
 end
 
+--- Questions as a teacher browsing the bank should see them: the stem and the
+--- options, so they can judge whether a question is any good, and nothing else.
+--- The answer index and the explanation are both withheld -- the explanation
+--- because it gives the answer away in prose, and a teacher who has memorised
+--- the key is a teacher who can hand it to their class.
+function BankService.listForAuthoring(
+	subject: string,
+	locale: string,
+	grade: number,
+	limit: number
+): { any }
+	local pool = poolFor(subject, locale)
+	local results: { any } = {}
+	for _, question in pool do
+		if math.abs(question.grade - grade) > 2 then
+			continue
+		end
+		table.insert(results, {
+			id = question.id,
+			grade = question.grade,
+			stem = question.stem,
+			options = table.clone(question.options),
+		})
+		if #results >= limit then
+			break
+		end
+	end
+	return results
+end
+
 function BankService.poolSize(subject: string, locale: string): number
 	return #poolFor(subject, locale)
 end

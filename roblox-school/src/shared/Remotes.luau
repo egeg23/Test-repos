@@ -18,8 +18,8 @@ Remotes.Names = {
 	AnswerResult = "AnswerResult",
 	LessonFinished = "LessonFinished",
 	LessonRejected = "LessonRejected",
-	ClassDirectory = "ClassDirectory",
-	JoinClass = "JoinClass",
+	ClassAction = "ClassAction",
+	ClassResult = "ClassResult",
 }
 
 local function getFolder(): Folder

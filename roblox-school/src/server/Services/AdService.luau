@@ -24,6 +24,7 @@ local RobloxAdService = game:GetService("AdService")
 local Monetization = require(ReplicatedStorage.Shared.Config.Monetization)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Types = require(ReplicatedStorage.Shared.Types)
+local ClassService = require(script.Parent.ClassService)
 local DataService = require(script.Parent.DataService)
 local PurchaseService = require(script.Parent.PurchaseService)
 local RateLimiter = require(script.Parent.RateLimiter)
@@ -122,23 +123,27 @@ end
 
 --- What each reward actually does. Timed effects go into activeBoosts, charges
 --- into consumables. Nothing here grants Robux or currency directly.
-local effects: { [string]: (Types.ProfileData) -> () } = {
-	doubleLessonReward = function(data)
+local effects: { [string]: (Player, Types.ProfileData) -> () } = {
+	doubleLessonReward = function(_player, data)
 		data.activeBoosts.lessonX2 = os.time() + boostSeconds("doubleLessonReward")
 	end,
-	extraAttempt = function(data)
+	extraAttempt = function(_player, data)
 		bump(data.consumables, "attempt")
 	end,
-	skipCooldown = function(data)
+	skipCooldown = function(_player, data)
 		bump(data.consumables, "cooldownSkip")
 	end,
-	doubleOfflineNotes = function(data)
+	doubleOfflineNotes = function(_player, data)
 		bump(data.consumables, "offlineX2")
 	end,
-	promoteClass = function(data)
-		data.activeBoosts.classPromo = os.time() + boostSeconds("promoteClass")
+	promoteClass = function(player, _data)
+		-- Written onto the class, not the teacher's profile: the point of a
+		-- promotion is that it keeps drawing students in while the teacher is
+		-- offline, which is most of the time.
+		local seconds = boostSeconds("promoteClass")
+		task.spawn(ClassService.promote, player, seconds)
 	end,
-	teacherTestSlot = function(data)
+	teacherTestSlot = function(_player, data)
 		bump(data.consumables, "testSlot")
 	end,
 }
@@ -156,7 +161,7 @@ local function grantAdReward(player: Player, data: Types.ProfileData, rewardId: 
 	resetDailyIfNeeded(data)
 	data.adCooldowns[rewardId] = os.time()
 	bump(data.adDailyCounts, rewardId)
-	effect(data)
+	effect(player, data)
 	return true
 end
 

@@ -35,7 +35,13 @@ Economy.QualityFloorTooEasy = 0.15
 Economy.QualityFloorTooHard = 0.5
 
 --- A full class pays more per student than a half-empty one. This is what makes
---- a teacher want to recruit, and what makes capacity worth buying.
+--- a teacher want to recruit.
+---
+--- Fill is measured against the BASE class size, never the purchased one. Against
+--- actual capacity, buying the capacity pass would drop a teacher's fill ratio
+--- overnight and their income with it -- pay Robux, earn less, which is a trap
+--- rather than an upsell. Against the base, the extra seats are pure upside:
+--- the same rate per student, with more students available to earn it from.
 Economy.FillRateMin = 0.7
 Economy.FillRateSpan = 0.6
 
@@ -58,6 +64,13 @@ Economy.MinPlaySecondsToCount = 900
 --- lives in this one number, so it is a constant to be tuned against retention,
 --- not a value scattered through the reward tables.
 Economy.AdCatchUpTarget = 0.55
+
+--- Class sizing. The capacity pass adds seats, which is what makes it worth
+--- buying: a fuller class pays its teacher more per student.
+Economy.BaseClassCapacity = 20
+Economy.CapacityPassBonus = 10
+Economy.BaseClassLimit = 1
+Economy.SecondClassPassBonus = 1
 
 --- Student-side lesson rewards.
 Economy.QuestionsPerLesson = 6
@@ -92,7 +105,6 @@ export type PayoutInput = {
 	expectedSeconds: number,
 	globalPassRate: number,
 	classMembers: number,
-	classCapacity: number,
 	teacherRating: number,
 	isTranslatedCompletion: boolean,
 }
@@ -138,11 +150,8 @@ function Economy.qualityFactor(globalPassRate: number): number
 	return 1 - (1 - Economy.QualityFloorTooEasy) * t
 end
 
-function Economy.fillRateFactor(members: number, capacity: number): number
-	if capacity <= 0 then
-		return Economy.FillRateMin
-	end
-	local fill = math.clamp(members / capacity, 0, 1)
+function Economy.fillRateFactor(members: number): number
+	local fill = math.clamp(members / Economy.BaseClassCapacity, 0, 1)
 	return Economy.FillRateMin + Economy.FillRateSpan * fill
 end
 
@@ -163,7 +172,7 @@ function Economy.teacherPayout(input: PayoutInput): PayoutBreakdown
 	local uniqueness = Economy.uniquenessFactor(input.priorCompletions)
 	local engagement = Economy.engagementFactor(input.actualSeconds, input.expectedSeconds)
 	local quality = Economy.qualityFactor(input.globalPassRate)
-	local fill = Economy.fillRateFactor(input.classMembers, input.classCapacity)
+	local fill = Economy.fillRateFactor(input.classMembers)
 	local rating = Economy.ratingFactor(input.teacherRating)
 	local reach = if input.isTranslatedCompletion then Economy.TranslatedReachShare else 1
 
