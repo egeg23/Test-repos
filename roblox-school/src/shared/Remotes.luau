@@ -18,6 +18,8 @@ Remotes.Names = {
 	AnswerResult = "AnswerResult",
 	LessonFinished = "LessonFinished",
 	LessonRejected = "LessonRejected",
+	CourseState = "CourseState",
+	CourseFinished = "CourseFinished",
 	ClassAction = "ClassAction",
 	ClassResult = "ClassResult",
 }

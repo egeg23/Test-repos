@@ -85,202 +85,40 @@ local function sendQuestion(attempt: Attempt)
 	})
 end
 
-local function creditTeacher(attempt: Attempt, data: Types.ProfileData, elapsedSeconds: number)
-	local key = tostring(attempt.teacherUserId)
-	local history = data.teacherHistory[key]
-	if history == nil then
-		history = { completions = 0, paid = 0 }
-		data.teacherHistory[key] = history
-	end
-
-	-- Roblox account age, not how long they have played this game: a legitimate
-	-- newcomer has a profile created seconds ago, while the thing being screened
-	-- out is a freshly registered alt.
-	local counts =
-		Economy.countsTowardTeacherPayout(attempt.player.AccountAge, data.playSeconds)
-
-	-- The completion is recorded either way. Otherwise a ring could park its
-	-- farming on accounts that never age past the gate and reset the decay curve
-	-- with every run.
-	history.completions += 1
-	if not counts then
-		return
-	end
-
-	local breakdown = Economy.teacherPayout({
-		priorCompletions = history.completions - 1,
-		lifetimePaidByThisStudent = history.paid,
-		actualSeconds = elapsedSeconds,
-		expectedSeconds = Economy.ExpectedSecondsPerQuestion * #attempt.questions,
-		globalPassRate = LessonStatsService.passRate(attempt.statKey),
-		classMembers = attempt.classMembers,
-		teacherRating = attempt.teacherRating,
-		isTranslatedCompletion = attempt.translated,
-	})
-
-	if breakdown.amount <= 0 then
-		return
-	end
-	history.paid += breakdown.amount
-	PayoutService.credit(attempt.teacherUserId, breakdown.amount)
-end
-
 local function finish(attempt: Attempt)
 	attempt.finished = true
 	attempts[attempt.player] = nil
 
 	local total = #attempt.questions
 	local passed = total > 0 and (attempt.correctCount / total) >= Economy.DefaultPassFraction
-	LessonStatsService.record(attempt.statKey, passed)
 
-	local data = DataService.getData(attempt.player)
-	if data == nil then
+	local summary = RewardService.settle(attempt.player, {
+		subject = attempt.subject,
+		statKey = attempt.statKey,
+		passed = passed,
+		score = attempt.correctCount,
+		total = total,
+		teacherUserId = attempt.teacherUserId,
+		classMembers = attempt.classMembers,
+		teacherRating = attempt.teacherRating,
+		translated = attempt.translated,
+		elapsedSeconds = os.clock() - attempt.startedAt,
+		expectedSeconds = Economy.ExpectedSecondsPerQuestion * total,
+	})
+	if summary == nil then
 		return
 	end
 
-	local hasDoublePass = PurchaseService.ownsPass(attempt.player, "xp2")
-	local multiplier = ProgressionService.rewardMultiplier(data, hasDoublePass)
-	local points = Economy.studentReward(attempt.correctCount, passed, multiplier)
-	data.points += points
-
-	local outcome = ProgressionService.applyLesson(data, attempt.subject, passed, points)
-
-	-- Teaching yourself pays nothing, and a bank lesson has no author to pay.
-	if attempt.teacherUserId > 0 and attempt.teacherUserId ~= attempt.player.UserId then
-		creditTeacher(attempt, data, os.clock() - attempt.startedAt)
-	end
-
 	Remotes.event(Remotes.Names.LessonFinished):FireClient(attempt.player, {
-		passed = passed,
-		correctCount = attempt.correctCount,
-		total = total,
-		pointsAwarded = points,
-		multiplier = multiplier,
-		grade = data.grade,
-		advanced = outcome.advanced,
-		graduated = outcome.graduated,
+		passed = summary.passed,
+		correctCount = summary.score,
+		total = summary.total,
+		pointsAwarded = summary.pointsAwarded,
+		multiplier = summary.multiplier,
+		grade = summary.grade,
+		advanced = summary.advanced,
+		graduated = summary.graduated,
 	})
-end
-
---- Turns a list of questions into attempt entries, shuffling the options for
---- each one. A leaked answer key that says "the answer is B" is worth nothing
---- once B is somewhere different on every attempt.
-local function buildQuestions(drawn: { Types.Question }, random: Random): { AttemptQuestion }
-	local questions: { AttemptQuestion } = {}
-	for _, question in drawn do
-		local order: { number } = {}
-		for index = 1, #question.options do
-			table.insert(order, index)
-		end
-		order = BankService.shuffled(order, random)
-
-		local correctPosition = 0
-		for position, original in order do
-			if original == question.answer then
-				correctPosition = position
-				break
-			end
-		end
-
-		table.insert(questions, {
-			questionId = question.id,
-			order = order,
-			correctPosition = correctPosition,
-			sentAt = 0,
-			chosen = nil,
-		})
-	end
-	return questions
-end
-
-type Source = {
-	questions: { AttemptQuestion },
-	subject: string,
-	statKey: string,
-	teacherUserId: number,
-	classMembers: number,
-	teacherRating: number,
-	translated: boolean,
-}
-
---- A lesson a teacher assembled, taken inside their class.
-local function classSource(
-	player: Player,
-	data: Types.ProfileData,
-	classId: string,
-	lessonId: string,
-	random: Random
-): (Source?, string?)
-	local class = ClassService.get(classId)
-	if class == nil then
-		return nil, "noClass"
-	end
-	-- Enrolment is what makes the fill rate mean anything, so it is required
-	-- rather than implied by knowing the id.
-	if data.enrolledClassId ~= classId then
-		return nil, "notEnrolled"
-	end
-
-	local lesson = class.lessons[lessonId]
-	if lesson == nil then
-		return nil, "noLesson"
-	end
-	local test = lesson.test
-	if test == nil then
-		return nil, "noLesson"
-	end
-
-	local candidates: { Types.Question } = {}
-	for _, questionId in test.poolIds do
-		local question = BankService.get(questionId)
-		if question ~= nil then
-			table.insert(candidates, question)
-		end
-	end
-	if #candidates == 0 then
-		return nil, "noQuestions"
-	end
-
-	local picked = BankService.shuffled(candidates, random)
-	while #picked > math.max(test.draw, 1) do
-		table.remove(picked)
-	end
-
-	return {
-		questions = buildQuestions(picked, random),
-		subject = class.subject,
-		-- Quality is measured per lesson here, not per subject: it is this
-		-- teacher's test being judged.
-		statKey = lessonId,
-		teacherUserId = class.teacherUserId,
-		classMembers = #class.memberUserIds,
-		teacherRating = class.rating,
-		translated = class.locale ~= data.locale,
-	}, nil
-end
-
---- A lesson drawn straight from the curated bank, run by nobody. This is what
---- keeps the school playable at three in the morning with no teachers online,
---- and what a brand new player meets first.
-local function bankSource(
-	data: Types.ProfileData,
-	subject: string,
-	random: Random
-): (Source?, string?)
-	local drawn =
-		BankService.draw(subject, data.locale, data.grade, Economy.QuestionsPerLesson, random)
-	if #drawn == 0 then
-		return nil, "noQuestions"
-	end
-	return {
-		questions = buildQuestions(drawn, random),
-		subject = subject,
-		statKey = subject,
-		teacherUserId = 0,
-		classMembers = 0,
-		teacherRating = 0,
-		translated = false,
-	}, nil
 end
 
 local function onStartLesson(player: Player, payload: unknown)
@@ -310,6 +148,23 @@ local function onStartLesson(player: Player, payload: unknown)
 	local failure: string?
 
 	if typeof(request.classId) == "string" and typeof(request.lessonId) == "string" then
+		-- PE is not a quiz. A course has its own lifecycle -- geometry, physics,
+		-- checkpoints -- so it is handed off whole rather than squeezed through
+		-- the question loop.
+		local class = ClassService.get(request.classId)
+		local lesson = if class ~= nil then class.lessons[request.lessonId] else nil
+		if class ~= nil and lesson ~= nil and lesson.kind == "obstacle" then
+			if data.enrolledClassId ~= request.classId then
+				reject(player, "notEnrolled")
+				return
+			end
+			local courseFailure = ObstacleService.begin(player, class, lesson)
+			if courseFailure ~= nil then
+				reject(player, courseFailure)
+			end
+			return
+		end
+
 		source, failure = classSource(player, data, request.classId, request.lessonId, random)
 	elseif typeof(request.subject) == "string" and Subjects.get(request.subject) ~= nil then
 		source, failure = bankSource(data, request.subject, random)

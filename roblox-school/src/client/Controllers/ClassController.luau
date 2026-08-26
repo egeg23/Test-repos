@@ -13,6 +13,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local CourseBuilderController = require(script.Parent.CourseBuilderController)
 local LessonController = require(script.Parent.LessonController)
 
 local ClassController = {}
@@ -29,6 +30,7 @@ local listFrame: ScrollingFrame
 local statusLabel: TextLabel
 local titleBox: TextBox
 local subjectBox: TextBox
+local gradeBox: TextBox
 
 local currentClassId: string? = nil
 local mode: "browse" | "mine" = "browse"
@@ -108,7 +110,8 @@ local function renderDirectory(entries: { any })
 			else "нет оценок"
 		makeLabel(
 			row,
-			`{entry.teacherName} · {entry.subject} · {entry.members}/{entry.capacity} · {rating}`,
+			`{entry.teacherName} · {entry.subject} · {entry.grade} кл. · `
+				.. `{entry.members}/{entry.capacity} · {rating}`,
 			13,
 			MUTED,
 			30
@@ -186,6 +189,15 @@ local function renderMine(payload: any)
 		promote.Activated:Connect(function()
 			Remotes.event(Remotes.Names.RequestAd):FireServer("promoteClass")
 		end)
+
+		if class.subject == "pe" then
+			local course = makeButton("Полоса", Color3.fromRGB(64, 120, 92), 90)
+			course.Position = UDim2.new(1, -212, 0, 6)
+			course.Parent = row
+			course.Activated:Connect(function()
+				CourseBuilderController.open(class.id, class.grade)
+			end)
+		end
 	end
 
 	if #payload.classes == 0 then
@@ -272,9 +284,23 @@ local function buildUi()
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	layout.Parent = listFrame
 
+	gradeBox = Instance.new("TextBox")
+	gradeBox.Size = UDim2.new(0, 56, 0, 32)
+	gradeBox.Position = UDim2.new(0, 12, 1, -84)
+	gradeBox.BackgroundColor3 = ROW
+	gradeBox.BorderSizePixel = 0
+	gradeBox.Font = Enum.Font.Gotham
+	gradeBox.TextSize = 14
+	gradeBox.TextColor3 = TEXT
+	gradeBox.PlaceholderText = "класс"
+	gradeBox.Text = ""
+	gradeBox.ClearTextOnFocus = false
+	gradeBox.Parent = panel
+	corner(gradeBox, 6)
+
 	subjectBox = Instance.new("TextBox")
-	subjectBox.Size = UDim2.new(0.4, -16, 0, 32)
-	subjectBox.Position = UDim2.new(0, 12, 1, -84)
+	subjectBox.Size = UDim2.new(0.4, -76, 0, 32)
+	subjectBox.Position = UDim2.new(0, 74, 1, -84)
 	subjectBox.BackgroundColor3 = ROW
 	subjectBox.BorderSizePixel = 0
 	subjectBox.Font = Enum.Font.Gotham
@@ -305,7 +331,11 @@ local function buildUi()
 	create.Position = UDim2.new(0, 12, 1, -44)
 	create.Parent = panel
 	create.Activated:Connect(function()
-		send("create", { subject = subjectBox.Text, title = titleBox.Text })
+		send("create", {
+			subject = subjectBox.Text,
+			title = titleBox.Text,
+			grade = tonumber(gradeBox.Text) or 1,
+		})
 	end)
 
 	statusLabel = Instance.new("TextLabel")
@@ -332,6 +362,14 @@ local REASONS: { [string]: string } = {
 	notEnrolled = "Сначала вступи в класс",
 	noClass = "Класс не найден",
 	storeFailed = "Не удалось сохранить, попробуй ещё раз",
+	badGrade = "Укажи класс числом от 1 до 11",
+	gradeOutOfWindow = "Можно только ±1 класс от своего",
+	tooShort = "Слишком короткая полоса для этого класса",
+	tooLong = "Слишком длинная полоса",
+	tooRepetitive = "Слишком однообразно — добавь разных модулей",
+	moduleTooAdvanced = "Этот модуль недоступен на таком классе",
+	wrongSubject = "Полосы только для физкультуры",
+	alreadyRunning = "Ты уже проходишь полосу",
 }
 
 function ClassController.init()
@@ -357,6 +395,10 @@ function ClassController.init()
 			send("mine")
 		elseif result.action == "rate" then
 			statusLabel.Text = "Оценка учтена"
+		elseif result.action == "addCourse" then
+			statusLabel.Text = "Полоса сохранена"
+			CourseBuilderController.close()
+			send("mine")
 		elseif result.action == "collect" then
 			statusLabel.Text = `Забрано баллов: {result.payload or 0}`
 			send("mine")

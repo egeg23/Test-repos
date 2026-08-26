@@ -50,8 +50,12 @@ export type TestSpec = {
 export type ObstacleSpec = {
 	id: string,
 	--- Prefab module ids in run order.
-	modules: { string },
-	difficulty: number,
+	moduleIds: { string },
+	--- Target grade. Every dimension of the course -- gap width, beam width, how
+	--- long a tile lasts, whether there are checkpoints at all -- is derived from
+	--- this one number, which is why a teacher choosing it is choosing the whole
+	--- difficulty of the course.
+	grade: number,
 }
 
 export type ModerationStatus = "draft" | "pending" | "published" | "rejected"
@@ -83,6 +87,10 @@ export type Class = {
 	locale: LocaleId,
 	subject: string,
 	title: string,
+	--- The school year this class teaches. Sets the window a teacher may pick an
+	--- obstacle course difficulty inside, and tells students whether the class is
+	--- meant for them.
+	grade: number,
 	capacity: number,
 	memberUserIds: { number },
 	--- Lessons are embedded rather than stored separately: a class holds a

@@ -75,6 +75,10 @@ tools/          checks that run outside Studio
   erroring at runtime, and only on the load order that happens to hit it, so one
   can sit in a build for weeks and then break in front of players. Nothing else
   here can see it — the syntax checker reads one file at a time.
+- `tools/check_obstacles.py` measures the obstacle difficulty curve against what
+  a Roblox character can physically do — it clears roughly twenty studs at a run
+  and is about two wide — and asserts the final year actually reaches the edge of
+  that while the first stays gentle.
 - `tools/validate_bank.py` enforces the question authoring rules. Besides the
   per-question checks it looks for two bank-wide patterns children find fast: the
   correct answer being uniquely the longest option, and answers clustering in one
@@ -147,9 +151,24 @@ Also done: profile storage with session locking, idempotent receipts, the
 rewarded-video flow, cross-server pass-rate statistics, rate limiting, and text
 filtering on everything a player types before it reaches anyone else.
 
-Not done yet: obstacle courses and assembly lessons, teacher-authored *questions*
+PE runs on obstacle courses, the one subject where a teacher creates without
+typing a word. A course is an ordered list of prefab modules and a target grade;
+prefab assembly is outside the free-form rules entirely, so a course is live the
+moment it is saved. Difficulty belongs to the grade rather than the module, so
+one catalogue serves the whole school: the same gap is four studs for a
+first-year and eighteen for a final-year. A teacher may set a course one grade
+either side of their class and no further — the quality factor would eventually
+punish a trivial course through its pass rate, but that takes twenty attempts,
+and those are twenty students who wasted their time.
+
+Not done yet: assembly lessons for science and art, teacher-authored *questions*
 (the constructor half of the hybrid works; free text still needs the moderation
 queue), campuses and elections, translation, and the in-game calendar.
+
+One design consequence worth knowing: grades ten and eleven have no checkpoints,
+so a single fall ends the run with nothing scored. That is the intent — the final
+year is meant to be genuinely hard — but it is the first thing to revisit if
+retention data says the last two grades are where players stop.
 
 Ids in `Monetization.luau` are still `0`, so nothing can actually be sold until
 they are filled in from the Creator Hub.

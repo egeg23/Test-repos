@@ -17,6 +17,7 @@ local MemoryStoreService = game:GetService("MemoryStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Economy = require(ReplicatedStorage.Shared.Config.Economy)
+local Obstacles = require(ReplicatedStorage.Shared.Config.Obstacles)
 local Subjects = require(ReplicatedStorage.Shared.Config.Subjects)
 local Types = require(ReplicatedStorage.Shared.Types)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
@@ -93,6 +94,7 @@ local function publish(class: Types.Class)
 				id = class.id,
 				subject = class.subject,
 				title = class.title,
+				grade = class.grade,
 				teacherName = class.teacherName,
 				members = #class.memberUserIds,
 				capacity = class.capacity,
@@ -167,7 +169,8 @@ end
 function ClassService.create(
 	player: Player,
 	subject: unknown,
-	title: unknown
+	title: unknown,
+	grade: unknown
 ): (Types.Class?, string?)
 	local data = DataService.getData(player)
 	if data == nil then
@@ -183,6 +186,11 @@ function ClassService.create(
 		return nil, "classLimit"
 	end
 
+	if typeof(grade) ~= "number" then
+		return nil, "badGrade"
+	end
+	local classGrade = math.clamp(math.floor(grade :: number), 1, Obstacles.MaxGrade)
+
 	local cleanTitle = ModerationService.filterTitle(title, player.UserId)
 	if cleanTitle == nil then
 		return nil, "titleRejected"
@@ -195,6 +203,7 @@ function ClassService.create(
 		locale = data.locale,
 		subject = subject :: string,
 		title = cleanTitle,
+		grade = classGrade,
 		capacity = capacityFor(player),
 		memberUserIds = {},
 		lessons = {},
@@ -446,6 +455,95 @@ function ClassService.addLesson(
 	return lessonId, nil
 end
 
+--- An obstacle course: an ordered list of prefab module ids and a target grade.
+---
+--- Nothing here is text, so nothing here is moderated -- assembling prefabs is
+--- outside the free-form rules entirely, and the course is live the moment it is
+--- saved. The only thing standing between a teacher and a trivial course is the
+--- grade window, which is deliberately checked here rather than left to the pass
+--- rate: the quality factor needs twenty attempts to notice a too-easy course,
+--- and those are twenty students who wasted their time.
+function ClassService.addCourse(
+	player: Player,
+	classId: unknown,
+	title: unknown,
+	courseGrade: unknown,
+	moduleIds: unknown
+): (string?, string?)
+	if typeof(classId) ~= "string" or typeof(moduleIds) ~= "table" then
+		return nil, "badRequest"
+	end
+	if typeof(courseGrade) ~= "number" then
+		return nil, "badGrade"
+	end
+
+	local id = classId :: string
+	local class = ClassService.get(id, true)
+	if class == nil then
+		return nil, "noClass"
+	end
+	if class.teacherUserId ~= player.UserId then
+		return nil, "notOwner"
+	end
+	if not Subjects.allows(class.subject, "obstacle") then
+		return nil, "wrongSubject"
+	end
+
+	local lessonCount = 0
+	for _ in class.lessons do
+		lessonCount += 1
+	end
+	if lessonCount >= MAX_LESSONS_PER_CLASS then
+		return nil, "lessonLimit"
+	end
+
+	local ids: { string } = {}
+	for _, raw in moduleIds :: { any } do
+		if typeof(raw) ~= "string" then
+			return nil, "badModule"
+		end
+		table.insert(ids, raw :: string)
+	end
+
+	local grade = math.floor(courseGrade :: number)
+	local validation = Obstacles.validateCourse(class.grade, grade, ids)
+	if not validation.ok then
+		return nil, validation.reason
+	end
+
+	local cleanTitle = ModerationService.filterTitle(title, player.UserId)
+	if cleanTitle == nil then
+		return nil, "titleRejected"
+	end
+
+	local lessonId = HttpService:GenerateGUID(false)
+	local lesson: Types.Lesson = {
+		id = lessonId,
+		authorUserId = player.UserId,
+		subject = class.subject,
+		grade = grade,
+		kind = "obstacle",
+		locale = class.locale,
+		title = cleanTitle,
+		body = "",
+		status = "published",
+		translations = {},
+		test = nil,
+		obstacle = { id = lessonId, moduleIds = ids, grade = grade },
+		createdAt = os.time(),
+		publishedAt = os.time(),
+	}
+
+	local updated = mutate(id, function(current)
+		current.lessons[lessonId] = lesson
+		return current
+	end)
+	if updated == nil then
+		return nil, "storeFailed"
+	end
+	return lessonId, nil
+end
+
 --- Ranked, highest first. Returns summaries; the caller resolves a class by id
 --- when the player actually picks one.
 function ClassService.list(locale: string, count: number?): { any }
@@ -486,13 +584,16 @@ local function ownerView(class: Types.Class): any
 			id = lessonId,
 			title = lesson.title,
 			grade = lesson.grade,
+			kind = lesson.kind,
 			questionCount = if lesson.test ~= nil then #lesson.test.poolIds else 0,
+			moduleCount = if lesson.obstacle ~= nil then #lesson.obstacle.moduleIds else 0,
 		})
 	end
 	return {
 		id = class.id,
 		subject = class.subject,
 		title = class.title,
+		grade = class.grade,
 		capacity = class.capacity,
 		members = #class.memberUserIds,
 		rating = class.rating,
@@ -508,12 +609,18 @@ end
 local function studentView(class: Types.Class): any
 	local lessons: { any } = {}
 	for lessonId, lesson in class.lessons do
-		table.insert(lessons, { id = lessonId, title = lesson.title, grade = lesson.grade })
+		table.insert(lessons, {
+			id = lessonId,
+			title = lesson.title,
+			grade = lesson.grade,
+			kind = lesson.kind,
+		})
 	end
 	return {
 		id = class.id,
 		subject = class.subject,
 		title = class.title,
+		grade = class.grade,
 		teacherName = class.teacherName,
 		members = #class.memberUserIds,
 		capacity = class.capacity,
@@ -564,7 +671,8 @@ local function onClassAction(player: Player, request: unknown)
 		local class = if classId ~= nil then ClassService.get(classId) else nil
 		respond(player, action, class ~= nil, nil, if class ~= nil then studentView(class) else nil)
 	elseif action == "create" then
-		local class, reason = ClassService.create(player, message.subject, message.title)
+		local class, reason =
+			ClassService.create(player, message.subject, message.title, message.grade)
 		respond(player, action, class ~= nil, reason, if class ~= nil then ownerView(class) else nil)
 	elseif action == "mine" then
 		local views: { any } = {}
@@ -575,6 +683,15 @@ local function onClassAction(player: Player, request: unknown)
 			end
 		end
 		respond(player, action, true, nil, { classes = views, pending = data.teacher.pendingPayout })
+	elseif action == "addCourse" then
+		local lessonId, reason = ClassService.addCourse(
+			player,
+			message.classId,
+			message.title,
+			message.grade,
+			message.moduleIds
+		)
+		respond(player, action, lessonId ~= nil, reason, lessonId)
 	elseif action == "addLesson" then
 		local lessonId, reason =
 			ClassService.addLesson(player, message.classId, message.title, message.questionIds)
