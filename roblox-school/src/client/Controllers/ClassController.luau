@@ -15,6 +15,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local CourseBuilderController = require(script.Parent.CourseBuilderController)
 local LessonController = require(script.Parent.LessonController)
+local LiveLessonController = require(script.Parent.LiveLessonController)
 local QuestionEditorController = require(script.Parent.QuestionEditorController)
 
 local ClassController = {}
@@ -197,6 +198,16 @@ local function renderMine(payload: any)
 		promote.Parent = row
 		promote.Activated:Connect(function()
 			Remotes.event(Remotes.Names.RequestAd):FireServer("promoteClass")
+		end)
+
+		local live = makeButton("Вести живьём", Color3.fromRGB(96, 76, 150), 118)
+		live.Position = UDim2.new(1, -334, 0, 6)
+		live.Parent = row
+		live.Activated:Connect(function()
+			local first = class.lessons[1]
+			if first ~= nil then
+				LiveLessonController.open(class.id, first.id)
+			end
 		end)
 
 		if class.subject == "pe" then

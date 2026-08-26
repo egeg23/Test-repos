@@ -22,6 +22,8 @@ Remotes.Names = {
 	CourseFinished = "CourseFinished",
 	AssemblyTask = "AssemblyTask",
 	AssemblySubmit = "AssemblySubmit",
+	LiveState = "LiveState",
+	LiveAction = "LiveAction",
 	ClassAction = "ClassAction",
 	ClassResult = "ClassResult",
 }

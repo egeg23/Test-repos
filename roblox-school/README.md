@@ -187,7 +187,15 @@ Each language has its own campus with a monthly election. Phases come from the
 clock rather than a scheduler, and every power the office holds multiplies
 upward.
 
-Not done yet: live lessons.
+A teacher can also run a class live: they push each question when the room is
+ready and decide when the answer is revealed, and both sides earn more for
+having turned up. Option order is shuffled per participant rather than per
+session — in a room of children answering the same question at the same moment,
+one shared "it's B" would otherwise settle it for everyone.
+
+A live session lives on one server. Spanning servers would need MessagingService
+and a different design; the matchmaking signals exist partly so that classmates
+land together in the first place.
 
 One design consequence worth knowing: grades ten and eleven have no checkpoints,
 so a single fall ends the run with nothing scored. That is the intent — the final

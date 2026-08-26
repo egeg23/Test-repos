@@ -72,6 +72,12 @@ Economy.CapacityPassBonus = 10
 Economy.BaseClassLimit = 1
 Economy.SecondClassPassBonus = 1
 
+--- A lesson taken live, with the teacher actually running it, pays more than the
+--- same lesson taken alone. It costs both sides more -- the student has to turn
+--- up at a particular moment, the teacher has to be there running it -- and it is
+--- the version of this game that is worth playing.
+Economy.LiveLessonMultiplier = 1.5
+
 --- Student-side lesson rewards.
 Economy.QuestionsPerLesson = 6
 Economy.PointsPerCorrect = 8
