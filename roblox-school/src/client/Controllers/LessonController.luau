@@ -252,6 +252,12 @@ function LessonController.init()
 	end)
 
 	Remotes.event(Remotes.Names.LessonFinished).OnClientEvent:Connect(function(payload: any)
+		-- Assembly results come down this same remote and carry an answer key.
+		-- They belong to AssemblyController; reacting here would paint a quiz
+		-- verdict over a task this panel was never showing.
+		if payload.answers ~= nil then
+			return
+		end
 		queued = nil
 		local verdict = if payload.passed then "Урок сдан" else "Урок не сдан"
 		progressLabel.Text = verdict

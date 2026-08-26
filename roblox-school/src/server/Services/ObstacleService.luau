@@ -331,37 +331,35 @@ local function buildCourse(spec: Types.ObstacleSpec, lane: number): BuiltCourse?
 end
 
 local function stepRun(run: Run, delta: number)
-	do
-		for _, item in run.animated do
-			item.phase += delta * item.speed
-			if item.kind == "slide" then
-				local offset = math.sin(item.phase / math.max(item.range, 1)) * item.range
-				local previous = item.part.Position
-				local target = item.origin + Vector3.new(0, 0, offset)
-				item.part.Position = target
+	for _, item in run.animated do
+		item.phase += delta * item.speed
+		if item.kind == "slide" then
+			local offset = math.sin(item.phase / math.max(item.range, 1)) * item.range
+			local previous = item.part.Position
+			local target = item.origin + Vector3.new(0, 0, offset)
+			item.part.Position = target
 
-				-- An anchored part moved by CFrame does not carry anyone standing
-				-- on it, so riders are moved by the same delta explicitly.
-				local shift = target - previous
-				local character = run.player.Character
-				local root = if character ~= nil
-					then character:FindFirstChild("HumanoidRootPart")
-					else nil
-				if root ~= nil and root:IsA("BasePart") then
-					local relative = root.Position - target
-					if
-						math.abs(relative.X) <= 8
-						and math.abs(relative.Z) <= 8
-						and relative.Y > 0
-						and relative.Y < 8
-					then
-						root.CFrame = root.CFrame + shift
-					end
+			-- An anchored part moved by CFrame does not carry anyone standing
+			-- on it, so riders are moved by the same delta explicitly.
+			local shift = target - previous
+			local character = run.player.Character
+			local root = if character ~= nil
+				then character:FindFirstChild("HumanoidRootPart")
+				else nil
+			if root ~= nil and root:IsA("BasePart") then
+				local relative = root.Position - target
+				if
+					math.abs(relative.X) <= 8
+					and math.abs(relative.Z) <= 8
+					and relative.Y > 0
+					and relative.Y < 8
+				then
+					root.CFrame = root.CFrame + shift
 				end
-			else
-				item.part.CFrame = CFrame.new(item.origin)
-					* CFrame.Angles(0, item.phase, 0)
 			end
+		else
+			item.part.CFrame = CFrame.new(item.origin)
+				* CFrame.Angles(0, item.phase, 0)
 		end
 	end
 end
@@ -395,6 +393,13 @@ local function finish(run: Run, passed: boolean, reason: string?)
 	if run.finished then
 		return
 	end
+	-- Claimed before settling, not after. Settling yields -- checking a game pass
+	-- is a web call -- and during that yield another checkpoint touch or the
+	-- heartbeat's time-limit check walks straight back in here and pays the run
+	-- out a second time.
+	run.finished = true
+	runs[run.player] = nil
+
 	local total = #run.checkpoints
 	local summary = RewardService.settle(run.player, {
 		subject = run.subject,

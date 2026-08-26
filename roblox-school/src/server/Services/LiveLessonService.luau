@@ -139,7 +139,16 @@ local function settle(session: Session)
 	session.finished = true
 	local total = #session.questions
 
-	for player, participant in session.participants do
+	-- Snapshotted first. Settling yields, and a player leaving during one of
+	-- those yields removes their key from `participants` -- mutating a table
+	-- while a generic for is walking it, which Lua does not define.
+	local roll: { Participant } = {}
+	for _, participant in session.participants do
+		table.insert(roll, participant)
+	end
+
+	for _, participant in roll do
+		local player = participant.player
 		sessionOf[player] = nil
 		local passed = total > 0
 			and (participant.correctCount / total) >= Economy.DefaultPassFraction

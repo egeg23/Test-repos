@@ -26,6 +26,14 @@ export type GrantFn = (player: Player, data: Types.ProfileData, id: string) -> b
 
 local grants: { [string]: GrantFn } = {}
 
+--- Remembers that a player does *not* own a pass, which the profile cannot: it
+--- records ownership, so without this every lesson a non-owner finishes costs a
+--- UserOwnsGamePassAsync web call. A purchase during the session clears the entry
+--- through PromptGamePassPurchaseFinished, and the short expiry covers a purchase
+--- made anywhere else.
+local NEGATIVE_CACHE_SECONDS = 120
+local unowned: { [Player]: { [string]: number } } = {}
+
 local function grantKey(kind: string, id: string): string
 	return `{kind}:{id}`
 end
@@ -141,18 +149,41 @@ function PurchaseService.ownsPass(player: Player, passId: string): boolean
 		return false
 	end
 
+	local misses = unowned[player]
+	if misses ~= nil then
+		local checkedAt = misses[passId]
+		if checkedAt ~= nil and os.clock() - checkedAt < NEGATIVE_CACHE_SECONDS then
+			return false
+		end
+	end
+
 	local ok, owns = pcall(function()
 		return MarketplaceService:UserOwnsGamePassAsync(player.UserId, pass.gamePassId)
 	end)
 	if ok and owns then
 		data.ownedPasses[passId] = true
+		if misses ~= nil then
+			misses[passId] = nil
+		end
 		return true
+	end
+
+	if ok then
+		if misses == nil then
+			misses = {}
+			unowned[player] = misses
+		end
+		misses[passId] = os.clock()
 	end
 	return false
 end
 
 function PurchaseService.start()
 	MarketplaceService.ProcessReceipt = processReceipt
+
+	Players.PlayerRemoving:Connect(function(player: Player)
+		unowned[player] = nil
+	end)
 
 	MarketplaceService.PromptGamePassPurchaseFinished:Connect(
 		function(player: Player, gamePassId: number, wasPurchased: boolean)
@@ -166,6 +197,10 @@ function PurchaseService.start()
 			for _, pass in Monetization.Passes do
 				if pass.gamePassId == gamePassId then
 					data.ownedPasses[pass.id] = true
+					local misses = unowned[player]
+					if misses ~= nil then
+						misses[pass.id] = nil
+					end
 					break
 				end
 			end

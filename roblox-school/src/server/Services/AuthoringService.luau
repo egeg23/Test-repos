@@ -365,9 +365,15 @@ function AuthoringService.listMine(player: Player): { any }
 end
 
 --- A dean's verdict: approve brings publication forward, reject stops it for good.
+---
+--- `subject` is the one the caller holds office in, and it is checked against the
+--- question rather than trusted. The caller can only establish that the player is
+--- a dean of the subject they named -- naming their own subject while pointing at
+--- a question from another is exactly the gap that leaves.
 function AuthoringService.review(
 	teacherUserId: number,
 	questionId: string,
+	subject: string,
 	approve: boolean
 ): boolean
 	local applied = false
@@ -378,7 +384,7 @@ function AuthoringService.review(
 			end
 			local book = current :: Book
 			local question = book.questions[questionId]
-			if question == nil then
+			if question == nil or question.subject ~= subject then
 				return nil
 			end
 			question.status = if approve then "published" else "rejected"

@@ -158,6 +158,10 @@ local function onStartLesson(player: Player, payload: unknown)
 				reject(player, "notEnrolled")
 				return
 			end
+			-- Whatever quiz was open is over. Leaving it live would let a student
+			-- run a course and answer questions at the same time, and would keep
+			-- an attempt around with no way to reach it.
+			attempts[player] = nil
 
 			if lesson.kind == "obstacle" then
 				local courseFailure = ObstacleService.begin(player, class, lesson)
@@ -192,6 +196,7 @@ local function onStartLesson(player: Player, payload: unknown)
 	elseif typeof(request.subject) == "string" and Subjects.get(request.subject) ~= nil then
 		-- Science and art can be asked for as an assembly instead of a quiz.
 		if request.kind == "assembly" and Subjects.allows(request.subject, "assembly") then
+			attempts[player] = nil
 			local assemblyFailure = AssemblyService.begin(player, {
 				subject = request.subject,
 				statKey = `{request.subject}:assembly`,

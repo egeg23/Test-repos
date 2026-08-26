@@ -231,6 +231,13 @@ function ClassService.create(
 	return class, nil
 end
 
+--- Returns false when the class could not be updated, in which case the student
+--- is still enrolled and should try again.
+---
+--- The order matters more than it looks. Clearing the profile first and hoping
+--- the write lands leaves a student who has left still counted among the
+--- members -- and the member count is the fill rate, which is what the teacher is
+--- paid on. Ghosts in a class are money.
 function ClassService.leave(player: Player): boolean
 	local data = DataService.getData(player)
 	if data == nil then
@@ -238,18 +245,24 @@ function ClassService.leave(player: Player): boolean
 	end
 	local classId = data.enrolledClassId
 	if classId == nil then
-		return false
+		return true
 	end
 
-	data.enrolledClassId = nil
-	mutate(classId, function(current)
+	local updated = mutate(classId, function(current)
 		local index = table.find(current.memberUserIds, player.UserId)
-		if index == nil then
-			return nil
+		if index ~= nil then
+			table.remove(current.memberUserIds, index)
 		end
-		table.remove(current.memberUserIds, index)
+		-- Not being in the list is success, not failure: the goal is to not be a
+		-- member, and returning nil here would be indistinguishable from the
+		-- write having failed.
 		return current
 	end)
+
+	if updated == nil then
+		return false
+	end
+	data.enrolledClassId = nil
 	return true
 end
 
@@ -277,8 +290,11 @@ function ClassService.join(player: Player, classId: unknown): (boolean, string?)
 		return false, "ownClass"
 	end
 
-	if data.enrolledClassId ~= nil then
-		ClassService.leave(player)
+	-- Leaving has to actually succeed. Otherwise the student ends up counted in
+	-- two classes at once, and both teachers are paid for a fuller room than they
+	-- have.
+	if data.enrolledClassId ~= nil and not ClassService.leave(player) then
+		return false, "leaveFailed"
 	end
 
 	local updated = mutate(id, function(current)
@@ -933,6 +949,7 @@ local function onClassAction(player: Player, request: unknown)
 		local applied = AuthoringService.review(
 			math.floor(message.teacherUserId),
 			message.questionId,
+			message.subject,
 			message.approve == true
 		)
 		respond(player, action, applied, if applied then nil else "notFound")

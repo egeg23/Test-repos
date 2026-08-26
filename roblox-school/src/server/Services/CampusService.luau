@@ -45,11 +45,14 @@ export type Record = {
 }
 
 type Candidate = { name: string, votes: number }
+type Ballot = { candidate: string, weight: number }
 type Votes = {
 	candidates: { [string]: Candidate },
-	--- Voter user id -> the candidate they picked. Present so a vote can be
-	--- changed during the window rather than cast twice.
-	voters: { [string]: string },
+	--- Voter user id -> their ballot. The weight is stored with it, not
+	--- recomputed on change: a voter who plays another day between casting and
+	--- changing their vote would otherwise take more away from the first
+	--- candidate than they ever gave, and enough of that drives a tally negative.
+	voters: { [string]: Ballot },
 }
 
 type CacheEntry = { record: Record, fetchedAt: number }
@@ -291,14 +294,18 @@ function CampusService.vote(player: Player, candidateUserId: unknown): (boolean,
 				return nil
 			end
 
-			-- Changing your mind moves the weight rather than adding it again.
+			-- Changing your mind moves the ballot rather than adding another one,
+			-- and moves exactly the weight it was cast with.
 			local voterKey = tostring(player.UserId)
 			local previous = votes.voters[voterKey]
-			if previous ~= nil and votes.candidates[previous] ~= nil then
-				votes.candidates[previous].votes -= weight
+			if previous ~= nil then
+				local prior = votes.candidates[previous.candidate]
+				if prior ~= nil then
+					prior.votes = math.max(0, prior.votes - previous.weight)
+				end
 			end
 			votes.candidates[target].votes += weight
-			votes.voters[voterKey] = target
+			votes.voters[voterKey] = { candidate = target, weight = weight }
 			applied = true
 			return votes
 		end)

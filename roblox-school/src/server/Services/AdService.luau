@@ -32,6 +32,8 @@ local RateLimiter = require(script.Parent.RateLimiter)
 local AdService = {}
 
 local SECONDS_PER_DAY = 86400
+--- How long a watched ad stays claimed while its receipt is on the way.
+local RECEIPT_GRACE_SECONDS = 60
 
 --- Cached per player: the policy call is a web request and the answer does not
 --- change within a session.
@@ -148,23 +150,6 @@ local effects: { [string]: (Player, Types.ProfileData) -> () } = {
 	end,
 }
 
---- Registered with PurchaseService, so an ad reward is credited through exactly
---- the same idempotent receipt path as a paid purchase. The cooldown and the
---- daily count are stamped here rather than when the ad started, because this is
---- the point at which we know the player actually watched it.
-local function grantAdReward(player: Player, data: Types.ProfileData, rewardId: string): boolean
-	local effect = effects[rewardId]
-	if effect == nil then
-		return false
-	end
-
-	resetDailyIfNeeded(data)
-	data.adCooldowns[rewardId] = os.time()
-	bump(data.adDailyCounts, rewardId)
-	effect(player, data)
-	return true
-end
-
 local function setInFlight(player: Player, rewardId: string, value: boolean)
 	local playerInFlight = inFlight[player]
 	if playerInFlight == nil then
@@ -176,6 +161,31 @@ local function setInFlight(player: Player, rewardId: string, value: boolean)
 	end
 	playerInFlight[rewardId] = value or nil
 end
+
+--- Registered with PurchaseService, so an ad reward is credited through exactly
+--- the same idempotent receipt path as a paid purchase. The cooldown and the
+--- daily count are stamped here rather than when the ad started, because this is
+--- the point at which we know the player actually watched it.
+---
+--- Clearing the in-flight mark is also this function's job. The mark cannot be
+--- dropped when the video ends: the counters do not move until the receipt
+--- arrives, so between those two moments a second request would find no cooldown
+--- and no spent quota, and the daily limit would be whatever the player could
+--- fit into that window.
+local function grantAdReward(player: Player, data: Types.ProfileData, rewardId: string): boolean
+	local effect = effects[rewardId]
+	if effect == nil then
+		return false
+	end
+
+	resetDailyIfNeeded(data)
+	data.adCooldowns[rewardId] = os.time()
+	bump(data.adDailyCounts, rewardId)
+	effect(player, data)
+	setInFlight(player, rewardId, false)
+	return true
+end
+
 
 local function onRequestAd(player: Player, rewardId: unknown)
 	if typeof(rewardId) ~= "string" then
@@ -204,9 +214,8 @@ local function onRequestAd(player: Player, rewardId: unknown)
 		return RobloxAdService:ShowRewardedVideoAdAsync(player, adReward)
 	end)
 
-	setInFlight(player, rewardId :: string, false)
-
 	if not ok then
+		setInFlight(player, rewardId :: string, false)
 		warn(`rewarded video failed for {player.Name}/{rewardId}: {result}`)
 		adState:FireClient(player, rewardId, false, "error")
 		return
@@ -215,6 +224,16 @@ local function onRequestAd(player: Player, rewardId: unknown)
 	-- Succeeded only means the ad played to the end. The reward itself arrives
 	-- through ProcessReceipt; the client is told so it can stop showing a spinner.
 	local succeeded = result == Enum.ShowAdResult.Succeeded
+	if not succeeded then
+		setInFlight(player, rewardId :: string, false)
+	else
+		-- A receipt that never arrives would otherwise leave this reward blocked
+		-- for the rest of the session. The window is long enough that a receipt
+		-- in flight always wins the race.
+		task.delay(RECEIPT_GRACE_SECONDS, function()
+			setInFlight(player, rewardId :: string, false)
+		end)
+	end
 	adState:FireClient(player, rewardId, succeeded, if succeeded then nil else tostring(result))
 end
 

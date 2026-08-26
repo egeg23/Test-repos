@@ -58,10 +58,11 @@ function ModerationService.filterTitle(text: unknown, authorUserId: number): str
 		return nil
 	end
 	local candidate = text :: string
-	if utf8.len(candidate) == nil then
-		return nil
-	end
-	if #candidate > ModerationService.MaxTitleLength * 4 then
+	-- Characters, not bytes. `#` counts bytes, which would have given a Cyrillic
+	-- title twice the allowance of an English one and an emoji-heavy one four
+	-- times -- a limit that quietly means something different per language.
+	local length = utf8.len(candidate)
+	if length == nil or length > ModerationService.MaxTitleLength then
 		return nil
 	end
 	return ModerationService.filterForBroadcast(candidate, authorUserId)
