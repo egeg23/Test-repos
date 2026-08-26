@@ -21,11 +21,14 @@ local Obstacles = require(ReplicatedStorage.Shared.Config.Obstacles)
 local Subjects = require(ReplicatedStorage.Shared.Config.Subjects)
 local Types = require(ReplicatedStorage.Shared.Types)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local AuthoringService = require(script.Parent.AuthoringService)
 local BankService = require(script.Parent.BankService)
+local CampusService = require(script.Parent.CampusService)
 local DataService = require(script.Parent.DataService)
 local ModerationService = require(script.Parent.ModerationService)
 local PayoutService = require(script.Parent.PayoutService)
 local PurchaseService = require(script.Parent.PurchaseService)
+local QuestionService = require(script.Parent.QuestionService)
 local RateLimiter = require(script.Parent.RateLimiter)
 
 local ClassService = {}
@@ -401,7 +404,14 @@ function ClassService.addLesson(
 		if seen[questionId] then
 			return nil, "duplicateQuestion"
 		end
-		local question = BankService.get(questionId)
+		-- Resolved through QuestionService rather than the bank directly, so a
+		-- teacher's own published questions are usable and someone else's are not.
+		-- A question still inside its hold does not resolve, so it cannot be
+		-- slipped into a lesson ahead of publication.
+		if not QuestionService.canUse(questionId, player.UserId) then
+			return nil, "badQuestion"
+		end
+		local question = QuestionService.get(questionId)
 		if question == nil or question.subject ~= class.subject then
 			return nil, "badQuestion"
 		end
@@ -453,6 +463,33 @@ function ClassService.addLesson(
 		return nil, "storeFailed"
 	end
 	return lessonId, nil
+end
+
+--- Recomputes a teacher's standing from the classes they actually run.
+---
+--- The classes are the source of truth for ratings, and the profile only caches
+--- the aggregate -- a teacher is usually offline when someone rates them, so
+--- there is nothing to write to at the moment it happens. Refreshing here means
+--- the number is current whenever the teacher is looking at it or about to use
+--- it, which is the only time it matters.
+function ClassService.refreshTeacherRating(player: Player)
+	local data = DataService.getData(player)
+	if data == nil then
+		return
+	end
+
+	local total = 0
+	local count = 0
+	for _, classId in data.teacher.classIds do
+		local class = ClassService.get(classId)
+		if class ~= nil and class.ratingCount > 0 then
+			total += class.rating * class.ratingCount
+			count += class.ratingCount
+		end
+	end
+
+	data.teacher.rating = if count > 0 then total / count else 0
+	data.teacher.ratingCount = count
 end
 
 --- An obstacle course: an ordered list of prefab module ids and a target grade.
@@ -642,9 +679,23 @@ local function onClassAction(player: Player, request: unknown)
 
 	-- Writes are metered far harder than reads: creating a class or adding a
 	-- lesson costs a DataStore write, while listing costs a cached memory read.
-	local isWrite = action ~= "list" and action ~= "browseBank" and action ~= "mine"
-	local capacity = if isWrite then 4 else 10
-	local refill = if isWrite then 0.2 else 1
+	local isRead = action == "list"
+		or action == "browseBank"
+		or action == "mine"
+		or action == "current"
+		or action == "myQuestions"
+		or action == "campus"
+	-- Submitting a question is six TextService calls and a store write, so it is
+	-- metered harder than an ordinary write, which is itself metered harder than
+	-- a cached read.
+	local capacity, refill
+	if action == "submitQuestion" then
+		capacity, refill = 3, 0.1
+	elseif isRead then
+		capacity, refill = 10, 1
+	else
+		capacity, refill = 4, 0.2
+	end
 	if not RateLimiter.consume(player, `Class:{action}`, capacity, refill) then
 		return
 	end
@@ -675,6 +726,7 @@ local function onClassAction(player: Player, request: unknown)
 			ClassService.create(player, message.subject, message.title, message.grade)
 		respond(player, action, class ~= nil, reason, if class ~= nil then ownerView(class) else nil)
 	elseif action == "mine" then
+		ClassService.refreshTeacherRating(player)
 		local views: { any } = {}
 		for _, classId in data.teacher.classIds do
 			local class = ClassService.get(classId)
@@ -714,6 +766,65 @@ local function onClassAction(player: Player, request: unknown)
 			nil,
 			BankService.listForAuthoring(subject, data.locale, grade, MAX_AUTHORING_RESULTS)
 		)
+	elseif action == "submitQuestion" then
+		if not data.teacher.licensed then
+			respond(player, action, false, "notLicensed")
+			return
+		end
+		local questionId, reason = AuthoringService.submit(player, data.locale, message.draft)
+		respond(player, action, questionId ~= nil, reason, questionId)
+	elseif action == "myQuestions" then
+		if not data.teacher.licensed then
+			respond(player, action, false, "notLicensed")
+			return
+		end
+		respond(player, action, true, nil, AuthoringService.listMine(player))
+	elseif action == "campus" then
+		respond(player, action, true, nil, CampusService.standings(data.locale))
+	elseif action == "nominate" then
+		-- Standing requires a rating, and the cached one may be stale.
+		ClassService.refreshTeacherRating(player)
+		local ok, reason = CampusService.nominate(player)
+		respond(player, action, ok, reason)
+	elseif action == "vote" then
+		local ok, reason = CampusService.vote(player, message.candidateUserId)
+		respond(player, action, ok, reason)
+	elseif action == "subjectOfMonth" then
+		local ok, reason = CampusService.setSubjectOfMonth(player, message.subject)
+		respond(player, action, ok, reason)
+	elseif action == "motto" then
+		local ok, reason = CampusService.setMotto(player, message.motto)
+		respond(player, action, ok, reason)
+	elseif action == "startEvent" then
+		local ok, reason = CampusService.startEvent(player)
+		respond(player, action, ok, reason)
+	elseif action == "appointDean" then
+		local ok, reason =
+			CampusService.appointDean(player, message.subject, message.teacherUserId)
+		respond(player, action, ok, reason)
+	elseif action == "reviewQuestion" then
+		-- A dean rules on their own subject and nobody else's.
+		if typeof(message.subject) ~= "string" then
+			respond(player, action, false, "badRequest")
+			return
+		end
+		if not CampusService.isDean(data.locale, message.subject, player.UserId) then
+			respond(player, action, false, "notDean")
+			return
+		end
+		if
+			typeof(message.teacherUserId) ~= "number"
+			or typeof(message.questionId) ~= "string"
+		then
+			respond(player, action, false, "badRequest")
+			return
+		end
+		local applied = AuthoringService.review(
+			math.floor(message.teacherUserId),
+			message.questionId,
+			message.approve == true
+		)
+		respond(player, action, applied, if applied then nil else "notFound")
 	elseif action == "collect" then
 		respond(player, action, true, nil, PayoutService.collect(player))
 	else

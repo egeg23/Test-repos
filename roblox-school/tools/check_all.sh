@@ -15,6 +15,7 @@ run "Luau syntax" ./tools/check.sh
 run "Circular requires" python3 tools/check_requires.py
 run "Question bank rules" python3 tools/validate_bank.py
 run "Obstacle difficulty" python3 tools/check_obstacles.py
+run "Campus elections" python3 tools/check_campus.py
 run "Economy simulation" python3 tools/simulate_economy.py
 
 echo

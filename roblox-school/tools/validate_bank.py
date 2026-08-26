@@ -11,18 +11,38 @@ do the test measures pattern-spotting instead of learning.
 from __future__ import annotations
 
 import json
+import re
 import sys
 from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 BANKS = ROOT / "content/banks"
+AUTHORING = ROOT / "src/shared/Config/Authoring.luau"
 
-MAX_STEM_CHARS = 120
-REQUIRED_OPTIONS = 4
-MIN_EXPLANATION_CHARS = 20
-# An option this much longer than the average is a giveaway on sight.
-MAX_OPTION_LENGTH_RATIO = 1.8
+
+def _rule(name: str) -> float:
+    """Reads a rule out of the shared Authoring config.
+
+    The bank and a teacher's own questions are held to the same standard, so
+    there is exactly one place those numbers live. Copying them here is how the
+    two quietly drift apart until players notice that hand-written questions
+    follow rules ours do not.
+    """
+    text = AUTHORING.read_text(encoding="utf-8")
+    match = re.search(rf"^Authoring\.{name}\s*=\s*([0-9.]+)$", text, re.MULTILINE)
+    if not match:
+        raise SystemExit(f"validate_bank: could not read Authoring.{name}")
+    return float(match.group(1))
+
+
+MAX_STEM_CHARS = int(_rule("MaxStemChars"))
+MIN_STEM_CHARS = int(_rule("MinStemChars"))
+REQUIRED_OPTIONS = int(_rule("RequiredOptions"))
+MAX_OPTION_CHARS = int(_rule("MaxOptionChars"))
+MIN_EXPLANATION_CHARS = int(_rule("MinExplanationChars"))
+MAX_EXPLANATION_CHARS = int(_rule("MaxExplanationChars"))
+MAX_OPTION_LENGTH_RATIO = _rule("MaxOptionLengthRatio")
 # Share of questions whose correct answer is the longest option, or sits in any
 # one slot. Uniform would be 25%; these are the points where a pattern emerges.
 MAX_LONGEST_CORRECT_SHARE = 0.40
@@ -48,8 +68,11 @@ def validate_question(question: dict, seen_ids: set[str], where: str) -> list[st
     stem = question.get("stem", "")
     if not isinstance(stem, str) or not stem.strip():
         errors.append(f"{prefix}: empty stem")
-    elif len(stem) > MAX_STEM_CHARS:
-        errors.append(f"{prefix}: stem is {len(stem)} chars, limit {MAX_STEM_CHARS}")
+    elif not MIN_STEM_CHARS <= len(stem) <= MAX_STEM_CHARS:
+        errors.append(
+            f"{prefix}: stem is {len(stem)} chars, allowed "
+            f"{MIN_STEM_CHARS}..{MAX_STEM_CHARS}"
+        )
 
     options = question.get("options")
     if not isinstance(options, list) or len(options) != REQUIRED_OPTIONS:
@@ -58,6 +81,11 @@ def validate_question(question: dict, seen_ids: set[str], where: str) -> list[st
 
     if any(not isinstance(o, str) or not o.strip() for o in options):
         errors.append(f"{prefix}: an option is empty")
+    for option in options:
+        if isinstance(option, str) and len(option) > MAX_OPTION_CHARS:
+            errors.append(
+                f"{prefix}: an option is {len(option)} chars, limit {MAX_OPTION_CHARS}"
+            )
     if len({o.strip().lower() for o in options}) != REQUIRED_OPTIONS:
         errors.append(f"{prefix}: options are not distinct")
 
@@ -78,6 +106,11 @@ def validate_question(question: dict, seen_ids: set[str], where: str) -> list[st
         errors.append(
             f"{prefix}: explanation is the part that teaches; "
             f"needs at least {MIN_EXPLANATION_CHARS} chars"
+        )
+    elif len(explanation) > MAX_EXPLANATION_CHARS:
+        errors.append(
+            f"{prefix}: explanation is {len(explanation)} chars, "
+            f"limit {MAX_EXPLANATION_CHARS}"
         )
 
     return errors

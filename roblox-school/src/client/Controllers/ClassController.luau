@@ -15,6 +15,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local CourseBuilderController = require(script.Parent.CourseBuilderController)
 local LessonController = require(script.Parent.LessonController)
+local QuestionEditorController = require(script.Parent.QuestionEditorController)
 
 local ClassController = {}
 
@@ -172,6 +173,14 @@ local function renderMine(payload: any)
 	collect.Parent = head
 	collect.Activated:Connect(function()
 		send("collect")
+	end)
+
+	local authoring = makeRow(44)
+	makeLabel(authoring, "Свои вопросы", 15, TEXT, 12)
+	local openEditor = makeButton("Открыть", ACCENT, 100)
+	openEditor.Parent = authoring
+	openEditor.Activated:Connect(function()
+		QuestionEditorController.open()
 	end)
 
 	for _, class in payload.classes do

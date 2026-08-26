@@ -8,8 +8,10 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Campus = require(ReplicatedStorage.Shared.Config.Campus)
 local Economy = require(ReplicatedStorage.Shared.Config.Economy)
 local Types = require(ReplicatedStorage.Shared.Types)
+local CampusService = require(script.Parent.CampusService)
 local DataService = require(script.Parent.DataService)
 local LessonStatsService = require(script.Parent.LessonStatsService)
 local PayoutService = require(script.Parent.PayoutService)
@@ -95,6 +97,11 @@ function RewardService.settle(player: Player, settlement: Settlement): Summary?
 
 	local hasDoublePass = PurchaseService.ownsPass(player, "xp2")
 	local multiplier = ProgressionService.rewardMultiplier(data, hasDoublePass)
+	-- The director's subject of the month and any running event fold in here.
+	-- Both only ever multiply upward: nothing the office does can leave a student
+	-- with less than they would have had.
+	multiplier *= CampusService.bonusMultiplier(data.locale, settlement.subject)
+
 	local points = Economy.studentReward(settlement.score, settlement.passed, multiplier)
 	data.points += points
 
@@ -107,6 +114,13 @@ function RewardService.settle(player: Player, settlement: Settlement): Summary?
 		and settlement.teacherUserId ~= player.UserId
 	then
 		creditTeacher(player, data, settlement)
+	end
+
+	-- The director takes a share of what the campus earns, minted rather than
+	-- deducted -- the student keeps every point they were shown.
+	local director = CampusService.get(data.locale).directorUserId
+	if director > 0 and director ~= player.UserId then
+		PayoutService.credit(director, points * Campus.DirectorShare)
 	end
 
 	return {
