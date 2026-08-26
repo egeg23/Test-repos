@@ -58,6 +58,14 @@ tools/          checks that run outside Studio
 ./tools/check_all.sh
 ```
 
+- `tools/test.sh` runs the unit tests in `tests/`. These execute the real config
+  modules — the economy formulas, the difficulty curve, the election calendar,
+  the authoring rules — under the standalone Luau binary, which is possible
+  because those modules import nothing from the engine. They are worth more than
+  the Python checks beside them for exactly that reason: those can only read
+  constants out of the source and reason about them, while these run the code
+  the game runs. Each one was confirmed to fail when the rule it guards is
+  removed.
 - `tools/check.sh` parses every Luau file with the upstream Luau binary
   (downloaded on first run) and gates on syntax errors and lints.
 
