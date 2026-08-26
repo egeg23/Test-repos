@@ -10,6 +10,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Campus = require(ReplicatedStorage.Shared.Config.Campus)
 local Economy = require(ReplicatedStorage.Shared.Config.Economy)
+local Progression = require(ReplicatedStorage.Shared.Config.Progression)
 local Types = require(ReplicatedStorage.Shared.Types)
 local CampusService = require(script.Parent.CampusService)
 local DataService = require(script.Parent.DataService)
@@ -101,6 +102,7 @@ function RewardService.settle(player: Player, settlement: Settlement): Summary?
 	-- Both only ever multiply upward: nothing the office does can leave a student
 	-- with less than they would have had.
 	multiplier *= CampusService.bonusMultiplier(data.locale, settlement.subject)
+	multiplier *= Progression.calendarMultiplier(os.time())
 
 	local points = Economy.studentReward(settlement.score, settlement.passed, multiplier)
 	data.points += points

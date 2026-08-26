@@ -21,6 +21,7 @@ local Obstacles = require(ReplicatedStorage.Shared.Config.Obstacles)
 local Subjects = require(ReplicatedStorage.Shared.Config.Subjects)
 local Types = require(ReplicatedStorage.Shared.Types)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local AssemblyService = require(script.Parent.AssemblyService)
 local AuthoringService = require(script.Parent.AuthoringService)
 local BankService = require(script.Parent.BankService)
 local CampusService = require(script.Parent.CampusService)
@@ -442,6 +443,7 @@ function ClassService.addLesson(
 		-- that has already been filtered, so there is nothing left to review.
 		status = "published",
 		translations = {},
+		assembly = nil,
 		test = {
 			id = lessonId,
 			subject = class.subject,
@@ -566,7 +568,94 @@ function ClassService.addCourse(
 		status = "published",
 		translations = {},
 		test = nil,
+		assembly = nil,
 		obstacle = { id = lessonId, moduleIds = ids, grade = grade },
+		createdAt = os.time(),
+		publishedAt = os.time(),
+	}
+
+	local updated = mutate(id, function(current)
+		current.lessons[lessonId] = lesson
+		return current
+	end)
+	if updated == nil then
+		return nil, "storeFailed"
+	end
+	return lessonId, nil
+end
+
+--- An assembly lesson: a selection of tasks from the curated catalogue.
+---
+--- Same shape as the question constructor and for the same reason. The teacher
+--- chooses what to set; the catalogue decides what is correct.
+function ClassService.addAssembly(
+	player: Player,
+	classId: unknown,
+	title: unknown,
+	taskIds: unknown
+): (string?, string?)
+	if typeof(classId) ~= "string" or typeof(taskIds) ~= "table" then
+		return nil, "badRequest"
+	end
+	local id = classId :: string
+	local class = ClassService.get(id, true)
+	if class == nil then
+		return nil, "noClass"
+	end
+	if class.teacherUserId ~= player.UserId then
+		return nil, "notOwner"
+	end
+	if not Subjects.allows(class.subject, "assembly") then
+		return nil, "wrongSubject"
+	end
+
+	local lessonCount = 0
+	for _ in class.lessons do
+		lessonCount += 1
+	end
+	if lessonCount >= MAX_LESSONS_PER_CLASS then
+		return nil, "lessonLimit"
+	end
+
+	local ids: { string } = {}
+	local seen: { [string]: boolean } = {}
+	local gradeTotal = 0
+	for _, raw in taskIds :: { any } do
+		if typeof(raw) ~= "string" or seen[raw] then
+			return nil, "badTask"
+		end
+		local task = AssemblyService.get(raw :: string)
+		if task == nil or task.subject ~= class.subject then
+			return nil, "badTask"
+		end
+		seen[raw] = true
+		gradeTotal += task.grade
+		table.insert(ids, raw :: string)
+	end
+	if #ids == 0 or #ids > 8 then
+		return nil, "taskCount"
+	end
+
+	local cleanTitle = ModerationService.filterTitle(title, player.UserId)
+	if cleanTitle == nil then
+		return nil, "titleRejected"
+	end
+
+	local lessonId = HttpService:GenerateGUID(false)
+	local lesson: Types.Lesson = {
+		id = lessonId,
+		authorUserId = player.UserId,
+		subject = class.subject,
+		grade = math.max(1, math.floor(gradeTotal / #ids + 0.5)),
+		kind = "assembly",
+		locale = class.locale,
+		title = cleanTitle,
+		body = "",
+		status = "published",
+		translations = {},
+		test = nil,
+		obstacle = nil,
+		assembly = { id = lessonId, taskIds = ids },
 		createdAt = os.time(),
 		publishedAt = os.time(),
 	}
@@ -684,6 +773,7 @@ local function onClassAction(player: Player, request: unknown)
 		or action == "mine"
 		or action == "current"
 		or action == "myQuestions"
+		or action == "browseAssembly"
 		or action == "campus"
 	-- Submitting a question is six TextService calls and a store write, so it is
 	-- metered harder than an ordinary write, which is itself metered harder than
@@ -744,6 +834,27 @@ local function onClassAction(player: Player, request: unknown)
 			message.moduleIds
 		)
 		respond(player, action, lessonId ~= nil, reason, lessonId)
+	elseif action == "addAssembly" then
+		local lessonId, reason =
+			ClassService.addAssembly(player, message.classId, message.title, message.taskIds)
+		respond(player, action, lessonId ~= nil, reason, lessonId)
+	elseif action == "browseAssembly" then
+		if not data.teacher.licensed then
+			respond(player, action, false, "notLicensed")
+			return
+		end
+		if typeof(message.subject) ~= "string" then
+			respond(player, action, false, "badRequest")
+			return
+		end
+		local grade = if typeof(message.grade) == "number" then message.grade else data.grade
+		respond(
+			player,
+			action,
+			true,
+			nil,
+			AssemblyService.listForAuthoring(message.subject, data.locale, grade)
+		)
 	elseif action == "addLesson" then
 		local lessonId, reason =
 			ClassService.addLesson(player, message.classId, message.title, message.questionIds)

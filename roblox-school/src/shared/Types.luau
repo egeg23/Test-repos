@@ -58,6 +58,13 @@ export type ObstacleSpec = {
 	grade: number,
 }
 
+export type AssemblySpec = {
+	id: string,
+	--- Ids into the curated assembly catalogue. A lesson picks which tasks to
+	--- set, never what the right answer to one is.
+	taskIds: { string },
+}
+
 export type ModerationStatus = "draft" | "pending" | "published" | "rejected"
 
 
@@ -76,6 +83,7 @@ export type Lesson = {
 	translations: { [string]: string },
 	test: TestSpec?,
 	obstacle: ObstacleSpec?,
+	assembly: AssemblySpec?,
 	createdAt: number,
 	publishedAt: number?,
 }

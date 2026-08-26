@@ -20,6 +20,8 @@ Remotes.Names = {
 	LessonRejected = "LessonRejected",
 	CourseState = "CourseState",
 	CourseFinished = "CourseFinished",
+	AssemblyTask = "AssemblyTask",
+	AssemblySubmit = "AssemblySubmit",
 	ClassAction = "ClassAction",
 	ClassResult = "ClassResult",
 }

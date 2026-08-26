@@ -37,10 +37,31 @@ function Progression.gameWeek(unixSeconds: number): number
 	return math.floor(unixSeconds / Progression.RealSecondsPerGameWeek)
 end
 
---- Test week lands on the last week of every term; holidays follow it.
+--- Test week lands on the last week of every term.
 function Progression.isTestWeek(unixSeconds: number): boolean
 	local week = Progression.gameWeek(unixSeconds)
 	return week % Progression.GameWeeksPerTerm == Progression.GameWeeksPerTerm - 1
+end
+
+function Progression.weekInTerm(unixSeconds: number): number
+	return Progression.gameWeek(unixSeconds) % Progression.GameWeeksPerTerm
+end
+
+function Progression.termIndex(unixSeconds: number): number
+	return math.floor(Progression.gameWeek(unixSeconds) / Progression.GameWeeksPerTerm)
+end
+
+--- What the calendar is worth on a given day.
+---
+--- The calendar exists for rhythm rather than for progress -- it is why a
+--- Thursday feels different from a Tuesday -- so its only mechanical effect is a
+--- modest bonus during test week. Enough to be a reason to show up that day,
+--- small enough that missing it is not a punishment. Like every other campus
+--- bonus, it only multiplies upward.
+Progression.TestWeekMultiplier = 1.2
+
+function Progression.calendarMultiplier(unixSeconds: number): number
+	return if Progression.isTestWeek(unixSeconds) then Progression.TestWeekMultiplier else 1
 end
 
 --- What a graduate may do next. Graduation is a branch, not an ending: the

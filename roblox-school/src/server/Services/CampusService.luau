@@ -17,6 +17,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Campus = require(ReplicatedStorage.Shared.Config.Campus)
+local Progression = require(ReplicatedStorage.Shared.Config.Progression)
 local Subjects = require(ReplicatedStorage.Shared.Config.Subjects)
 local DataService = require(script.Parent.DataService)
 
@@ -331,6 +332,11 @@ function CampusService.standings(locale: string): any
 		phase = Campus.phase(now),
 		dayInCycle = Campus.dayInCycle(now),
 		cycleDays = Campus.CycleDays,
+		schoolWeek = Progression.gameWeek(now),
+		weekInTerm = Progression.weekInTerm(now),
+		weeksPerTerm = Progression.GameWeeksPerTerm,
+		termIndex = Progression.termIndex(now),
+		isTestWeek = Progression.isTestWeek(now),
 		directorUserId = record.directorUserId,
 		directorName = record.directorName,
 		subjectOfMonth = record.subjectOfMonth,

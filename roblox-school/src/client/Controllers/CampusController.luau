@@ -107,7 +107,9 @@ local function render(view: any)
 	clearList()
 
 	local remaining = view.cycleDays - view.dayInCycle
-	phaseLabel.Text = `{PHASE_NAMES[view.phase] or view.phase} · день {view.dayInCycle} из {view.cycleDays}`
+	local week = `{view.termIndex + 1} четверть, неделя {view.weekInTerm + 1} из {view.weeksPerTerm}`
+	local calendar = if view.isTestWeek then `{week} · контрольная неделя ×1.2` else week
+	phaseLabel.Text = `{PHASE_NAMES[view.phase] or view.phase} · {calendar}`
 
 	local head = row(72)
 	text(

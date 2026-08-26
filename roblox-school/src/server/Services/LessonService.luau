@@ -153,20 +153,58 @@ local function onStartLesson(player: Player, payload: unknown)
 		-- the question loop.
 		local class = ClassService.get(request.classId)
 		local lesson = if class ~= nil then class.lessons[request.lessonId] else nil
-		if class ~= nil and lesson ~= nil and lesson.kind == "obstacle" then
+		if class ~= nil and lesson ~= nil and lesson.kind ~= "quiz" then
 			if data.enrolledClassId ~= request.classId then
 				reject(player, "notEnrolled")
 				return
 			end
-			local courseFailure = ObstacleService.begin(player, class, lesson)
-			if courseFailure ~= nil then
-				reject(player, courseFailure)
+
+			if lesson.kind == "obstacle" then
+				local courseFailure = ObstacleService.begin(player, class, lesson)
+				if courseFailure ~= nil then
+					reject(player, courseFailure)
+				end
+				return
 			end
+
+			local spec = lesson.assembly
+			if lesson.kind == "assembly" and spec ~= nil and #spec.taskIds > 0 then
+				local taskId = spec.taskIds[Random.new():NextInteger(1, #spec.taskIds)]
+				local failure = AssemblyService.begin(player, {
+					subject = class.subject,
+					statKey = lesson.id,
+					teacherUserId = class.teacherUserId,
+					classMembers = #class.memberUserIds,
+					teacherRating = class.rating,
+					translated = class.locale ~= data.locale,
+				}, data.locale, data.grade, taskId)
+				if failure ~= nil then
+					reject(player, failure)
+				end
+				return
+			end
+
+			reject(player, "noLesson")
 			return
 		end
 
 		source, failure = classSource(player, data, request.classId, request.lessonId, random)
 	elseif typeof(request.subject) == "string" and Subjects.get(request.subject) ~= nil then
+		-- Science and art can be asked for as an assembly instead of a quiz.
+		if request.kind == "assembly" and Subjects.allows(request.subject, "assembly") then
+			local assemblyFailure = AssemblyService.begin(player, {
+				subject = request.subject,
+				statKey = `{request.subject}:assembly`,
+				teacherUserId = 0,
+				classMembers = 0,
+				teacherRating = 0,
+				translated = false,
+			}, data.locale, data.grade, nil)
+			if assemblyFailure ~= nil then
+				reject(player, assemblyFailure)
+			end
+			return
+		end
 		source, failure = bankSource(data, request.subject, random)
 	else
 		failure = "badRequest"

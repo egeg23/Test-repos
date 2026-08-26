@@ -71,15 +71,26 @@ tools/          checks that run outside Studio
   a local type declaration, which passes clean. Type diagnostics are counted and
   suppressed; real typechecking needs luau-lsp with a Rojo sourcemap, in Studio
   or an editor.
-- `tools/check_requires.py` looks for circular requires. Luau resolves a cycle by
-  erroring at runtime, and only on the load order that happens to hit it, so one
-  can sit in a build for weeks and then break in front of players. Nothing else
-  here can see it — the syntax checker reads one file at a time.
 - `tools/check_obstacles.py` measures the obstacle difficulty curve against what
   a Roblox character can physically do — it clears roughly twenty studs at a run
   and is about two wide — and asserts the final year actually reaches the edge of
   that while the first stays gentle.
-- `tools/validate_bank.py` enforces the question authoring rules. Besides the
+- `tools/validate_bank.py` enforces the question authoring rules, reading them
+  from the shared `Authoring` config so the bank and teacher-written questions
+  are held to one standard.
+- `tools/validate_assembly.py` checks assembly tasks against the component
+  catalogue. Two of its failures are silent rather than loud: a task whose answer
+  is not in its own palette is unsolvable but reads fine, and a palette holding
+  only the pieces it needs solves itself by elimination.
+- `tools/check_campus.py` walks every day of the election cycle at both edges.
+  The phase is derived from the clock on each server independently, so an
+  off-by-one does not fail loudly — it means two servers disagree about whether
+  voting is open. It also asserts that every power the director's office holds
+  multiplies upward.
+- `tools/check_requires.py` looks for circular requires. Luau resolves a cycle by
+  erroring at runtime, and only on the load order that happens to hit it, so one
+  can sit in a build for weeks and then break in front of players. Nothing else
+  here can see it — the syntax checker reads one file at a time. Besides the
   per-question checks it looks for two bank-wide patterns children find fast: the
   correct answer being uniquely the longest option, and answers clustering in one
   slot. Either turns a test of understanding into a test of pattern-spotting.
@@ -161,9 +172,22 @@ either side of their class and no further — the quality factor would eventuall
 punish a trivial course through its pass rate, but that takes twenty attempts,
 and those are twenty students who wasted their time.
 
-Not done yet: assembly lessons for science and art, teacher-authored *questions*
-(the constructor half of the hybrid works; free text still needs the moderation
-queue), campuses and elections, translation, and the in-game calendar.
+Science and art run on assembly tasks — labelled slots, a palette with spare
+pieces, marked on the server. The teacher picks which tasks to set; the catalogue
+decides what is correct, because a teacher who could declare which wiring is
+right could teach the wrong one.
+
+Teachers can also write their own questions. That is free text, so it goes
+through structural rules, then TextService on every field, then a hold, then
+publication — each step failing closed, and nothing resolvable until it reaches
+the end. Universal subjects are machine-translated into the other launch locales
+and filtered again before storage.
+
+Each language has its own campus with a monthly election. Phases come from the
+clock rather than a scheduler, and every power the office holds multiplies
+upward.
+
+Not done yet: live lessons.
 
 One design consequence worth knowing: grades ten and eleven have no checkpoints,
 so a single fall ends the run with nothing scored. That is the intent — the final

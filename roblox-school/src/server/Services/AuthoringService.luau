@@ -25,6 +25,7 @@ local Authoring = require(ReplicatedStorage.Shared.Config.Authoring)
 local Subjects = require(ReplicatedStorage.Shared.Config.Subjects)
 local Types = require(ReplicatedStorage.Shared.Types)
 local ModerationService = require(script.Parent.ModerationService)
+local TranslationService = require(script.Parent.TranslationService)
 
 local AuthoringService = {}
 
@@ -49,6 +50,9 @@ export type Authored = {
 	--- bring that forward by approving, or stop it by rejecting.
 	publishAt: number,
 	createdAt: number,
+	--- Locale -> the same question in that language, machine-translated and then
+	--- filtered again. Only ever populated for universal subjects.
+	translations: { [string]: TranslationService.TranslatedQuestion }?,
 }
 
 type Book = {
@@ -113,7 +117,12 @@ local function settleStatus(question: Authored): Authored
 end
 
 --- The only way a question reaches a student. Anything not published returns nil.
-function AuthoringService.resolve(questionId: string): Types.Question?
+---
+--- `locale` selects a translated variant when one exists. A missing translation
+--- falls back to the original rather than to nothing: a Brazilian student is
+--- better served a maths question in Russian than no maths question at all, and
+--- the numbers are the same either way.
+function AuthoringService.resolve(questionId: string, locale: string?): Types.Question?
 	local owner = AuthoringService.parseId(questionId)
 	if owner == nil then
 		return nil
@@ -129,15 +138,70 @@ function AuthoringService.resolve(questionId: string): Types.Question?
 		return nil
 	end
 
+	local stem = question.stem
+	local options = question.options
+	local explanation = question.explanation
+
+	if locale ~= nil and locale ~= question.locale and question.translations ~= nil then
+		local variant = question.translations[locale]
+		if variant ~= nil then
+			stem = variant.stem
+			options = variant.options
+			explanation = variant.explanation
+		end
+	end
+
 	return {
 		id = question.id,
 		subject = question.subject,
 		grade = question.grade,
-		stem = question.stem,
-		options = table.clone(question.options),
+		stem = stem,
+		options = table.clone(options),
+		-- The answer index is the author's, not the translator's: option order is
+		-- preserved through translation, so position 3 stays position 3.
 		answer = question.answer,
-		explanation = question.explanation,
+		explanation = explanation,
 	}
+end
+
+--- Translates a stored question in the background and writes the result back.
+---
+--- Deliberately after the store rather than before it. Submission would otherwise
+--- block on a dozen network calls, and the hold before publication is far longer
+--- than this takes -- so translations are ready well before anyone can see the
+--- question, and a translation failure simply means it publishes in one language.
+local function translateInBackground(userId: number, questionId: string, draft: Authoring.Draft, locale: string)
+	task.spawn(function()
+		local translations = TranslationService.translateQuestion(
+			draft.subject,
+			locale,
+			userId,
+			draft.stem,
+			draft.options,
+			draft.explanation
+		)
+		if next(translations) == nil then
+			return
+		end
+
+		local ok = pcall(function()
+			store:UpdateAsync(tostring(userId), function(current: any)
+				if typeof(current) ~= "table" then
+					return nil
+				end
+				local book = current :: Book
+				local question = book.questions[questionId]
+				if question == nil then
+					return nil
+				end
+				question.translations = translations
+				return book
+			end)
+		end)
+		if ok then
+			cache[userId] = nil
+		end
+	end)
 end
 
 --- Filters every field. Returns nil if any one of them could not be cleared,
@@ -264,6 +328,7 @@ function AuthoringService.submit(
 				status = "pending",
 				publishAt = os.time() + HOLD_SECONDS,
 				createdAt = os.time(),
+				translations = nil,
 			}
 			return live
 		end)
@@ -273,6 +338,7 @@ function AuthoringService.submit(
 		return nil, "storeFailed"
 	end
 	cache[player.UserId] = nil
+	translateInBackground(player.UserId, questionId, filtered, locale)
 	return questionId, nil
 end
 

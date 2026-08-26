@@ -1,22 +1,37 @@
 {
   "name": "roblox-school",
-  "globIgnorePaths": ["**/*.spec.luau"],
+  "globIgnorePaths": [
+    "**/*.spec.luau"
+  ],
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {
-      "Shared": { "$path": "src/shared" },
-      "Packages": { "$path": "Packages" }
+      "Shared": {
+        "$path": "src/shared"
+      },
+      "Packages": {
+        "$path": "Packages"
+      }
     },
     "ServerStorage": {
       "$comment": "Question banks live server-side and are never replicated. They contain the answer keys: putting them in ReplicatedStorage would hand every client a copy of every answer.",
-      "Banks": { "$path": "content/banks" }
+      "Banks": {
+        "$path": "content/banks"
+      },
+      "Assembly": {
+        "$path": "content/assembly"
+      }
     },
     "ServerScriptService": {
-      "Server": { "$path": "src/server" }
+      "Server": {
+        "$path": "src/server"
+      }
     },
     "StarterPlayer": {
       "StarterPlayerScripts": {
-        "Client": { "$path": "src/client" }
+        "Client": {
+          "$path": "src/client"
+        }
       }
     }
   }

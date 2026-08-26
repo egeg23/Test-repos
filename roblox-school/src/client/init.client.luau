@@ -1,6 +1,7 @@
 --!strict
 --- Client entry point.
 
+local AssemblyController = require(script.Controllers.AssemblyController)
 local CampusController = require(script.Controllers.CampusController)
 local ClassController = require(script.Controllers.ClassController)
 local CourseBuilderController = require(script.Controllers.CourseBuilderController)
@@ -10,6 +11,7 @@ local QuestionEditorController = require(script.Controllers.QuestionEditorContro
 
 LessonController.init()
 ObstacleController.init()
+AssemblyController.init()
 -- Both are built before ClassController, which opens them from the teacher panel.
 CourseBuilderController.init()
 QuestionEditorController.init()

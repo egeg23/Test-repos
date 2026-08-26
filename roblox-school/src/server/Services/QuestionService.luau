@@ -16,9 +16,13 @@ local BankService = require(script.Parent.BankService)
 local QuestionService = {}
 
 --- Nil for an id that does not exist, is not published yet, or was rejected.
-function QuestionService.get(questionId: string): Types.Question?
+---
+--- `locale` picks a translated variant of an authored question where one exists.
+--- The curated bank ignores it: bank pools are already chosen per locale before
+--- a question id is ever looked up.
+function QuestionService.get(questionId: string, locale: string?): Types.Question?
 	if AuthoringService.isAuthoredId(questionId) then
-		return AuthoringService.resolve(questionId)
+		return AuthoringService.resolve(questionId, locale)
 	end
 	return BankService.get(questionId)
 end
