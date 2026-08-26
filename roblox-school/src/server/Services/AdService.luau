@@ -24,6 +24,7 @@ local RobloxAdService = game:GetService("AdService")
 local Monetization = require(ReplicatedStorage.Shared.Config.Monetization)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Types = require(ReplicatedStorage.Shared.Types)
+local Analytics = require(script.Parent.AnalyticsService)
 local ClassService = require(script.Parent.ClassService)
 local DataService = require(script.Parent.DataService)
 local PurchaseService = require(script.Parent.PurchaseService)
@@ -183,6 +184,7 @@ local function grantAdReward(player: Player, data: Types.ProfileData, rewardId: 
 	bump(data.adDailyCounts, rewardId)
 	effect(player, data)
 	setInFlight(player, rewardId, false)
+	Analytics.adGranted(player, rewardId)
 	return true
 end
 
@@ -208,6 +210,7 @@ local function onRequestAd(player: Player, rewardId: unknown)
 	end
 
 	setInFlight(player, rewardId :: string, true)
+	Analytics.adOffered(player, rewardId :: string)
 
 	local ok, result = pcall(function()
 		local adReward = RobloxAdService:CreateAdRewardFromDevProductId(reward.devProductId)
@@ -224,6 +227,7 @@ local function onRequestAd(player: Player, rewardId: unknown)
 	-- Succeeded only means the ad played to the end. The reward itself arrives
 	-- through ProcessReceipt; the client is told so it can stop showing a spinner.
 	local succeeded = result == Enum.ShowAdResult.Succeeded
+	Analytics.adResult(player, rewardId :: string, succeeded)
 	if not succeeded then
 		setInFlight(player, rewardId :: string, false)
 	else

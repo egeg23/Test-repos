@@ -372,6 +372,31 @@ local function buildUi()
 
 end
 
+local PATH_NAMES: { [string]: string } = {
+	university = "Поступить в университет",
+	teacher = "Стать преподавателем",
+	newGamePlus = "Пойти заново с бонусом",
+}
+
+--- Shown when the server reports the last grade is finished. Until this exists
+--- the flag it clears has no other way of being cleared, and every lesson is
+--- refused while it is set.
+local function renderGraduation()
+	clearList()
+	local head = makeRow(52)
+	makeLabel(head, "Все классы пройдены. Что дальше?", 16, TEXT, 14)
+
+	for _, path in { "university", "teacher", "newGamePlus" } do
+		local element = makeRow(46)
+		makeLabel(element, PATH_NAMES[path] or path, 15, TEXT, 12)
+		local choose = makeButton("Выбрать", ACCENT, 100)
+		choose.Parent = element
+		choose.Activated:Connect(function()
+			send("graduate", { path = path })
+		end)
+	end
+end
+
 local REASONS: { [string]: string } = {
 	notLicensed = "Сначала нужно выпуститься и получить лицензию",
 	classLimit = "Больше классов не положено без пропуска",
@@ -383,6 +408,7 @@ local REASONS: { [string]: string } = {
 	noClass = "Класс не найден",
 	storeFailed = "Не удалось сохранить, попробуй ещё раз",
 	badGrade = "Укажи класс числом от 1 до 11",
+	cannotGraduate = "Выпускной ещё не заслужен",
 	gradeOutOfWindow = "Можно только ±1 класс от своего",
 	tooShort = "Слишком короткая полоса для этого класса",
 	tooLong = "Слишком длинная полоса",
@@ -402,6 +428,13 @@ function ClassController.init()
 		end
 		statusLabel.Text = ""
 
+		-- Nothing else is worth showing while the last grade is unresolved: the
+		-- server refuses every lesson until a path is chosen.
+		if result.awaitingGraduation and result.action ~= "graduate" then
+			renderGraduation()
+			return
+		end
+
 		if result.action == "list" then
 			renderDirectory(result.payload or {})
 		elseif result.action == "join" or result.action == "current" then
@@ -415,6 +448,12 @@ function ClassController.init()
 			send("mine")
 		elseif result.action == "rate" then
 			statusLabel.Text = "Оценка учтена"
+		elseif result.action == "graduate" then
+			statusLabel.Text = if result.payload.licensed
+				then "Теперь ты преподаватель. Создай свой класс."
+				else "Поздравляю с выпуском!"
+			mode = "mine"
+			send("mine")
 		elseif result.action == "addCourse" then
 			statusLabel.Text = "Полоса сохранена"
 			CourseBuilderController.close()

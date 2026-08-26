@@ -267,7 +267,7 @@ function LessonController.init()
 			button.Visible = false
 		end
 		explanationLabel.Text = if payload.graduated
-			then "Все классы пройдены. Пора выбрать, что дальше."
+			then "Все классы пройдены. Открой «Школа» и выбери, что дальше."
 			elseif payload.advanced then `Ты перешёл в {payload.grade} класс`
 			else ""
 		explanationLabel.Visible = explanationLabel.Text ~= ""

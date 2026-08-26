@@ -12,6 +12,7 @@ local Campus = require(ReplicatedStorage.Shared.Config.Campus)
 local Economy = require(ReplicatedStorage.Shared.Config.Economy)
 local Progression = require(ReplicatedStorage.Shared.Config.Progression)
 local Types = require(ReplicatedStorage.Shared.Types)
+local Analytics = require(script.Parent.AnalyticsService)
 local CampusService = require(script.Parent.CampusService)
 local DataService = require(script.Parent.DataService)
 local LessonStatsService = require(script.Parent.LessonStatsService)
@@ -109,6 +110,18 @@ function RewardService.settle(player: Player, settlement: Settlement): Summary?
 
 	local outcome =
 		ProgressionService.applyLesson(data, settlement.subject, settlement.passed, points)
+
+	Analytics.lessonFinished(
+		player,
+		settlement.subject,
+		settlement.passed,
+		settlement.score,
+		settlement.total
+	)
+	Analytics.pointsEarned(player, points, data.points, settlement.subject)
+	if outcome.advanced then
+		Analytics.gradeReached(player, data.grade)
+	end
 
 	-- Teaching yourself pays nothing, and bank content has no author to pay.
 	if

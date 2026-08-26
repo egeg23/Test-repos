@@ -5,6 +5,7 @@
 --- service reads through it. PurchaseService must be running before AdService,
 --- which registers its rewards as grants on it.
 
+local Analytics = require(script.Services.AnalyticsService)
 local DataService = require(script.Services.DataService)
 local PurchaseService = require(script.Services.PurchaseService)
 local AdService = require(script.Services.AdService)
@@ -17,7 +18,9 @@ local MatchmakingSignalsService = require(script.Services.MatchmakingSignalsServ
 local LessonService = require(script.Services.LessonService)
 local LiveLessonService = require(script.Services.LiveLessonService)
 
+Analytics.start()
 DataService.start()
+DataService.ProfileLoaded:Connect(Analytics.playerJoined)
 PurchaseService.start()
 PayoutService.start()
 ShopService.start()

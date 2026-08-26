@@ -237,6 +237,7 @@ local function onStartLesson(player: Player, payload: unknown)
 	}
 
 	attempts[player] = attempt
+	Analytics.lessonStarted(player, source.subject, "quiz")
 	sendQuestion(attempt)
 end
 

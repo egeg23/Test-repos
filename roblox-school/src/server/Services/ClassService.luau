@@ -21,6 +21,7 @@ local Obstacles = require(ReplicatedStorage.Shared.Config.Obstacles)
 local Subjects = require(ReplicatedStorage.Shared.Config.Subjects)
 local Types = require(ReplicatedStorage.Shared.Types)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local Analytics = require(script.Parent.AnalyticsService)
 local AssemblyService = require(script.Parent.AssemblyService)
 local AuthoringService = require(script.Parent.AuthoringService)
 local BankService = require(script.Parent.BankService)
@@ -28,6 +29,7 @@ local CampusService = require(script.Parent.CampusService)
 local DataService = require(script.Parent.DataService)
 local ModerationService = require(script.Parent.ModerationService)
 local PayoutService = require(script.Parent.PayoutService)
+local ProgressionService = require(script.Parent.ProgressionService)
 local PurchaseService = require(script.Parent.PurchaseService)
 local QuestionService = require(script.Parent.QuestionService)
 local RateLimiter = require(script.Parent.RateLimiter)
@@ -226,6 +228,7 @@ function ClassService.create(
 	end
 
 	table.insert(data.teacher.classIds, class.id)
+	Analytics.teacherEvent(player, "classCreated")
 	cache[class.id] = { class = class, fetchedAt = os.clock() }
 	publish(class)
 	return class, nil
@@ -312,6 +315,7 @@ function ClassService.join(player: Player, classId: unknown): (boolean, string?)
 		return false, "full"
 	end
 	data.enrolledClassId = id
+	Analytics.classJoined(player, class.subject)
 	return true, nil
 end
 
@@ -709,11 +713,16 @@ end
 local MAX_AUTHORING_RESULTS = 60
 
 local function respond(player: Player, action: string, ok: boolean, reason: string?, payload: any?)
+	-- Carried on every reply, not just the one that earns it. A player who
+	-- finishes the last grade and then logs out has to be offered the choice
+	-- again when they come back, and this is the channel that reaches them.
+	local data = DataService.getData(player)
 	Remotes.event(Remotes.Names.ClassResult):FireClient(player, {
 		action = action,
 		ok = ok,
 		reason = reason,
 		payload = payload,
+		awaitingGraduation = data ~= nil and data.awaitingGraduation or false,
 	})
 end
 
@@ -899,6 +908,9 @@ local function onClassAction(player: Player, request: unknown)
 			return
 		end
 		local questionId, reason = AuthoringService.submit(player, data.locale, message.draft)
+		if questionId ~= nil then
+			Analytics.teacherEvent(player, "questionSubmitted")
+		end
 		respond(player, action, questionId ~= nil, reason, questionId)
 	elseif action == "myQuestions" then
 		if not data.teacher.licensed then
@@ -906,6 +918,24 @@ local function onClassAction(player: Player, request: unknown)
 			return
 		end
 		respond(player, action, true, nil, AuthoringService.listMine(player))
+	elseif action == "graduate" then
+		-- Without this the flag ProgressionService sets on finishing the last
+		-- grade can never be cleared, and LessonService refuses every lesson
+		-- while it is set: reaching graduation would end the account.
+		if typeof(message.path) ~= "string" then
+			respond(player, action, false, "badRequest")
+			return
+		end
+		local graduated = ProgressionService.graduate(data, message.path)
+		if graduated then
+			Analytics.graduated(player, message.path, data.graduatedCount)
+		end
+		respond(player, action, graduated, if graduated then nil else "cannotGraduate", {
+			path = message.path,
+			grade = data.grade,
+			licensed = data.teacher.licensed,
+			graduatedCount = data.graduatedCount,
+		})
 	elseif action == "campus" then
 		respond(player, action, true, nil, CampusService.standings(data.locale))
 	elseif action == "nominate" then

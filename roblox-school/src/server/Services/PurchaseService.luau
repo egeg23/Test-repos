@@ -13,6 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Monetization = require(ReplicatedStorage.Shared.Config.Monetization)
 local Types = require(ReplicatedStorage.Shared.Types)
+local Analytics = require(script.Parent.AnalyticsService)
 local DataService = require(script.Parent.DataService)
 
 local PurchaseService = {}
@@ -115,6 +116,7 @@ local function processReceipt(receiptInfo: any): Enum.ProductPurchaseDecision
 
 	data.grantedReceipts[receiptId] = os.time()
 	pruneReceipts(data)
+	Analytics.purchase(player, kind, id, receiptInfo.CurrencySpent or 0)
 
 	-- Force the write before acknowledging. Relying on the autosave would leave a
 	-- window where Roblox has been told the purchase is done but the profile does
