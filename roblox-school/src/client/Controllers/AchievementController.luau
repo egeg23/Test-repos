@@ -15,6 +15,7 @@ local TweenService = game:GetService("TweenService")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local L = require(script.Parent.Parent.Locale)
+local HudController = require(script.Parent.HudController)
 
 local AchievementController = {}
 
@@ -22,7 +23,7 @@ local player = Players.LocalPlayer
 
 local PANEL = Color3.fromRGB(28, 30, 38)
 local ROW = Color3.fromRGB(44, 48, 58)
-local ACCENT = Color3.fromRGB(70, 96, 190)
+
 local GOLD = Color3.fromRGB(206, 166, 78)
 local TEXT = Color3.fromRGB(236, 238, 244)
 local MUTED = Color3.fromRGB(150, 156, 170)
@@ -177,8 +178,8 @@ local function render(payload: any)
 	summary.Size = UDim2.new(1, 0, 0, math.max(46, y + 6))
 end
 
---- A toast per unlocked tier, stacked. Slides in, waits, fades out.
-local function toast(entry: any)
+--- A toast, stacked with any others. Slides in, waits, fades out.
+local function toastText(heading: string, detail: string)
 	local card = Instance.new("Frame")
 	card.Size = UDim2.fromOffset(280, 54)
 	card.BackgroundColor3 = PANEL
@@ -194,9 +195,9 @@ local function toast(entry: any)
 	stripe.Parent = card
 	corner(stripe, 2)
 
-	local name = label(card, L.text("achv.unlocked", L.text(`achv.{entry.branch}`)), 14, TEXT, 14, 8)
+	local name = label(card, heading, 14, TEXT, 14, 8)
 	name.Font = Enum.Font.GothamBold
-	label(card, L.text("achv.reward", entry.points), 13, GOLD, 14, 28)
+	label(card, detail, 13, GOLD, 14, 28)
 
 	-- Off-screen to the right, then in. The list layout owns the vertical
 	-- position, so only the offset is animated.
@@ -226,18 +227,6 @@ local function buildUi()
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	gui.Parent = player:WaitForChild("PlayerGui")
 
-	local toggle = Instance.new("TextButton")
-	toggle.Size = UDim2.fromOffset(130, 36)
-	toggle.Position = UDim2.fromOffset(400, 16)
-	toggle.BackgroundColor3 = ACCENT
-	toggle.BorderSizePixel = 0
-	toggle.Font = Enum.Font.GothamBold
-	toggle.TextSize = 16
-	toggle.TextColor3 = TEXT
-	toggle.Text = L.text("achv.title")
-	toggle.Parent = gui
-	corner(toggle, 8)
-
 	panel = Instance.new("Frame")
 	panel.Size = UDim2.fromScale(0.34, 0.7)
 	panel.Position = UDim2.fromScale(0.33, 0.14)
@@ -247,12 +236,9 @@ local function buildUi()
 	panel.Parent = gui
 	corner(panel, 12)
 
-	toggle.Activated:Connect(function()
-		panel.Visible = not panel.Visible
-		if panel.Visible then
-			AchievementController.refresh()
-		end
-	end)
+	-- The toolbar owns the button and the "one panel at a time" rule; this
+	-- panel only says what it is called and what to do when it opens.
+	HudController.register("achv", L.text("achv.title"), panel, AchievementController.refresh)
 
 	streakLabel = Instance.new("TextLabel")
 	streakLabel.Size = UDim2.new(1, -24, 0, 26)
@@ -309,7 +295,10 @@ function AchievementController.init()
 
 	Remotes.event(Remotes.Names.AchievementUnlocked).OnClientEvent:Connect(function(granted: any)
 		for _, entry in granted do
-			toast(entry)
+			toastText(
+				L.text("achv.unlocked", L.text(`achv.{entry.branch}`)),
+				L.text("achv.reward", entry.points)
+			)
 		end
 		if panel.Visible then
 			AchievementController.refresh()
@@ -318,6 +307,13 @@ function AchievementController.init()
 
 	Remotes.event(Remotes.Names.StreakState).OnClientEvent:Connect(function(state: any)
 		streakLabel.Text = L.text("achv.streak", state.days or 0)
+		-- The daily bonus arrives on join, before the player has opened anything,
+		-- so it is announced the same way a tier unlock is. A payout the player
+		-- never saw land is a payout that did not happen, as far as they know.
+		local reward = state.reward
+		if typeof(reward) == "number" and reward > 0 then
+			toastText(L.text("achv.streakToday", state.days or 0), L.text("achv.reward", reward))
+		end
 	end)
 end
 

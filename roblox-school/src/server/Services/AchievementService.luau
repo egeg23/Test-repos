@@ -161,10 +161,42 @@ function AchievementService.touchDaily(player: Player): number
 	end
 	data.streakDay = today
 
+	-- Paid before the branch is evaluated, so a day that both pays and unlocks a
+	-- tier lands as one balance the player can see the parts of.
+	local reward = Achievements.streakReward(data.streak)
+	data.points += reward
+	-- Stored so the ad catch-up knows what it is doubling. Without it, a player
+	-- who watches the ad on day twelve would double day one's amount.
+	data.streakReward = reward
+	Analytics.pointsEarned(player, reward, data.points, "dailyStreak")
+
 	AchievementService.record(player, "longestStreak", data.streak)
 	Analytics.dailyStreak(player, data.streak)
-	Remotes.event(Remotes.Names.StreakState):FireClient(player, { days = data.streak })
+	Remotes.event(Remotes.Names.StreakState):FireClient(player, {
+		days = data.streak,
+		reward = reward,
+	})
 	return data.streak
+end
+
+--- Pays the streak bonus a second time, for the ad that offers to double it.
+---
+--- Reads what today actually paid rather than recomputing it: recomputing would
+--- silently pay the wrong amount if the curve were retuned between the grant and
+--- the ad, and would pay a full day's bonus to a player whose profile had not
+--- been credited yet at all.
+function AchievementService.doubleStreakReward(player: Player, data: Types.ProfileData): number
+	local base = data.streakReward or 0
+	if base <= 0 then
+		return 0
+	end
+	local bonus = math.floor(base * Achievements.perkTotal(data.achievements, "adReward"))
+	data.points += bonus
+	-- Cleared, so the same day cannot be doubled twice even if the daily limit
+	-- were ever raised or a receipt were replayed against a fresh profile.
+	data.streakReward = 0
+	Analytics.pointsEarned(player, bonus, data.points, "dailyStreakAd")
+	return bonus
 end
 
 --- The whole board, for the panel: every branch, the player's counter, which

@@ -14,6 +14,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Authoring = require(ReplicatedStorage.Shared.Config.Authoring)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local L = require(script.Parent.Parent.Locale)
+local HudController = require(script.Parent.HudController)
 local CourseBuilderController = require(script.Parent.CourseBuilderController)
 local LessonController = require(script.Parent.LessonController)
 local LiveLessonController = require(script.Parent.LiveLessonController)
@@ -240,19 +241,6 @@ local function buildUi()
 	gui.ResetOnSpawn = false
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	gui.Parent = player:WaitForChild("PlayerGui")
-
-	local toggle = Instance.new("TextButton")
-	toggle.Size = UDim2.fromOffset(120, 36)
-	toggle.Position = UDim2.fromOffset(16, 16)
-	toggle.BackgroundColor3 = ACCENT
-	toggle.BorderSizePixel = 0
-	toggle.Font = Enum.Font.GothamBold
-	toggle.TextSize = 16
-	toggle.TextColor3 = TEXT
-	toggle.Text = L.text("class.title")
-	toggle.Parent = gui
-	corner(toggle, 8)
-
 	local panel = Instance.new("Frame")
 	panel.Size = UDim2.fromScale(0.42, 0.66)
 	panel.Position = UDim2.fromScale(0.03, 0.16)
@@ -262,16 +250,17 @@ local function buildUi()
 	panel.Parent = gui
 	corner(panel, 12)
 
-	toggle.Activated:Connect(function()
-		panel.Visible = not panel.Visible
-		if panel.Visible then
-			if mode == "mine" then
-				send("mine")
-			elseif currentClassId ~= nil then
-				send("current")
-			else
-				send("list")
-			end
+	-- The toolbar owns the button and the "one panel at a time" rule; this
+	-- panel only says what it is called and what to do when it opens.
+	HudController.register("class", L.text("class.title"), panel, function()
+		-- Which list to fetch depends on where the player left off: their own
+		-- classes, the one they are enrolled in, or the directory.
+		if mode == "mine" then
+			send("mine")
+		elseif currentClassId ~= nil then
+			send("current")
+		else
+			send("list")
 		end
 	end)
 
@@ -380,7 +369,6 @@ local function buildUi()
 
 end
 
-
 --- Shown when the server reports the last grade is finished. Until this exists
 --- the flag it clears has no other way of being cleared, and every lesson is
 --- refused while it is set.
@@ -399,7 +387,6 @@ local function renderGraduation()
 		end)
 	end
 end
-
 
 function ClassController.init()
 	buildUi()

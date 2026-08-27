@@ -35,6 +35,7 @@ local TEMPLATE: Types.ProfileData = {
 	achievements = {},
 	streak = 0,
 	streakDay = 0,
+	streakReward = 0,
 	role = "student",
 	enrolledClassId = nil,
 	classRatings = {},

@@ -33,6 +33,37 @@ HAS_LETTER = re.compile(r"[^\W\d_]", re.UNICODE)
 TEXT_LITERAL = re.compile(r"\.(Text|PlaceholderText)\s*=\s*\"([^\"]*)\"")
 
 
+
+LITERAL_KEY = re.compile(r"""(?:L\.text|Strings\.get)\(\s*"([A-Za-z0-9_.]+)"\s*[,)]""")
+INTERPOLATED_KEY = re.compile(r"""(?:L\.text|Strings\.get)\(\s*`([A-Za-z0-9_.]*)\{""")
+
+
+def missing_keys() -> list[str]:
+    """Every string key referenced in code has to exist in the table."""
+    table = (ROOT / "src/shared/Strings.luau").read_text(encoding="utf-8")
+    known = set(re.findall(r'\["([A-Za-z0-9_.]+)"\]\s*=', table))
+    if not known:
+        return ["could not read any keys out of Strings.luau"]
+
+    found: list[str] = []
+    for path in sorted(SRC.rglob("*.luau")):
+        if path.name == "Strings.luau":
+            continue
+        relative = path.relative_to(ROOT)
+        text = path.read_text(encoding="utf-8")
+        for number, line in enumerate(text.split("\n"), 1):
+            for key in LITERAL_KEY.findall(line):
+                if key not in known:
+                    found.append(f"{relative}:{number}: string key '{key}' is not in the table")
+            # `subject.{id}` cannot be resolved, but its prefix can: if nothing
+            # in the table starts with it, the whole family is missing.
+            for prefix in INTERPOLATED_KEY.findall(line):
+                if prefix and not any(key.startswith(prefix) for key in known):
+                    found.append(
+                        f"{relative}:{number}: no string key begins with '{prefix}'"
+                    )
+    return found
+
 def main() -> int:
     problems: list[str] = []
 
@@ -59,13 +90,15 @@ def main() -> int:
                         f'property: "{literal[:40]}"'
                     )
 
+    problems += missing_keys()
+
     if problems:
         for problem in problems:
             print(f"  - {problem}")
-        print(f"\nFAILED: {len(problems)} hardcoded string(s).")
+        print(f"\nFAILED: {len(problems)} localisation problem(s).")
         return 1
 
-    print("No hardcoded display text.")
+    print("No hardcoded display text, and every string key resolves.")
     return 0
 
 

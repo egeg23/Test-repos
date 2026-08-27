@@ -2,6 +2,7 @@
 --- Client entry point.
 
 local AchievementController = require(script.Controllers.AchievementController)
+local HudController = require(script.Controllers.HudController)
 local AssemblyController = require(script.Controllers.AssemblyController)
 local CampusController = require(script.Controllers.CampusController)
 local ClassController = require(script.Controllers.ClassController)
@@ -13,6 +14,9 @@ local PromptLabelController = require(script.Controllers.PromptLabelController)
 local ShopController = require(script.Controllers.ShopController)
 local QuestionEditorController = require(script.Controllers.QuestionEditorController)
 
+-- The HUD owns the toolbar every panel registers a button on, so it is built
+-- before any of them.
+HudController.init()
 LessonController.init()
 ObstacleController.init()
 AssemblyController.init()

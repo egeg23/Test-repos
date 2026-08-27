@@ -280,6 +280,22 @@ assert(
 	`ad perks reach x{Achievements.maxPerk("adReward")}, over the {Achievements.MaxAdRewardPerk} ceiling`
 )
 
+--- The daily streak's own payout, separate from the `regular` branch it feeds.
+---
+--- The branch pays at three days, seven, thirty and a hundred. That leaves day
+--- two paying nothing, which is exactly the day a habit is or is not formed. So
+--- every day pays something, rising, and flattening: the curve has to reward
+--- returning without making a missed day feel like a punishment worth quitting
+--- over. A player on day forty is not earning four times a player on day ten.
+Achievements.StreakRewardBase = 40
+Achievements.StreakRewardPerDay = 12
+Achievements.StreakRewardCapDay = 14
+
+function Achievements.streakReward(day: number): number
+	local counted = math.clamp(day, 1, Achievements.StreakRewardCapDay)
+	return Achievements.StreakRewardBase + (counted - 1) * Achievements.StreakRewardPerDay
+end
+
 --- Thresholds must ascend, or a later tier unlocks before an earlier one and the
 --- branch reads as broken to the only person who can see it.
 for _, branch in Achievements.Branches do

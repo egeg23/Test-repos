@@ -192,6 +192,10 @@ export type ProfileData = {
 	--- and a gap of one day does not silently keep it alive.
 	streak: number,
 	streakDay: number,
+	--- What today's streak bonus paid, kept so the ad that doubles it knows the
+	--- amount. Zeroed once doubled, which is also what stops it being doubled
+	--- twice.
+	streakReward: number,
 	role: Role,
 	--- The class this student is currently enrolled in, if any. One at a time:
 	--- being in six classes at once would make the fill-rate factor meaningless.

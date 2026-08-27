@@ -12,6 +12,7 @@ local Campus = require(ReplicatedStorage.Shared.Config.Campus)
 local Subjects = require(ReplicatedStorage.Shared.Config.Subjects)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local L = require(script.Parent.Parent.Locale)
+local HudController = require(script.Parent.HudController)
 
 local CampusController = {}
 
@@ -22,8 +23,6 @@ local ROW = Color3.fromRGB(44, 48, 58)
 local ACCENT = Color3.fromRGB(70, 96, 190)
 local TEXT = Color3.fromRGB(236, 238, 244)
 local MUTED = Color3.fromRGB(150, 156, 170)
-
-
 
 local reviewSubject: string? = nil
 local panel: Frame
@@ -290,18 +289,6 @@ local function buildUi()
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	gui.Parent = player:WaitForChild("PlayerGui")
 
-	local toggle = Instance.new("TextButton")
-	toggle.Size = UDim2.fromOffset(120, 36)
-	toggle.Position = UDim2.fromOffset(144, 16)
-	toggle.BackgroundColor3 = ACCENT
-	toggle.BorderSizePixel = 0
-	toggle.Font = Enum.Font.GothamBold
-	toggle.TextSize = 16
-	toggle.TextColor3 = TEXT
-	toggle.Text = L.text("campus.title")
-	toggle.Parent = gui
-	corner(toggle, 8)
-
 	panel = Instance.new("Frame")
 	panel.Size = UDim2.fromScale(0.44, 0.62)
 	panel.Position = UDim2.fromScale(0.28, 0.18)
@@ -311,11 +298,10 @@ local function buildUi()
 	panel.Parent = gui
 	corner(panel, 12)
 
-	toggle.Activated:Connect(function()
-		panel.Visible = not panel.Visible
-		if panel.Visible then
-			send("campus")
-		end
+	-- The toolbar owns the button and the "one panel at a time" rule; this
+	-- panel only says what it is called and what to do when it opens.
+	HudController.register("campus", L.text("campus.title"), panel, function()
+		send("campus")
 	end)
 
 	headerLabel = Instance.new("TextLabel")
@@ -366,7 +352,6 @@ local function buildUi()
 	statusLabel.Text = ""
 	statusLabel.Parent = panel
 end
-
 
 function CampusController.init()
 	buildUi()

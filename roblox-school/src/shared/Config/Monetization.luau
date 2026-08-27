@@ -183,6 +183,17 @@ Monetization.AdRewards = {
 		displayKey = "ad.doubleOfflineNotes",
 	},
 	{
+		id = "doubleStreak",
+		devProductId = 0,
+		robuxEquivalent = 6,
+		cooldownSeconds = 0,
+		--- Once a day, because that is what it doubles. A second view would be
+		--- doubling a thing already doubled, which is a different offer.
+		dailyLimit = 1,
+		audience = "student",
+		displayKey = "ad.doubleStreak",
+	},
+	{
 		id = "promoteClass",
 		devProductId = 0,
 		robuxEquivalent = 8,

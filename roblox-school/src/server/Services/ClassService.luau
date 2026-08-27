@@ -33,6 +33,7 @@ local DataService = require(script.Parent.DataService)
 local ModerationQueueService = require(script.Parent.ModerationQueueService)
 local ModerationService = require(script.Parent.ModerationService)
 local PayoutService = require(script.Parent.PayoutService)
+local Progression = require(ReplicatedStorage.Shared.Config.Progression)
 local ProgressionService = require(script.Parent.ProgressionService)
 local PurchaseService = require(script.Parent.PurchaseService)
 local QuestionService = require(script.Parent.QuestionService)
@@ -874,6 +875,7 @@ local function onClassAction(player: Player, request: unknown)
 		or action == "shop"
 		or action == "reviewQueue"
 		or action == "achievements"
+		or action == "me"
 		or action == "campus"
 	-- Submitting a question is six TextService calls and a store write, so it is
 	-- metered harder than an ordinary write, which is itself metered harder than
@@ -1066,6 +1068,30 @@ local function onClassAction(player: Player, request: unknown)
 		local ok, reason =
 			CampusService.appointDean(player, message.subject, message.teacherUserId)
 		respond(player, action, ok, reason)
+	elseif action == "me" then
+		-- Everything the HUD shows, in one reply. A HUD that assembled itself from
+		-- four different actions would be four rate-limit buckets and four chances
+		-- to be half-populated.
+		local needed = Progression.lessonsForGrade(data.grade)
+		local boosts = {}
+		local now = os.time()
+		for id, expiresAt in data.activeBoosts do
+			if expiresAt > now then
+				boosts[id] = expiresAt - now
+			end
+		end
+		respond(player, action, true, nil, {
+			points = data.points,
+			grade = data.grade,
+			lessonsThisGrade = data.lessonsThisGrade,
+			lessonsForGrade = needed,
+			graduatedCount = data.graduatedCount,
+			awaitingGraduation = data.awaitingGraduation,
+			licensed = data.teacher.licensed,
+			pendingPayout = math.floor(data.teacher.pendingPayout),
+			streak = data.streak,
+			boosts = boosts,
+		})
 	elseif action == "achievements" then
 		respond(player, action, true, nil, AchievementService.board(player))
 	elseif action == "reviewQueue" then

@@ -133,4 +133,36 @@ return function()
 			end
 		end
 	end)
+	t.suite("Achievements: the daily streak")
+
+	t.test("every day pays something, rising", function()
+		-- Day two is where a habit is or is not formed, and the branch pays
+		-- nothing until day three. So the curve has to cover it.
+		for day = 1, 10 do
+			t.greaterThan(Achievements.streakReward(day), 0, `day {day} pays`)
+			if day > 1 then
+				t.greaterThan(
+					Achievements.streakReward(day),
+					Achievements.streakReward(day - 1),
+					`day {day} beats day {day - 1}`
+				)
+			end
+		end
+	end)
+
+	t.test("the curve flattens rather than running away", function()
+		-- A player on day forty must not be earning several times what a player
+		-- on day ten earns, or a missed day becomes a reason to stop playing
+		-- rather than a reason to come back tomorrow.
+		local capped = Achievements.streakReward(Achievements.StreakRewardCapDay)
+		t.equal(Achievements.streakReward(500), capped, "far past the cap pays the cap")
+		t.lessThan(capped / Achievements.streakReward(1), 5, "a long streak is not a different game")
+	end)
+
+	t.test("day zero and negative days do not pay more than day one", function()
+		-- Reached only through a clock going backwards, which it does: a server
+		-- in a different region, a profile restored from a backup.
+		t.equal(Achievements.streakReward(0), Achievements.streakReward(1), "day zero")
+		t.equal(Achievements.streakReward(-5), Achievements.streakReward(1), "negative")
+	end)
 end

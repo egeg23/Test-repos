@@ -24,6 +24,7 @@ local RobloxAdService = game:GetService("AdService")
 local Monetization = require(ReplicatedStorage.Shared.Config.Monetization)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Types = require(ReplicatedStorage.Shared.Types)
+local AchievementService = require(script.Parent.AchievementService)
 local Analytics = require(script.Parent.AnalyticsService)
 local DataService = require(script.Parent.DataService)
 local PurchaseService = require(script.Parent.PurchaseService)
@@ -123,9 +124,17 @@ function AdService.canWatch(player: Player, rewardId: string): (boolean, string?
 	return true, nil
 end
 
-local function boostSeconds(rewardId: string): number
+--- How long a timed ad reward lasts for this player.
+---
+--- The earned ad perk stretches the duration rather than the effect: a longer x2
+--- window is a reward a player can feel without changing what the boost is, and
+--- duration is the only quantity here that is continuous enough to multiply.
+local function boostSeconds(player: Player, rewardId: string): number
 	local reward = Monetization.getAdReward(rewardId)
-	return if reward ~= nil and reward.boostSeconds ~= nil then reward.boostSeconds else 0
+	if reward == nil or reward.boostSeconds == nil then
+		return 0
+	end
+	return math.floor(reward.boostSeconds * AchievementService.perk(player, "adReward"))
 end
 
 local function bump(map: { [string]: number }, key: string)
@@ -179,8 +188,8 @@ end
 --- What each reward actually does. Timed effects go into activeBoosts, charges
 --- into consumables. Nothing here grants Robux or currency directly.
 local effects: { [string]: (Player, Types.ProfileData) -> () } = {
-	doubleLessonReward = function(_player, data)
-		data.activeBoosts.lessonX2 = os.time() + boostSeconds("doubleLessonReward")
+	doubleLessonReward = function(player, data)
+		data.activeBoosts.lessonX2 = os.time() + boostSeconds(player, "doubleLessonReward")
 	end,
 	extraAttempt = function(_player, data)
 		bump(data.consumables, "attempt")
@@ -197,8 +206,14 @@ local effects: { [string]: (Player, Types.ProfileData) -> () } = {
 		-- offline, which is most of the time.
 		local promote = promoteClass
 		if promote ~= nil then
-			task.spawn(promote, player, boostSeconds("promoteClass"))
+			task.spawn(promote, player, boostSeconds(player, "promoteClass"))
 		end
+	end,
+	doubleStreak = function(player, data)
+		-- The only ad that pays points. The others hand out boosts and charges,
+		-- which is why the earned ad perk applies here and to boost durations but
+		-- not to the charge rewards: there is no such thing as 1.35 of a retry.
+		AchievementService.doubleStreakReward(player, data)
 	end,
 	teacherTestSlot = function(_player, data)
 		bump(data.consumables, "testSlot")

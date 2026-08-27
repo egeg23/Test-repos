@@ -17,6 +17,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Monetization = require(ReplicatedStorage.Shared.Config.Monetization)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local L = require(script.Parent.Parent.Locale)
+local HudController = require(script.Parent.HudController)
 
 local ShopController = {}
 
@@ -228,18 +229,6 @@ local function buildUi()
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	gui.Parent = player:WaitForChild("PlayerGui")
 
-	local toggle = Instance.new("TextButton")
-	toggle.Size = UDim2.fromOffset(120, 36)
-	toggle.Position = UDim2.fromOffset(272, 16)
-	toggle.BackgroundColor3 = ACCENT
-	toggle.BorderSizePixel = 0
-	toggle.Font = Enum.Font.GothamBold
-	toggle.TextSize = 16
-	toggle.TextColor3 = TEXT
-	toggle.Text = L.text("shop.title")
-	toggle.Parent = gui
-	corner(toggle, 8)
-
 	panel = Instance.new("Frame")
 	panel.Size = UDim2.fromScale(0.4, 0.66)
 	panel.Position = UDim2.fromScale(0.55, 0.16)
@@ -249,12 +238,9 @@ local function buildUi()
 	panel.Parent = gui
 	corner(panel, 12)
 
-	toggle.Activated:Connect(function()
-		panel.Visible = not panel.Visible
-		if panel.Visible then
-			ShopController.refresh()
-		end
-	end)
+	-- The toolbar owns the button and the "one panel at a time" rule; this
+	-- panel only says what it is called and what to do when it opens.
+	HudController.register("shop", L.text("shop.title"), panel, ShopController.refresh)
 
 	balanceLabel = Instance.new("TextLabel")
 	balanceLabel.Size = UDim2.new(1, -24, 0, 26)
