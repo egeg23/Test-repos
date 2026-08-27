@@ -245,6 +245,24 @@ function Analytics.teacherEvent(player: Player, name: string, value: number?)
 	end)
 end
 
+--- An achievement tier unlocking. Logged per tier rather than per batch: a
+--- session that unlocks three at once is three data points about which branches
+--- pull, not one about a lucky moment.
+function Analytics.achievementUnlocked(player: Player, branch: string, tier: number)
+	safely(function()
+		AnalyticsService:LogCustomEvent(player, `achievement_{branch}`, tier)
+	end)
+end
+
+--- The length of a streak on the day it is credited. The retention number the
+--- whole daily loop exists to move, so it is its own event rather than a field
+--- on another one.
+function Analytics.dailyStreak(player: Player, days: number)
+	safely(function()
+		AnalyticsService:LogCustomEvent(player, "daily_streak", days)
+	end)
+end
+
 function Analytics.start()
 	Players.PlayerRemoving:Connect(function(player: Player)
 		lessonSessions[player] = nil

@@ -19,6 +19,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Campus = require(ReplicatedStorage.Shared.Config.Campus)
 local Progression = require(ReplicatedStorage.Shared.Config.Progression)
 local Subjects = require(ReplicatedStorage.Shared.Config.Subjects)
+local AchievementService = require(script.Parent.AchievementService)
 local DataService = require(script.Parent.DataService)
 
 local CampusService = {}
@@ -313,6 +314,12 @@ function CampusService.vote(player: Player, candidateUserId: unknown): (boolean,
 
 	if not ok then
 		return false, "storeFailed"
+	end
+	if applied then
+		-- Counted on a cast vote, not on an attempt: the citizen branch is meant
+		-- to reward turning up on election day, and a vote that hit a missing
+		-- candidate did not.
+		AchievementService.bump(player, "votesCast", 1)
 	end
 	return applied, if applied then nil else "noCandidate"
 end

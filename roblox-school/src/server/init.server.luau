@@ -3,12 +3,15 @@
 ---
 --- Start order matters: DataService owns profile loading, and every other
 --- service reads through it. PurchaseService must be running before AdService,
---- which registers its rewards as grants on it.
+--- which registers its rewards as grants on it. AchievementService must be
+--- running before PayoutService, because draining a teacher's queue applies the
+--- counters it carries.
 
 local Analytics = require(script.Services.AnalyticsService)
 local DataService = require(script.Services.DataService)
 local PurchaseService = require(script.Services.PurchaseService)
 local AdService = require(script.Services.AdService)
+local AchievementService = require(script.Services.AchievementService)
 local PayoutService = require(script.Services.PayoutService)
 local ClassService = require(script.Services.ClassService)
 local ShopService = require(script.Services.ShopService)
@@ -32,6 +35,7 @@ DataService.ProfileLoaded:Connect(function(player, data)
 	end
 end)
 PurchaseService.start()
+AchievementService.start()
 PayoutService.start()
 ShopService.start()
 AdService.start()

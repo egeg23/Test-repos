@@ -26,6 +26,8 @@ Remotes.Names = {
 	LiveAction = "LiveAction",
 	ClassAction = "ClassAction",
 	ClassResult = "ClassResult",
+	AchievementUnlocked = "AchievementUnlocked",
+	StreakState = "StreakState",
 }
 
 local function getFolder(): Folder

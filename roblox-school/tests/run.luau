@@ -15,6 +15,7 @@ local specs = {
 	require("./progression.spec"),
 	require("./strings.spec"),
 	require("./decor.spec"),
+	require("./achievements.spec"),
 }
 
 for _, spec in specs do

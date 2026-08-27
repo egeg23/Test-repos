@@ -178,7 +178,20 @@ export type ProfileData = {
 	--- happens to them.
 	awaitingGraduation: boolean,
 	subjects: { [string]: SubjectProgress },
+	--- Monotonic counters the achievement branches are keyed to. Only ever
+	--- incremented: a branch whose stat could fall would revoke a tier the player
+	--- already saw granted, which is the one thing a progression system must
+	--- never do.
+	stats: { [string]: number },
+	--- Achievement tier ids already granted, as `branch:index`. Ids rather than a
+	--- per-branch count, because a count cannot say which tiers were granted once
+	--- the thresholds are retuned -- and they will be.
 	achievements: { [string]: boolean },
+	--- Consecutive days with a session. `streakDay` is the day number the streak
+	--- was last credited on, so a second session the same day does not extend it
+	--- and a gap of one day does not silently keep it alive.
+	streak: number,
+	streakDay: number,
 	role: Role,
 	--- The class this student is currently enrolled in, if any. One at a time:
 	--- being in six classes at once would make the fill-rate factor meaningless.

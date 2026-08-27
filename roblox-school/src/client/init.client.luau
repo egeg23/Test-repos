@@ -1,6 +1,7 @@
 --!strict
 --- Client entry point.
 
+local AchievementController = require(script.Controllers.AchievementController)
 local AssemblyController = require(script.Controllers.AssemblyController)
 local CampusController = require(script.Controllers.CampusController)
 local ClassController = require(script.Controllers.ClassController)
@@ -22,6 +23,7 @@ QuestionEditorController.init()
 ClassController.init()
 CampusController.init()
 ShopController.init()
+AchievementController.init()
 PromptLabelController.init()
 
 print("[school] client ready")

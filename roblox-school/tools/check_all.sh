@@ -21,6 +21,7 @@ run "Obstacle difficulty" python3 tools/check_obstacles.py
 run "Campus elections" python3 tools/check_campus.py
 run "Decor and rooms" python3 tools/check_decor.py
 run "World layout" python3 tools/check_world.py
+run "Achievement branches" python3 tools/check_achievements.py
 run "Economy simulation" python3 tools/simulate_economy.py
 
 echo

@@ -9,6 +9,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Achievements = require(ReplicatedStorage.Shared.Config.Achievements)
 local Progression = require(ReplicatedStorage.Shared.Config.Progression)
 local Types = require(ReplicatedStorage.Shared.Types)
 
@@ -140,6 +141,12 @@ function ProgressionService.rewardMultiplier(
 	if tripleUntil > now then
 		multiplier *= 3
 	end
+	-- Earned perks multiply alongside the bought ones rather than instead of
+	-- them. That is the whole shape of the three lanes: a veteran who never paid
+	-- beats a newcomer who did, and a veteran who also pays beats both. The
+	-- perk ceiling is held under the pass multiplier in Config/Achievements,
+	-- which is what stops the free lane from turning the pass into a refund.
+	multiplier *= Achievements.perkTotal(data.achievements, "studentPoints")
 	return multiplier
 end
 

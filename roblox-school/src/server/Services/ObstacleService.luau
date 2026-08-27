@@ -21,6 +21,7 @@ local Obstacles = require(ReplicatedStorage.Shared.Config.Obstacles)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Types = require(ReplicatedStorage.Shared.Types)
 local ClassService = require(script.Parent.ClassService)
+local AchievementService = require(script.Parent.AchievementService)
 local RewardService = require(script.Parent.RewardService)
 
 local ObstacleService = {}
@@ -74,6 +75,12 @@ type Run = {
 	teacherRating: number,
 	translated: boolean,
 	params: Obstacles.Params,
+	--- The grade's limit plus whatever the athlete branch has added. Stored on
+	--- the run rather than read from `params` each time, so the heartbeat, the
+	--- expected-time calculation and the clock the client is shown all use one
+	--- number -- three reads of a perk that could change mid-run would be three
+	--- different courses.
+	timeLimitSeconds: number,
 	checkpoints: { BasePart },
 	--- Index of the last checkpoint reached, 0 before the first.
 	reached: number,
@@ -485,10 +492,13 @@ local function finish(run: Run, passed: boolean, reason: string?)
 		elapsedSeconds = os.clock() - run.startedAt,
 		-- A course a student is expected to finish in about two thirds of its
 		-- limit; the limit itself is the point of failure, not the target.
-		expectedSeconds = run.params.timeLimitSeconds * 0.6,
+		expectedSeconds = run.timeLimitSeconds * 0.6,
 	})
 
 	local player = run.player
+	if passed then
+		AchievementService.bump(player, "coursesFinished", 1)
+	end
 	cleanup(run)
 
 	Remotes.event(Remotes.Names.CourseFinished):FireClient(player, {
@@ -641,6 +651,13 @@ function ObstacleService.begin(
 	end
 
 	local params = Obstacles.paramsForGrade(spec.grade)
+	-- Extra seconds from the athlete branch. Time, rather than an easier course:
+	-- the grade window is what a teacher chose and what the difficulty curve
+	-- promises, so a perk that changed the geometry would make two players'
+	-- "grade nine course" different courses. More time on the same course is a
+	-- perk that helps without lying about what was run.
+	local timeLimitSeconds = params.timeLimitSeconds
+		+ AchievementService.perk(player, "obstacleTime")
 	local run: Run = {
 		player = player,
 		lane = lane,
@@ -654,6 +671,7 @@ function ObstacleService.begin(
 		-- for anyone to complete and no reach share to pay.
 		translated = false,
 		params = params,
+		timeLimitSeconds = timeLimitSeconds,
 		checkpoints = built.checkpoints,
 		reached = 0,
 		lastCheckpointCFrame = built.spawnCFrame,
@@ -680,7 +698,7 @@ function ObstacleService.begin(
 		grade = spec.grade,
 		reached = 0,
 		total = #built.checkpoints,
-		timeLimitSeconds = params.timeLimitSeconds,
+		timeLimitSeconds = timeLimitSeconds,
 	})
 	return nil
 end
@@ -710,7 +728,7 @@ function ObstacleService.start()
 			end
 			stepRun(run, delta)
 
-			if os.clock() - run.startedAt > run.params.timeLimitSeconds then
+			if os.clock() - run.startedAt > run.timeLimitSeconds then
 				finish(run, false, "timeLimit")
 				continue
 			end

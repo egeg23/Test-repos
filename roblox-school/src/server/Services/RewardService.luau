@@ -14,6 +14,7 @@ local Progression = require(ReplicatedStorage.Shared.Config.Progression)
 local Types = require(ReplicatedStorage.Shared.Types)
 local Analytics = require(script.Parent.AnalyticsService)
 local CampusService = require(script.Parent.CampusService)
+local AchievementService = require(script.Parent.AchievementService)
 local DataService = require(script.Parent.DataService)
 local LessonStatsService = require(script.Parent.LessonStatsService)
 local PayoutService = require(script.Parent.PayoutService)
@@ -21,6 +22,11 @@ local ProgressionService = require(script.Parent.ProgressionService)
 local PurchaseService = require(script.Parent.PurchaseService)
 
 local RewardService = {}
+
+--- Lessons in one subject before it counts toward the polymath branch. Ten is
+--- roughly a grade's worth in a single subject: enough that eight of them is a
+--- real span of play, few enough that the first one lands inside a first session.
+RewardService.LessonsToMasterSubject = 10
 
 export type Settlement = {
 	subject: string,
@@ -69,6 +75,14 @@ local function creditTeacher(player: Player, data: Types.ProfileData, settlement
 	history.completions += 1
 	if not counts then
 		return
+	end
+
+	-- The mentor branch counts distinct students, not completions: a class of ten
+	-- taken a hundred times is ten students. `completions` was just incremented,
+	-- so one means this is their first, and only a student who cleared the alt
+	-- gate above is counted at all.
+	if history.completions == 1 then
+		PayoutService.creditStat(settlement.teacherUserId, "studentsTaught", 1)
 	end
 
 	local breakdown = Economy.teacherPayout({
@@ -121,6 +135,26 @@ function RewardService.settle(player: Player, settlement: Settlement): Summary?
 	Analytics.pointsEarned(player, points, data.points, settlement.subject)
 	if outcome.advanced then
 		Analytics.gradeReached(player, data.grade)
+	end
+
+	-- Counters after the profile is updated, never before: a tier granted for a
+	-- lesson that then failed to settle would be a reward for nothing.
+	if settlement.passed then
+		AchievementService.bump(player, "lessonsPassed", 1)
+		if settlement.total > 0 and settlement.score >= settlement.total then
+			AchievementService.bump(player, "perfectLessons", 1)
+		end
+
+		-- Mastery is recomputed rather than incremented: it is a property of the
+		-- whole profile, and a counter that only ever went up by one would drift
+		-- the moment the threshold moved.
+		local mastered = 0
+		for _, progress in data.subjects do
+			if progress.lessonsPassed >= RewardService.LessonsToMasterSubject then
+				mastered += 1
+			end
+		end
+		AchievementService.record(player, "subjectsMastered", mastered)
 	end
 
 	-- Teaching yourself pays nothing, and bank content has no author to pay.

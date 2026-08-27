@@ -28,6 +28,7 @@ local AssemblyService = require(script.Parent.AssemblyService)
 local AuthoringService = require(script.Parent.AuthoringService)
 local BankService = require(script.Parent.BankService)
 local CampusService = require(script.Parent.CampusService)
+local AchievementService = require(script.Parent.AchievementService)
 local DataService = require(script.Parent.DataService)
 local ModerationQueueService = require(script.Parent.ModerationQueueService)
 local ModerationService = require(script.Parent.ModerationService)
@@ -392,6 +393,13 @@ function ClassService.rate(player: Player, classId: unknown, stars: unknown): (b
 		return false, "failed"
 	end
 	data.classRatings[id] = score
+
+	-- The acclaimed branch counts top marks, and only ones newly given: a student
+	-- toggling five stars off and on again is one rating, not two. `previous`
+	-- being nil is the only case that is a new opinion.
+	if score >= Economy.MaxRating and previous ~= score then
+		PayoutService.creditStat(updated.teacherUserId, "fiveStarRatings", 1)
+	end
 	return true, nil
 end
 
@@ -865,6 +873,7 @@ local function onClassAction(player: Player, request: unknown)
 		or action == "ads"
 		or action == "shop"
 		or action == "reviewQueue"
+		or action == "achievements"
 		or action == "campus"
 	-- Submitting a question is six TextService calls and a store write, so it is
 	-- metered harder than an ordinary write, which is itself metered harder than
@@ -924,10 +933,16 @@ local function onClassAction(player: Player, request: unknown)
 			message.grade,
 			message.moduleIds
 		)
+		if lessonId ~= nil then
+			AchievementService.bump(player, "lessonsAuthored", 1)
+		end
 		respond(player, action, lessonId ~= nil, reason, lessonId)
 	elseif action == "addAssembly" then
 		local lessonId, reason =
 			ClassService.addAssembly(player, message.classId, message.title, message.taskIds)
+		if lessonId ~= nil then
+			AchievementService.bump(player, "lessonsAuthored", 1)
+		end
 		respond(player, action, lessonId ~= nil, reason, lessonId)
 	elseif action == "browseAssembly" then
 		if not data.teacher.licensed then
@@ -949,6 +964,9 @@ local function onClassAction(player: Player, request: unknown)
 	elseif action == "addLesson" then
 		local lessonId, reason =
 			ClassService.addLesson(player, message.classId, message.title, message.questionIds)
+		if lessonId ~= nil then
+			AchievementService.bump(player, "lessonsAuthored", 1)
+		end
 		respond(player, action, lessonId ~= nil, reason, lessonId)
 	elseif action == "browseBank" then
 		if not data.teacher.licensed then
@@ -1048,6 +1066,8 @@ local function onClassAction(player: Player, request: unknown)
 		local ok, reason =
 			CampusService.appointDean(player, message.subject, message.teacherUserId)
 		respond(player, action, ok, reason)
+	elseif action == "achievements" then
+		respond(player, action, true, nil, AchievementService.board(player))
 	elseif action == "reviewQueue" then
 		if typeof(message.subject) ~= "string" then
 			respond(player, action, false, "badRequest")
