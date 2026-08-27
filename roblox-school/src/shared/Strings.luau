@@ -229,6 +229,10 @@ Strings.Entries = {
 	["graduation.congratulations"] = { ru = "Поздравляю с выпуском!", en = "Congratulations on graduating!", es = "¡Felicidades por graduarte!", pt = "Parabéns pela formatura!" },
 
 	-- ---- campus ----
+	["world.library"] = { ru = "Библиотека", en = "Library", es = "Biblioteca", pt = "Biblioteca" },
+	["world.staffroom"] = { ru = "Учительская", en = "Staff room", es = "Sala de profesores", pt = "Sala dos professores" },
+	["world.gym"] = { ru = "Спортзал", en = "Gym", es = "Gimnasio", pt = "Ginásio" },
+	["world.assembly"] = { ru = "Актовый зал", en = "Assembly hall", es = "Salón de actos", pt = "Auditório" },
 	["campus.title"] = { ru = "Кампус", en = "Campus", es = "Campus", pt = "Campus" },
 	["campus.term"] = { ru = "Идёт семестр", en = "Term in progress", es = "Semestre en curso", pt = "Semestre em andamento" },
 	["campus.campaign"] = { ru = "Выдвижение кандидатов", en = "Nominations open", es = "Candidaturas abiertas", pt = "Candidaturas abertas" },

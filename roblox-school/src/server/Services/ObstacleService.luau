@@ -15,6 +15,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
+local Build = require(script.Parent.Parent.World.Build)
+local Decor = require(ReplicatedStorage.Shared.Config.Decor)
 local Obstacles = require(ReplicatedStorage.Shared.Config.Obstacles)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Types = require(ReplicatedStorage.Shared.Types)
@@ -331,6 +333,55 @@ local function buildCourse(spec: Types.ObstacleSpec, lane: number): BuiltCourse?
 			x += 10
 		end
 	end
+
+	-- Dress the course by grade tier. A first-year course and a graduating-year
+	-- course were the same grey before this: the difficulty curve was real but
+	-- invisible, so a hard course read as an unfair one rather than a late one.
+	-- The tint is a lerp rather than a replacement, because the colours also carry
+	-- meaning -- red is a hazard at every grade, and a tier that overrode that
+	-- would be dressing at the cost of readability.
+	local tier = Decor.tierFor(spec.grade)
+	-- Decor speaks packed integers so the tests can run it outside Roblox; the
+	-- conversion happens once, here, at the boundary.
+	local accent = Build.colour(tier.accent)
+	for _, descendant in model:GetDescendants() do
+		if descendant:IsA("BasePart") then
+			descendant.Color = descendant.Color:Lerp(accent, 0.22)
+		end
+	end
+
+	-- A gate at the start, carrying the grade. It is the only place the player is
+	-- told what they are about to attempt.
+	for _, side in { -1, 1 } do
+		makePart(
+			model,
+			Vector3.new(2, 16, 2),
+			origin + Vector3.new(-18, 8, side * (PLATFORM_WIDTH / 2)),
+			accent
+		)
+	end
+	local lintel = makePart(
+		model,
+		Vector3.new(2, 2, PLATFORM_WIDTH + 2),
+		origin + Vector3.new(-18, 17, 0),
+		accent
+	)
+	local gateSign = Instance.new("BillboardGui")
+	gateSign.Size = UDim2.fromOffset(240, 56)
+	gateSign.StudsOffsetWorldSpace = Vector3.new(0, 3, 0)
+	gateSign.MaxDistance = 220
+	gateSign.Parent = lintel
+	local gateText = Instance.new("TextLabel")
+	gateText.Size = UDim2.fromScale(1, 1)
+	gateText.BackgroundTransparency = 1
+	gateText.Font = Enum.Font.GothamBold
+	gateText.TextSize = 30
+	gateText.TextColor3 = Color3.fromRGB(255, 255, 255)
+	gateText.TextStrokeTransparency = 0.35
+	-- The grade as a bare numeral: the one label that needs no translation, on a
+	-- part built once for a course every locale runs.
+	gateText.Text = tostring(spec.grade)
+	gateText.Parent = gateSign
 
 	-- Tagged rather than returned, so wiring can walk the finished model once
 	-- instead of threading two more lists through every builder.

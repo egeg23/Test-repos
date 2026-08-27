@@ -14,6 +14,7 @@ local specs = {
 	require("./authoring.spec"),
 	require("./progression.spec"),
 	require("./strings.spec"),
+	require("./decor.spec"),
 }
 
 for _, spec in specs do

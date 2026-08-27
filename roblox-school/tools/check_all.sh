@@ -19,6 +19,8 @@ run "Question bank rules" python3 tools/validate_bank.py
 run "Assembly tasks" python3 tools/validate_assembly.py
 run "Obstacle difficulty" python3 tools/check_obstacles.py
 run "Campus elections" python3 tools/check_campus.py
+run "Decor and rooms" python3 tools/check_decor.py
+run "World layout" python3 tools/check_world.py
 run "Economy simulation" python3 tools/simulate_economy.py
 
 echo
