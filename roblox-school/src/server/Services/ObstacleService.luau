@@ -283,6 +283,97 @@ builders.hazardField = function(context, x)
 	return length
 end
 
+--- The three modules the prefab pack sells. Variety, never difficulty: each is
+--- built from the same primitives and tuned against the same grade parameters as
+--- the free ones, so a paid teacher's course looks different and plays at the
+--- same level. Selling difficulty would let a bought course earn more, and the
+--- payout formula must not be buyable.
+
+builders.pendulum = function(context, x)
+	local length = 50
+	makePart(
+		context.model,
+		Vector3.new(length, PLATFORM_THICKNESS, PLATFORM_WIDTH),
+		context.origin + Vector3.new(x + length / 2, 0, 0),
+		COLOUR_PLATFORM
+	)
+
+	-- Two bobs, offset half a cycle, so the safe gap moves rather than merely
+	-- opening and closing in place.
+	for index, offset in { length * 0.3, length * 0.7 } do
+		local centre = context.origin + Vector3.new(x + offset, 3, 0)
+		local bob = makePart(context.model, Vector3.new(3, 6, 3), centre, COLOUR_HAZARD)
+		bob.CanCollide = false
+		table.insert(context.animated, {
+			part = bob,
+			kind = "slide",
+			origin = centre,
+			speed = context.params.platformSpeed,
+			range = 12,
+			-- Half a cycle apart. `range` divides the phase in the slide step, so
+			-- the offset is scaled by it to stay half a period at any range.
+			phase = if index == 2 then math.pi * 12 else 0,
+		})
+		table.insert(context.hazards, bob)
+	end
+	return length
+end
+
+builders.conveyor = function(context, x)
+	local length = 54
+	-- A long belt that slides under the runner. Built as one moving platform
+	-- rather than a strip of them: the rider-carrying code in stepRun moves one
+	-- part and whoever stands on it, and a strip would fight itself.
+	local centre = context.origin + Vector3.new(x + length / 2, 0, 0)
+	local belt = makePart(
+		context.model,
+		Vector3.new(length, PLATFORM_THICKNESS, 12),
+		centre,
+		COLOUR_MOVING
+	)
+	table.insert(context.animated, {
+		part = belt,
+		kind = "slide",
+		origin = centre,
+		speed = context.params.platformSpeed,
+		range = 9,
+		phase = 0,
+	})
+
+	-- Rails either side, so falling off is sideways-and-deliberate rather than
+	-- the belt quietly carrying a standing player into the void.
+	for _, side in { -1, 1 } do
+		makePart(
+			context.model,
+			Vector3.new(length, 2, 1),
+			centre + Vector3.new(0, 1, side * 7),
+			COLOUR_BEAM
+		)
+	end
+	return length
+end
+
+builders.steppingStones = function(context, x)
+	local count = 5
+	local stone = 8
+	-- Spacing comes from the grade's gap, scaled down: five short hops should
+	-- read as harder than one long one at the same grade, not easier, so each
+	-- gap is a little over half the grade's single-jump distance.
+	local spacing = stone + context.params.gapStuds * 0.55
+	for index = 0, count - 1 do
+		-- Alternating sideways offset, so the line is a zigzag rather than a
+		-- row of full stops.
+		local sway = if index % 2 == 0 then -4 else 4
+		makePart(
+			context.model,
+			Vector3.new(stone, PLATFORM_THICKNESS, stone),
+			context.origin + Vector3.new(x + index * spacing + stone / 2, 0, sway),
+			COLOUR_PLATFORM
+		)
+	end
+	return count * spacing
+end
+
 export type BuiltCourse = {
 	model: Model,
 	checkpoints: { BasePart },

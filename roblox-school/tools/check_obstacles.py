@@ -89,6 +89,33 @@ def params(grade: int) -> dict[str, float]:
     return out
 
 
+def check_builders() -> list[str]:
+    """Every declared module must have a builder, and vice versa.
+
+    A module with no builder is not a warning at run time -- buildCourse returns
+    nil, the model is destroyed and the student is told the course failed, with
+    nothing anywhere saying why. Adding a module is one table entry in a config
+    and a function in a service, and the two are in different files.
+    """
+    service = (ROOT / "src/server/Services/ObstacleService.luau").read_text(encoding="utf-8")
+    built = set(re.findall(r"^builders\.(\w+) = function", service, re.MULTILINE))
+    declared = set(re.findall(r'\{ id = "(\w+)", minGrade', TEXT))
+    found = []
+    for name in sorted(declared - built):
+        found.append(f"module '{name}' is declared but ObstacleService has no builder for it")
+    for name in sorted(built - declared):
+        found.append(f"ObstacleService builds '{name}', which is not a declared module")
+
+    # A premium module must not be easier to reach than a free one at the same
+    # grade, or the pack would be selling difficulty rather than variety.
+    premium = set(re.findall(r'\{ id = "(\w+)"[^}]*premium = true', TEXT))
+    for name in sorted(premium):
+        entry = re.search(rf'\{{ id = "{name}", minGrade = (\d+)', TEXT)
+        if entry and int(entry.group(1)) < 1:
+            found.append(f"premium module '{name}' has an impossible minGrade")
+    return found
+
+
 def main() -> int:
     failures: list[str] = []
 
@@ -193,6 +220,10 @@ def main() -> int:
         failures.append(f"an 11th grade class can be given grade {low_11} work")
     else:
         print(f"  ok: an 11th grade class cannot be set easier than grade {low_11}")
+
+    failures += check_builders()
+    if not failures:
+        print("  ok: every module has a builder and every builder has a module")
 
     print()
     if failures:

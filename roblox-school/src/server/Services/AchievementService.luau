@@ -161,6 +161,18 @@ function AchievementService.touchDaily(player: Player): number
 	end
 	data.streakDay = today
 
+	-- The perfectionist and regular branches hand out free retries, refreshed
+	-- daily. Set rather than added: a player who did not use yesterday's does not
+	-- bank them, or a fortnight away would return with a stack of twenty and the
+	-- retry cooldown would stop existing for them.
+	local refunds = Achievements.perkTotal(data.achievements, "attemptRefund")
+	if refunds > 0 then
+		local held: number = data.consumables.attempt or 0
+		if held < refunds then
+			data.consumables.attempt = refunds
+		end
+	end
+
 	-- Paid before the branch is evaluated, so a day that both pays and unlocks a
 	-- tier lands as one balance the player can see the parts of.
 	local reward = Achievements.streakReward(data.streak)

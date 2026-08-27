@@ -105,6 +105,13 @@ Strings.Entries = {
 	["course.saved"] = { ru = "Полоса сохранена", en = "Course saved", es = "Circuito guardado", pt = "Percurso salvo" },
 
 	-- ---- obstacle modules ----
+	["module.pendulum"] = { ru = "Маятники", en = "Pendulums", es = "Péndulos", pt = "Pêndulos" },
+	["module.conveyor"] = { ru = "Транспортёр", en = "Conveyor", es = "Cinta", pt = "Esteira" },
+	["module.steppingStones"] = { ru = "Камни", en = "Stepping stones", es = "Piedras", pt = "Pedras" },
+	["error.needsPrefabPack"] = { ru = "Нужен набор префабов", en = "Needs the prefab pack", es = "Requiere el pack de prefabs", pt = "Requer o pacote de prefabs" },
+	["error.onCooldown"] = { ru = "Урок откроется позже", en = "This lesson reopens shortly", es = "La lección se reabre pronto", pt = "A aula reabre em breve" },
+	["error.noHintsLeft"] = { ru = "Подсказки кончились", en = "No hints left", es = "No quedan pistas", pt = "Sem dicas restantes" },
+	["error.needsHintPass"] = { ru = "Нужен пропуск на подсказки", en = "Needs the hint pass", es = "Requiere el pase de pistas", pt = "Requer o passe de dicas" },
 	["module.gap"] = { ru = "Пропасть", en = "Gap", es = "Hueco", pt = "Vão" },
 	["module.narrowBeam"] = { ru = "Узкая балка", en = "Narrow beam", es = "Viga estrecha", pt = "Viga estreita" },
 	["module.movingPlatform"] = { ru = "Движущаяся платформа", en = "Moving platform", es = "Plataforma móvil", pt = "Plataforma móvel" },
@@ -235,6 +242,8 @@ Strings.Entries = {
 	["world.assembly"] = { ru = "Актовый зал", en = "Assembly hall", es = "Salón de actos", pt = "Auditório" },
 	["ad.doubleStreak"] = { ru = "Удвоить дневной бонус", en = "Double today's daily bonus", es = "Duplicar el bono diario", pt = "Dobrar o bônus diário" },
 	["achv.streakReward"] = { ru = "Дневной бонус: +{1}", en = "Daily bonus: +{1}", es = "Bono diario: +{1}", pt = "Bônus diário: +{1}" },
+	["lesson.hint"] = { ru = "Подсказка ({1})", en = "Hint ({1})", es = "Pista ({1})", pt = "Dica ({1})" },
+	["hud.offline"] = { ru = "Пока тебя не было: +{1}", en = "While you were away: +{1}", es = "Mientras no estabas: +{1}", pt = "Enquanto esteve fora: +{1}" },
 	["hud.pending"] = { ru = "к получению: {1}", en = "{1} to collect", es = "{1} por cobrar", pt = "{1} a receber" },
 	["hud.boosts"] = { ru = "бустов: {1}", en = "{1} boosts", es = "{1} mejoras", pt = "{1} impulsos" },
 	["achv.title"] = { ru = "Достижения", en = "Achievements", es = "Logros", pt = "Conquistas" },

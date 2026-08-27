@@ -305,6 +305,13 @@ function AchievementController.init()
 		end
 	end)
 
+	Remotes.event(Remotes.Names.OfflineNotes).OnClientEvent:Connect(function(payload: any)
+		-- Same toast as an unlock. A player returning after a night away should
+		-- be told what their notes earned in the place they already look for
+		-- news, not in a panel they have to go and open.
+		toastText(L.text("hud.offline", payload.points or 0), L.text("achv.reward", payload.points or 0))
+	end)
+
 	Remotes.event(Remotes.Names.StreakState).OnClientEvent:Connect(function(state: any)
 		streakLabel.Text = L.text("achv.streak", state.days or 0)
 		-- The daily bonus arrives on join, before the player has opened anything,

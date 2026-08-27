@@ -16,10 +16,16 @@ local L = require(script.Parent.Parent.Locale)
 
 local CourseBuilderController = {}
 
+--- Whether this teacher owns the prefab pack, from the server's `me` reply. The
+--- server validates every course against it again; this only decides whether a
+--- module is drawn as available or as locked.
+local hasPrefabPack = false
+
 local player = Players.LocalPlayer
 
 local PANEL = Color3.fromRGB(28, 30, 38)
 local ROW = Color3.fromRGB(44, 48, 58)
+local LOCKED = Color3.fromRGB(36, 38, 46)
 local ACCENT = Color3.fromRGB(70, 96, 190)
 local GOOD = Color3.fromRGB(64, 160, 92)
 local TEXT = Color3.fromRGB(236, 238, 244)
@@ -68,8 +74,22 @@ local function renderModules()
 		end
 	end
 	for _, entry in Obstacles.modulesForGrade(chosenGrade) do
-		local element = button(moduleRow, L.text(entry.displayKey), ROW, UDim2.new(0, 150, 0, 34))
+		-- A locked module is drawn, dimmed, and refuses on click. Hiding it would
+		-- mean a teacher never learns what the pack adds, which is the one thing
+		-- the shop entry cannot tell them.
+		local locked = entry.premium and not hasPrefabPack
+		local element = button(
+			moduleRow,
+			L.text(entry.displayKey),
+			if locked then LOCKED else ROW,
+			UDim2.new(0, 150, 0, 34)
+		)
+		element.TextTransparency = if locked then 0.4 else 0
 		element.Activated:Connect(function()
+			if locked then
+				requirementLabel.Text = L.text("error.needsPrefabPack")
+				return
+			end
 			table.insert(sequence, entry.id)
 			refresh()
 		end)
@@ -286,6 +306,22 @@ function CourseBuilderController.close()
 end
 
 function CourseBuilderController.init()
+	Remotes.event(Remotes.Names.ClassResult).OnClientEvent:Connect(function(result: any)
+		if result.action ~= "me" or not result.ok then
+			return
+		end
+		local passes = result.payload.passes
+		local owned = typeof(passes) == "table" and passes.prefabPack == true
+		if owned ~= hasPrefabPack then
+			hasPrefabPack = owned
+			-- Only redraw if the panel is up: renderModules touches instances that
+			-- exist from buildUi onward, and init runs before the first open.
+			if panel ~= nil and panel.Visible then
+				renderModules()
+			end
+		end
+	end)
+
 	buildUi()
 end
 

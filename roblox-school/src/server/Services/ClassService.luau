@@ -42,10 +42,16 @@ local RateLimiter = require(script.Parent.RateLimiter)
 
 local ClassService = {}
 
+--- What the listing-priority pass adds to a class's directory score. A hundred
+--- is one star of rating: visible, and nowhere near a promotion's thousand.
+ClassService.ListingPriorityBonus = 100
+
 local DIRECTORY_TTL_SECONDS = 3 * 24 * 60 * 60
 local CACHE_TTL_SECONDS = 30
 local MAX_DIRECTORY_RESULTS = 40
-local MAX_LESSONS_PER_CLASS = 12
+--- Lessons one class may hold before a slot charge is needed. Mirrors
+--- Limits.BaseLessonsPerClass, which tools/check_limits.py holds to this value.
+local MAX_LESSONS_PER_CLASS = 8
 --- A member's timestamp is only rewritten once it is this stale, so an active
 --- student costs one class write a day rather than one per lesson.
 local MEMBER_TOUCH_SECONDS = 24 * 60 * 60
@@ -99,11 +105,37 @@ local function pruneMembers(class: Types.Class): boolean
 	return removed
 end
 
+--- Whether this teacher may add one more lesson to a class that already has
+--- `lessonCount`, spending a slot charge if they are over the base.
+---
+--- The charge is consumed here rather than at purchase, so buying one and not
+--- using it leaves it in the profile, and so the three different add paths
+--- cannot disagree about when one is needed.
+local function spendLessonSlot(player: Player, lessonCount: number): boolean
+	if lessonCount < MAX_LESSONS_PER_CLASS then
+		return true
+	end
+	local data = DataService.getData(player)
+	if data == nil then
+		return false
+	end
+	local charges: number = data.consumables.testSlot or 0
+	if charges <= 0 then
+		return false
+	end
+	data.consumables.testSlot = charges - 1
+	return true
+end
+
 local function capacityFor(player: Player): number
 	local capacity = Economy.BaseClassCapacity
 	if PurchaseService.ownsPass(player, "classCapacity") then
 		capacity += Economy.CapacityPassBonus
 	end
+	-- Earned seats stack with bought ones. The fill rate is measured against the
+	-- base capacity, never this number, so extra seats stay pure upside for the
+	-- teacher instead of quietly lowering the ratio they are paid on.
+	capacity += AchievementService.perk(player, "classCapacity")
 	return capacity
 end
 
@@ -118,6 +150,11 @@ end
 --- Promotion outranks everything else, which is what the teacher paid or watched
 --- an ad for. It is bounded by time rather than by money, so it buys attention
 --- for fifteen minutes, not a permanent seat at the top.
+---
+--- The listing-priority pass is deliberately a much smaller, standing nudge:
+--- worth about a star of rating. A pass that outranked merit permanently would
+--- turn the directory into a paid list, and the directory is the only way a good
+--- unknown teacher is ever found.
 local function directoryScore(class: Types.Class): number
 	local fill = if class.capacity > 0
 		then math.clamp(ClassService.liveMembers(class) / class.capacity, 0, 1)
@@ -125,6 +162,9 @@ local function directoryScore(class: Types.Class): number
 	local score = math.floor(fill * 400) + math.floor(class.rating * 100)
 	if class.promoUntil > os.time() then
 		score += 1000
+	end
+	if class.listingPriority then
+		score += ClassService.ListingPriorityBonus
 	end
 	return score
 end
@@ -254,6 +294,7 @@ function ClassService.create(
 		rating = 0,
 		ratingCount = 0,
 		promoUntil = 0,
+		listingPriority = PurchaseService.ownsPass(player, "listingPriority"),
 		createdAt = os.time(),
 		updatedAt = os.time(),
 	}
@@ -480,7 +521,7 @@ function ClassService.addLesson(
 	for _ in class.lessons do
 		lessonCount += 1
 	end
-	if lessonCount >= MAX_LESSONS_PER_CLASS then
+	if not spendLessonSlot(player, lessonCount) then
 		return nil, "lessonLimit"
 	end
 
@@ -624,7 +665,7 @@ function ClassService.addCourse(
 	for _ in class.lessons do
 		lessonCount += 1
 	end
-	if lessonCount >= MAX_LESSONS_PER_CLASS then
+	if not spendLessonSlot(player, lessonCount) then
 		return nil, "lessonLimit"
 	end
 
@@ -637,7 +678,12 @@ function ClassService.addCourse(
 	end
 
 	local grade = math.floor(courseGrade :: number)
-	local validation = Obstacles.validateCourse(class.grade, grade, ids)
+	local validation = Obstacles.validateCourse(
+		class.grade,
+		grade,
+		ids,
+		PurchaseService.ownsPass(player, "prefabPack")
+	)
 	if not validation.ok then
 		return nil, validation.reason
 	end
@@ -705,7 +751,7 @@ function ClassService.addAssembly(
 	for _ in class.lessons do
 		lessonCount += 1
 	end
-	if lessonCount >= MAX_LESSONS_PER_CLASS then
+	if not spendLessonSlot(player, lessonCount) then
 		return nil, "lessonLimit"
 	end
 
@@ -1088,6 +1134,11 @@ local function onClassAction(player: Player, request: unknown)
 			graduatedCount = data.graduatedCount,
 			awaitingGraduation = data.awaitingGraduation,
 			licensed = data.teacher.licensed,
+			-- The passes a client needs to draw its own state honestly: which
+			-- obstacle modules are locked, whether the hint button exists. The
+			-- server still decides every one of them on use; this only stops the
+			-- interface promising something it will then refuse.
+			passes = data.ownedPasses,
 			pendingPayout = math.floor(data.teacher.pendingPayout),
 			streak = data.streak,
 			boosts = boosts,

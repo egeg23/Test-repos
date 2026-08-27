@@ -28,17 +28,29 @@ export type Module = {
 	minGrade: number,
 	--- Studs of course length this module consumes when built.
 	length: number,
+	--- Whether the prefab-pack pass is needed to place this module.
+	---
+	--- The pass sells variety, never difficulty or advantage: a student running a
+	--- paid teacher's course meets different shapes, not harder ones, and the
+	--- grade window still decides how hard the course may be. Selling difficulty
+	--- would make a bought course pay more, which is the one thing the payout
+	--- formula must not be able to buy.
+	premium: boolean,
 	displayKey: string,
 }
 
 Obstacles.Modules = {
-	{ id = "gap", minGrade = 1, length = 40, displayKey = "module.gap" },
-	{ id = "narrowBeam", minGrade = 1, length = 48, displayKey = "module.narrowBeam" },
-	{ id = "movingPlatform", minGrade = 2, length = 52, displayKey = "module.movingPlatform" },
-	{ id = "vanishingTiles", minGrade = 4, length = 56, displayKey = "module.vanishingTiles" },
-	{ id = "spinner", minGrade = 6, length = 44, displayKey = "module.spinner" },
-	{ id = "hazardField", minGrade = 8, length = 60, displayKey = "module.hazardField" },
+	{ id = "gap", minGrade = 1, length = 40, premium = false, displayKey = "module.gap" },
+	{ id = "narrowBeam", minGrade = 1, length = 48, premium = false, displayKey = "module.narrowBeam" },
+	{ id = "movingPlatform", minGrade = 2, length = 52, premium = false, displayKey = "module.movingPlatform" },
+	{ id = "vanishingTiles", minGrade = 4, length = 56, premium = false, displayKey = "module.vanishingTiles" },
+	{ id = "spinner", minGrade = 6, length = 44, premium = false, displayKey = "module.spinner" },
+	{ id = "hazardField", minGrade = 8, length = 60, premium = false, displayKey = "module.hazardField" },
+	{ id = "pendulum", minGrade = 3, length = 50, premium = true, displayKey = "module.pendulum" },
+	{ id = "conveyor", minGrade = 2, length = 54, premium = true, displayKey = "module.conveyor" },
+	{ id = "steppingStones", minGrade = 5, length = 58, premium = true, displayKey = "module.steppingStones" },
 } :: { Module }
+
 
 local moduleById: { [string]: Module } = {}
 for _, entry in Obstacles.Modules do
@@ -123,12 +135,21 @@ function Obstacles.allowedGrades(classGrade: number): (number, number)
 		math.min(Obstacles.MaxGrade, centre + Obstacles.GradeWindow)
 end
 
-function Obstacles.modulesForGrade(grade: number): { Module }
+--- Modules a teacher may place at this grade.
+---
+--- `hasPrefabPack` is passed in rather than read here, so this stays pure and the
+--- tests can run it. Omitting it lists everything the grade allows, which is what
+--- the builder wants when it draws locked modules alongside owned ones.
+function Obstacles.modulesForGrade(grade: number, hasPrefabPack: boolean?): { Module }
 	local available: { Module } = {}
 	for _, entry in Obstacles.Modules do
-		if entry.minGrade <= grade then
-			table.insert(available, entry)
+		if entry.minGrade > grade then
+			continue
 		end
+		if entry.premium and hasPrefabPack == false then
+			continue
+		end
+		table.insert(available, entry)
 	end
 	return available
 end
@@ -146,7 +167,8 @@ export type Validation = { ok: boolean, reason: string? }
 function Obstacles.validateCourse(
 	classGrade: number,
 	courseGrade: number,
-	moduleIds: { string }
+	moduleIds: { string },
+	hasPrefabPack: boolean?
 ): Validation
 	local low, high = Obstacles.allowedGrades(classGrade)
 	if courseGrade < low or courseGrade > high then
@@ -172,6 +194,12 @@ function Obstacles.validateCourse(
 		end
 		if entry.minGrade > courseGrade then
 			return { ok = false, reason = "moduleTooAdvanced" }
+		end
+		-- Checked here rather than only in the builder UI: the client picks the
+		-- modules, and a client that decided which ones it was allowed to pick
+		-- would be a client deciding what it owns.
+		if entry.premium and hasPrefabPack ~= true then
+			return { ok = false, reason = "needsPrefabPack" }
 		end
 		if not distinct[id] then
 			distinct[id] = true

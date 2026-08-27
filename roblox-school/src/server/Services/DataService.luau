@@ -55,6 +55,10 @@ local TEMPLATE: Types.ProfileData = {
 	ownedPasses = {},
 	activeBoosts = {},
 	consumables = {},
+	lessonsToday = 0,
+	lessonDayStamp = 0,
+	retryCooldowns = {},
+	lastSeenAt = 0,
 }
 
 local store = ProfileStore.New(STORE_NAME, TEMPLATE)
@@ -141,6 +145,12 @@ end
 local function onPlayerRemoving(player: Player)
 	local profile = profiles[player]
 	if profile ~= nil then
+		-- Stamped before the session ends, because offline notes accrue from it
+		-- and a profile released without one would credit a returning player for
+		-- every second since the epoch.
+		if profile.Data ~= nil then
+			profile.Data.lastSeenAt = os.time()
+		end
 		profile:EndSession()
 		profiles[player] = nil
 	end

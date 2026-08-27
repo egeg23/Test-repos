@@ -28,6 +28,9 @@ Remotes.Names = {
 	ClassResult = "ClassResult",
 	AchievementUnlocked = "AchievementUnlocked",
 	StreakState = "StreakState",
+	LessonHint = "LessonHint",
+	UseHint = "UseHint",
+	OfflineNotes = "OfflineNotes",
 }
 
 local function getFolder(): Folder

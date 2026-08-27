@@ -12,6 +12,7 @@ local LiveLessonController = require(script.Controllers.LiveLessonController)
 local ObstacleController = require(script.Controllers.ObstacleController)
 local PromptLabelController = require(script.Controllers.PromptLabelController)
 local ShopController = require(script.Controllers.ShopController)
+local UniformController = require(script.Controllers.UniformController)
 local QuestionEditorController = require(script.Controllers.QuestionEditorController)
 
 -- The HUD owns the toolbar every panel registers a button on, so it is built
@@ -28,6 +29,7 @@ ClassController.init()
 CampusController.init()
 ShopController.init()
 AchievementController.init()
+UniformController.init()
 PromptLabelController.init()
 
 print("[school] client ready")

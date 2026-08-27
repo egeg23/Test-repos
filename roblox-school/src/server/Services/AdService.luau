@@ -21,6 +21,7 @@ local PolicyService = game:GetService("PolicyService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RobloxAdService = game:GetService("AdService")
 
+local Limits = require(ReplicatedStorage.Shared.Config.Limits)
 local Monetization = require(ReplicatedStorage.Shared.Config.Monetization)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Types = require(ReplicatedStorage.Shared.Types)
@@ -195,7 +196,11 @@ local effects: { [string]: (Player, Types.ProfileData) -> () } = {
 		bump(data.consumables, "attempt")
 	end,
 	skipCooldown = function(_player, data)
-		bump(data.consumables, "cooldownSkip")
+		-- A second wind: the day's lesson count is wound back, so the next few
+		-- lessons pay full rate again. It subtracts from the count rather than
+		-- raising the allowance, so watching it twice hands back eight lessons
+		-- rather than leaving a permanently higher ceiling.
+		data.lessonsToday = math.max(0, data.lessonsToday - Limits.SecondWindLessons)
 	end,
 	doubleOfflineNotes = function(_player, data)
 		bump(data.consumables, "offlineX2")

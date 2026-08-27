@@ -9,6 +9,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Limits = require(ReplicatedStorage.Shared.Config.Limits)
 local Economy = require(ReplicatedStorage.Shared.Config.Economy)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Subjects = require(ReplicatedStorage.Shared.Config.Subjects)
@@ -16,6 +17,7 @@ local BankService = require(script.Parent.BankService)
 local DataService = require(script.Parent.DataService)
 local ClassService = require(script.Parent.ClassService)
 local LessonStatsService = require(script.Parent.LessonStatsService)
+local PurchaseService = require(script.Parent.PurchaseService)
 local RateLimiter = require(script.Parent.RateLimiter)
 
 local LessonService = {}
@@ -44,6 +46,11 @@ type Attempt = {
 	correctCount: number,
 	startedAt: number,
 	finished: boolean,
+	--- Hints spent this attempt, and the options already removed per question.
+	--- Per question rather than per attempt so two hints on one question cannot
+	--- strip it down to a single choice.
+	hintsUsed: number,
+	hintedOptions: { [number]: { number } },
 }
 
 local attempts: { [Player]: Attempt } = {}
@@ -78,6 +85,63 @@ local function sendQuestion(attempt: Attempt)
 		total = #attempt.questions,
 		stem = question.stem,
 		options = options,
+		removed = attempt.hintedOptions[attempt.position],
+		hintsLeft = Limits.HintsPerLesson - attempt.hintsUsed,
+	})
+end
+
+--- Removes a wrong option from the question in front of the student.
+---
+--- The server picks which one and remembers it. A client that chose would be a
+--- client that could ask for the correct one to be "removed" and read the answer
+--- out of the refusal; a server that forgot would let the same hint be spent
+--- twice on one question and leave a single choice standing.
+local function useHint(player: Player)
+	local attempt = attempts[player]
+	if attempt == nil or attempt.finished then
+		return
+	end
+	if attempt.hintsUsed >= Limits.HintsPerLesson then
+		reject(player, "noHintsLeft")
+		return
+	end
+	if not PurchaseService.ownsPass(player, "hint") then
+		reject(player, "needsHintPass")
+		return
+	end
+
+	local entry = attempt.questions[attempt.position]
+	if entry == nil then
+		return
+	end
+
+	local already = attempt.hintedOptions[attempt.position] or {}
+	local candidates: { number } = {}
+	for position = 1, #entry.order do
+		if position == entry.correctPosition then
+			continue
+		end
+		if table.find(already, position) == nil then
+			table.insert(candidates, position)
+		end
+	end
+	-- Never strip a question below two standing options: past that a hint is not
+	-- help, it is the answer.
+	if #candidates == 0 or #entry.order - #already <= 2 then
+		reject(player, "noHintsLeft")
+		return
+	end
+
+	local chosen = candidates[Random.new():NextInteger(1, #candidates)]
+	table.insert(already, chosen)
+	attempt.hintedOptions[attempt.position] = already
+	attempt.hintsUsed += 1
+
+	Remotes.event(Remotes.Names.LessonHint):FireClient(player, {
+		token = attempt.token,
+		position = attempt.position,
+		removed = already,
+		hintsLeft = Limits.HintsPerLesson - attempt.hintsUsed,
 	})
 end
 
@@ -87,6 +151,15 @@ local function finish(attempt: Attempt)
 
 	local total = #attempt.questions
 	local passed = total > 0 and (attempt.correctCount / total) >= Economy.DefaultPassFraction
+
+	-- Failing closes this lesson to this student for a few minutes. Per lesson,
+	-- not per player, so failing maths does not stop them doing history -- and
+	-- retrying one lesson twenty times in a row is both how a question pool gets
+	-- brute-forced and the cheapest way to farm the teacher who wrote it.
+	local data = DataService.getData(attempt.player)
+	if data ~= nil and not passed then
+		data.retryCooldowns[attempt.statKey] = os.time()
+	end
 
 	local summary = RewardService.settle(attempt.player, {
 		subject = attempt.subject,
@@ -216,6 +289,20 @@ local function onStartLesson(player: Player, payload: unknown)
 		return
 	end
 
+	-- A lesson failed a few minutes ago is closed, unless the student spends a
+	-- charge to reopen it. The charge is spent here rather than on the shop
+	-- button, so buying one and never using it leaves it in the profile.
+	local remaining = Limits.retryRemaining(data.retryCooldowns[source.statKey] or 0, os.time())
+	if remaining > 0 then
+		local spare: number = data.consumables.attempt or 0
+		if spare <= 0 then
+			reject(player, "onCooldown")
+			return
+		end
+		data.consumables.attempt = spare - 1
+		data.retryCooldowns[source.statKey] = nil
+	end
+
 	local attempt: Attempt = {
 		player = player,
 		token = issueToken(),
@@ -230,6 +317,8 @@ local function onStartLesson(player: Player, payload: unknown)
 		correctCount = 0,
 		startedAt = os.clock(),
 		finished = false,
+		hintsUsed = 0,
+		hintedOptions = {},
 	}
 
 	attempts[player] = attempt
@@ -309,6 +398,13 @@ function LessonService.start()
 
 	Remotes.event(Remotes.Names.StartLesson).OnServerEvent:Connect(onStartLesson)
 	Remotes.event(Remotes.Names.SubmitAnswer).OnServerEvent:Connect(onSubmitAnswer)
+	Remotes.event(Remotes.Names.UseHint).OnServerEvent:Connect(function(player: Player)
+		-- Metered: a hint is a cheap call but it reads a pass, which is a web
+		-- request when the ownership cache is cold.
+		if RateLimiter.consume(player, "UseHint", 3, 0.3) then
+			useHint(player)
+		end
+	end)
 
 	Players.PlayerRemoving:Connect(function(player: Player)
 		attempts[player] = nil

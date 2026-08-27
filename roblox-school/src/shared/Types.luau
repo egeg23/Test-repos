@@ -118,6 +118,11 @@ export type Class = {
 	--- the class, not on the teacher's profile, because the promotion has to keep
 	--- working while the teacher is offline -- which is the normal case.
 	promoUntil: number,
+	--- Whether the owner held the listing-priority pass when this class was
+	--- created or last edited. Stored on the class rather than checked at listing
+	--- time because the directory is read cross-server, where the owner is
+	--- usually not present to have their passes read.
+	listingPriority: boolean,
 	createdAt: number,
 	updatedAt: number,
 }
@@ -220,6 +225,16 @@ export type ProfileData = {
 	--- Consumable id -> remaining count. Separate from activeBoosts because a
 	--- spare test attempt is a charge to spend, not a window that runs out.
 	consumables: { [string]: number },
+	--- Lessons finished today, and the day that count belongs to. Feeds the
+	--- diminishing-returns curve the lessonSlots pass raises the start of.
+	lessonsToday: number,
+	lessonDayStamp: number,
+	--- Lesson stat key -> the unix second it was last failed. A failed lesson is
+	--- closed to that student for a few minutes: enough that failing costs
+	--- something, not enough to end a session.
+	retryCooldowns: { [string]: number },
+	--- Unix second this profile was last released. Offline notes accrue from it.
+	lastSeenAt: number,
 }
 
 return Types

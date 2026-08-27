@@ -21,9 +21,22 @@ local player = Players.LocalPlayer
 local CORRECT_COLOUR = Color3.fromRGB(64, 160, 92)
 local WRONG_COLOUR = Color3.fromRGB(184, 70, 70)
 local IDLE_COLOUR = Color3.fromRGB(52, 56, 66)
+local STRUCK_COLOUR = Color3.fromRGB(38, 40, 48)
+local HINT_COLOUR = Color3.fromRGB(206, 166, 78)
 local PANEL_COLOUR = Color3.fromRGB(28, 30, 38)
 
-type Pending = { token: string, position: number, total: number, stem: string, options: { string } }
+type Pending = {
+	token: string,
+	position: number,
+	total: number,
+	stem: string,
+	options: { string },
+	--- Option positions a hint has already struck out. Sent with the question as
+	--- well as with the hint, so re-showing a question after an explanation does
+	--- not silently restore the options the student paid to remove.
+	removed: { number }?,
+	hintsLeft: number?,
+}
 
 local currentToken: string? = nil
 local currentPosition = 0
@@ -34,7 +47,13 @@ local stemLabel: TextLabel
 local progressLabel: TextLabel
 local explanationLabel: TextLabel
 local continueButton: TextButton
+local hintButton: TextButton?
 local panel: Frame
+
+--- Whether this player owns the hint pass, from the server's `me` reply. The
+--- server checks it again on every hint; this only decides whether to draw a
+--- button that would otherwise always refuse.
+local hasHintPass = false
 
 local function buildUi()
 	local gui = Instance.new("ScreenGui")
@@ -136,6 +155,23 @@ local function buildUi()
 	continueButton.LayoutOrder = 8
 	continueButton.Parent = panel
 
+	local hint = Instance.new("TextButton")
+	hint.Name = "Hint"
+	hint.Size = UDim2.fromOffset(150, 30)
+	hint.Position = UDim2.new(0, 16, 1, -44)
+	hint.BackgroundColor3 = HINT_COLOUR
+	hint.BorderSizePixel = 0
+	hint.Font = Enum.Font.GothamBold
+	hint.TextSize = 14
+	hint.TextColor3 = PANEL_COLOUR
+	hint.Text = ""
+	hint.Visible = false
+	hint.Parent = panel
+	hint.Activated:Connect(function()
+		Remotes.event(Remotes.Names.UseHint):FireServer()
+	end)
+	hintButton = hint
+
 	local continueCorner = Instance.new("UICorner")
 	continueCorner.CornerRadius = UDim.new(0, 8)
 	continueCorner.Parent = continueButton
@@ -156,6 +192,18 @@ local function setOptionsEnabled(enabled: boolean)
 	end
 end
 
+--- The hint button only exists for a player who owns the pass and has hints
+--- left. Hidden rather than disabled: an always-visible button that always
+--- refuses is an advert dressed as a control.
+local function updateHintButton(hintsLeft: number?)
+	if hintButton == nil then
+		return
+	end
+	local left = hintsLeft or 0
+	hintButton.Visible = hasHintPass and left > 0
+	hintButton.Text = L.text("lesson.hint", left)
+end
+
 local function show(pending: Pending)
 	currentToken = pending.token
 	currentPosition = pending.position
@@ -165,13 +213,21 @@ local function show(pending: Pending)
 	explanationLabel.Visible = false
 	continueButton.Visible = false
 
+	local removed = pending.removed or {}
 	for index, button in optionButtons do
 		local text = pending.options[index]
 		button.Visible = text ~= nil
 		button.Text = text or ""
-		button.BackgroundColor3 = IDLE_COLOUR
+		-- Struck out rather than hidden: a vanishing option makes the remaining
+		-- ones jump, and a student who just spent a hint should see what it
+		-- bought them.
+		local struck = table.find(removed, index) ~= nil
+		button.BackgroundColor3 = if struck then STRUCK_COLOUR else IDLE_COLOUR
+		button.TextTransparency = if struck then 0.55 else 0
+		button.Active = not struck
 	end
 
+	updateHintButton(pending.hintsLeft)
 	setOptionsEnabled(true)
 	screenGui.Enabled = true
 end
@@ -276,6 +332,28 @@ function LessonController.init()
 		explanationLabel.Visible = explanationLabel.Text ~= ""
 		continueButton.Visible = true
 		currentToken = nil
+	end)
+
+	Remotes.event(Remotes.Names.LessonHint).OnClientEvent:Connect(function(payload: any)
+		if payload.token ~= currentToken or payload.position ~= currentPosition then
+			return
+		end
+		local removed = payload.removed or {}
+		for index, button in optionButtons do
+			if table.find(removed, index) ~= nil then
+				button.BackgroundColor3 = STRUCK_COLOUR
+				button.TextTransparency = 0.55
+				button.Active = false
+			end
+		end
+		updateHintButton(payload.hintsLeft)
+	end)
+
+	Remotes.event(Remotes.Names.ClassResult).OnClientEvent:Connect(function(result: any)
+		if result.action == "me" and result.ok then
+			local passes = result.payload.passes
+			hasHintPass = typeof(passes) == "table" and passes.hint == true
+		end
 	end)
 
 	Remotes.event(Remotes.Names.LessonRejected).OnClientEvent:Connect(function(reason: any)
