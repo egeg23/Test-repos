@@ -6,13 +6,13 @@
 --- per action name, and a client cannot dodge a limit by reaching for a
 --- different remote.
 ---
---- Strings are hardcoded Russian, as in LessonController; they move into a
---- LocalizationTable with the locale work.
+--- All text comes from the shared Strings table, keyed by the player's locale.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local L = require(script.Parent.Parent.Locale)
 local CourseBuilderController = require(script.Parent.CourseBuilderController)
 local LessonController = require(script.Parent.LessonController)
 local LiveLessonController = require(script.Parent.LiveLessonController)
@@ -99,7 +99,7 @@ local function renderDirectory(entries: { any })
 	clearList()
 	if #entries == 0 then
 		local row = makeRow(44)
-		makeLabel(row, "Пока нет классов. Создай свой или учись у ботов.", 15, MUTED, 12)
+		makeLabel(row, L.text("class.empty"), 15, MUTED, 12)
 		return
 	end
 
@@ -109,17 +109,18 @@ local function renderDirectory(entries: { any })
 		makeLabel(row, `{promoted}{entry.title}`, 16, TEXT, 6)
 		local rating = if entry.ratingCount > 0
 			then string.format("%.1f★ (%d)", entry.rating, entry.ratingCount)
-			else "нет оценок"
+			else L.text("class.noRatings")
 		makeLabel(
 			row,
-			`{entry.teacherName} · {entry.subject} · {entry.grade} кл. · `
-				.. `{entry.members}/{entry.capacity} · {rating}`,
+			`{entry.teacherName} · {L.text(`subject.{entry.subject}`)} · `
+				.. L.text("common.grade", entry.grade)
+				.. ` · {entry.members}/{entry.capacity} · {rating}`,
 			13,
 			MUTED,
 			30
 		)
 
-		local join = makeButton("Вступить", ACCENT, 96)
+		local join = makeButton(L.text("class.join"), ACCENT, 96)
 		join.Parent = row
 		join.Activated:Connect(function()
 			send("join", { classId = entry.id })
@@ -134,7 +135,7 @@ local function renderCurrentClass(view: any)
 	local header = makeRow(58)
 	makeLabel(header, view.title, 16, TEXT, 6)
 	makeLabel(header, `{view.teacherName} · {view.members}/{view.capacity}`, 13, MUTED, 30)
-	local leave = makeButton("Выйти", Color3.fromRGB(120, 62, 62), 84)
+	local leave = makeButton(L.text("common.leave"), Color3.fromRGB(120, 62, 62), 84)
 	leave.Parent = header
 	leave.Activated:Connect(function()
 		send("leave")
@@ -143,7 +144,7 @@ local function renderCurrentClass(view: any)
 	end)
 
 	local stars = makeRow(44)
-	makeLabel(stars, "Оценить класс:", 14, MUTED, 12)
+	makeLabel(stars, L.text("class.rateThis"), 14, MUTED, 12)
 	for value = 1, 5 do
 		local button = makeButton(tostring(value), ACCENT, 30)
 		button.Position = UDim2.new(0, 130 + (value - 1) * 34, 0, 6)
@@ -156,8 +157,8 @@ local function renderCurrentClass(view: any)
 	for _, lesson in view.lessons do
 		local row = makeRow(50)
 		makeLabel(row, lesson.title, 15, TEXT, 6)
-		makeLabel(row, `{lesson.grade} класс`, 13, MUTED, 26)
-		local start = makeButton("Начать", ACCENT, 90)
+		makeLabel(row, L.text("common.grade", lesson.grade), 13, MUTED, 26)
+		local start = makeButton(L.text("class.start"), ACCENT, 90)
 		start.Parent = row
 		start.Activated:Connect(function()
 			LessonController.startClassLesson(view.id, lesson.id)
@@ -169,16 +170,16 @@ local function renderMine(payload: any)
 	clearList()
 
 	local head = makeRow(48)
-	makeLabel(head, `Накоплено за преподавание: {math.floor(payload.pending)}`, 15, TEXT, 12)
-	local collect = makeButton("Забрать", ACCENT, 90)
+	makeLabel(head, L.text("class.earned", math.floor(payload.pending)), 15, TEXT, 12)
+	local collect = makeButton(L.text("class.collect"), ACCENT, 90)
 	collect.Parent = head
 	collect.Activated:Connect(function()
 		send("collect")
 	end)
 
 	local authoring = makeRow(44)
-	makeLabel(authoring, "Свои вопросы", 15, TEXT, 12)
-	local openEditor = makeButton("Открыть", ACCENT, 100)
+	makeLabel(authoring, L.text("class.myQuestions"), 15, TEXT, 12)
+	local openEditor = makeButton(L.text("common.open"), ACCENT, 100)
 	openEditor.Parent = authoring
 	openEditor.Activated:Connect(function()
 		QuestionEditorController.open()
@@ -189,18 +190,19 @@ local function renderMine(payload: any)
 		makeLabel(row, class.title, 16, TEXT, 6)
 		makeLabel(
 			row,
-			`{class.subject} · {class.members}/{class.capacity} · уроков: {#class.lessons}`,
+			`{L.text(`subject.{class.subject}`)} · {class.members}/{class.capacity} · `
+				.. L.text("class.lessonCount", #class.lessons),
 			13,
 			MUTED,
 			30
 		)
-		local promote = makeButton("Продвинуть", ACCENT, 110)
+		local promote = makeButton(L.text("class.promote"), ACCENT, 110)
 		promote.Parent = row
 		promote.Activated:Connect(function()
 			Remotes.event(Remotes.Names.RequestAd):FireServer("promoteClass")
 		end)
 
-		local live = makeButton("Вести живьём", Color3.fromRGB(96, 76, 150), 118)
+		local live = makeButton(L.text("class.teachLive"), Color3.fromRGB(96, 76, 150), 118)
 		live.Position = UDim2.new(1, -334, 0, 6)
 		live.Parent = row
 		live.Activated:Connect(function()
@@ -211,7 +213,7 @@ local function renderMine(payload: any)
 		end)
 
 		if class.subject == "pe" then
-			local course = makeButton("Полоса", Color3.fromRGB(64, 120, 92), 90)
+			local course = makeButton(L.text("class.course"), Color3.fromRGB(64, 120, 92), 90)
 			course.Position = UDim2.new(1, -212, 0, 6)
 			course.Parent = row
 			course.Activated:Connect(function()
@@ -222,7 +224,7 @@ local function renderMine(payload: any)
 
 	if #payload.classes == 0 then
 		local row = makeRow(44)
-		makeLabel(row, "Класса ещё нет. Заполни поля ниже и создай.", 15, MUTED, 12)
+		makeLabel(row, L.text("class.none"), 15, MUTED, 12)
 	end
 end
 
@@ -241,7 +243,7 @@ local function buildUi()
 	toggle.Font = Enum.Font.GothamBold
 	toggle.TextSize = 16
 	toggle.TextColor3 = TEXT
-	toggle.Text = "Школа"
+	toggle.Text = L.text("class.title")
 	toggle.Parent = gui
 	corner(toggle, 8)
 
@@ -267,7 +269,7 @@ local function buildUi()
 		end
 	end)
 
-	local browseTab = makeButton("Классы", ACCENT, 100)
+	local browseTab = makeButton(L.text("class.browse"), ACCENT, 100)
 	browseTab.Position = UDim2.fromOffset(12, 12)
 	browseTab.Size = UDim2.fromOffset(100, 30)
 	browseTab.Parent = panel
@@ -280,7 +282,7 @@ local function buildUi()
 		end
 	end)
 
-	local mineTab = makeButton("Мой класс", ROW, 110)
+	local mineTab = makeButton(L.text("class.mine"), ROW, 110)
 	mineTab.Position = UDim2.fromOffset(120, 12)
 	mineTab.Size = UDim2.fromOffset(110, 30)
 	mineTab.Parent = panel
@@ -312,7 +314,7 @@ local function buildUi()
 	gradeBox.Font = Enum.Font.Gotham
 	gradeBox.TextSize = 14
 	gradeBox.TextColor3 = TEXT
-	gradeBox.PlaceholderText = "класс"
+	gradeBox.PlaceholderText = L.text("class.gradePlaceholder")
 	gradeBox.Text = ""
 	gradeBox.ClearTextOnFocus = false
 	gradeBox.Parent = panel
@@ -326,7 +328,7 @@ local function buildUi()
 	subjectBox.Font = Enum.Font.Gotham
 	subjectBox.TextSize = 14
 	subjectBox.TextColor3 = TEXT
-	subjectBox.PlaceholderText = "предмет (math, logic…)"
+	subjectBox.PlaceholderText = L.text("class.subjectPlaceholder")
 	subjectBox.Text = ""
 	subjectBox.ClearTextOnFocus = false
 	subjectBox.Parent = panel
@@ -340,13 +342,13 @@ local function buildUi()
 	titleBox.Font = Enum.Font.Gotham
 	titleBox.TextSize = 14
 	titleBox.TextColor3 = TEXT
-	titleBox.PlaceholderText = "название класса"
+	titleBox.PlaceholderText = L.text("class.namePlaceholder")
 	titleBox.Text = ""
 	titleBox.ClearTextOnFocus = false
 	titleBox.Parent = panel
 	corner(titleBox, 6)
 
-	local create = makeButton("Создать класс", ACCENT, 140)
+	local create = makeButton(L.text("class.create"), ACCENT, 140)
 	create.Size = UDim2.fromOffset(140, 32)
 	create.Position = UDim2.new(0, 12, 1, -44)
 	create.Parent = panel
@@ -372,11 +374,6 @@ local function buildUi()
 
 end
 
-local PATH_NAMES: { [string]: string } = {
-	university = "Поступить в университет",
-	teacher = "Стать преподавателем",
-	newGamePlus = "Пойти заново с бонусом",
-}
 
 --- Shown when the server reports the last grade is finished. Until this exists
 --- the flag it clears has no other way of being cleared, and every lesson is
@@ -384,12 +381,12 @@ local PATH_NAMES: { [string]: string } = {
 local function renderGraduation()
 	clearList()
 	local head = makeRow(52)
-	makeLabel(head, "Все классы пройдены. Что дальше?", 16, TEXT, 14)
+	makeLabel(head, L.text("graduation.prompt"), 16, TEXT, 14)
 
 	for _, path in { "university", "teacher", "newGamePlus" } do
 		local element = makeRow(46)
-		makeLabel(element, PATH_NAMES[path] or path, 15, TEXT, 12)
-		local choose = makeButton("Выбрать", ACCENT, 100)
+		makeLabel(element, L.text(`graduation.{path}`), 15, TEXT, 12)
+		local choose = makeButton(L.text("common.choose"), ACCENT, 100)
 		choose.Parent = element
 		choose.Activated:Connect(function()
 			send("graduate", { path = path })
@@ -397,33 +394,15 @@ local function renderGraduation()
 	end
 end
 
-local REASONS: { [string]: string } = {
-	notLicensed = "Сначала нужно выпуститься и получить лицензию",
-	classLimit = "Больше классов не положено без пропуска",
-	titleRejected = "Название не прошло фильтр",
-	unknownSubject = "Нет такого предмета",
-	full = "В классе нет мест",
-	ownClass = "Нельзя учиться в своём классе",
-	notEnrolled = "Сначала вступи в класс",
-	noClass = "Класс не найден",
-	storeFailed = "Не удалось сохранить, попробуй ещё раз",
-	badGrade = "Укажи класс числом от 1 до 11",
-	cannotGraduate = "Выпускной ещё не заслужен",
-	gradeOutOfWindow = "Можно только ±1 класс от своего",
-	tooShort = "Слишком короткая полоса для этого класса",
-	tooLong = "Слишком длинная полоса",
-	tooRepetitive = "Слишком однообразно — добавь разных модулей",
-	moduleTooAdvanced = "Этот модуль недоступен на таком классе",
-	wrongSubject = "Полосы только для физкультуры",
-	alreadyRunning = "Ты уже проходишь полосу",
-}
 
 function ClassController.init()
 	buildUi()
 
 	Remotes.event(Remotes.Names.ClassResult).OnClientEvent:Connect(function(result: any)
 		if not result.ok then
-			statusLabel.Text = REASONS[result.reason] or (result.reason or "Не вышло")
+			statusLabel.Text = if result.reason ~= nil
+				then L.text(`error.{result.reason}`)
+				else L.text("common.failed")
 			return
 		end
 		statusLabel.Text = ""
@@ -447,19 +426,19 @@ function ClassController.init()
 			mode = "mine"
 			send("mine")
 		elseif result.action == "rate" then
-			statusLabel.Text = "Оценка учтена"
+			statusLabel.Text = L.text("class.rated")
 		elseif result.action == "graduate" then
 			statusLabel.Text = if result.payload.licensed
-				then "Теперь ты преподаватель. Создай свой класс."
-				else "Поздравляю с выпуском!"
+				then L.text("graduation.nowTeacher")
+				else L.text("graduation.congratulations")
 			mode = "mine"
 			send("mine")
 		elseif result.action == "addCourse" then
-			statusLabel.Text = "Полоса сохранена"
+			statusLabel.Text = L.text("course.saved")
 			CourseBuilderController.close()
 			send("mine")
 		elseif result.action == "collect" then
-			statusLabel.Text = `Забрано баллов: {result.payload or 0}`
+			statusLabel.Text = L.text("class.collected", result.payload or 0)
 			send("mine")
 		end
 	end)

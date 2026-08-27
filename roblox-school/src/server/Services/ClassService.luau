@@ -17,10 +17,12 @@ local MemoryStoreService = game:GetService("MemoryStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Economy = require(ReplicatedStorage.Shared.Config.Economy)
+local Monetization = require(ReplicatedStorage.Shared.Config.Monetization)
 local Obstacles = require(ReplicatedStorage.Shared.Config.Obstacles)
 local Subjects = require(ReplicatedStorage.Shared.Config.Subjects)
 local Types = require(ReplicatedStorage.Shared.Types)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local AdService = require(script.Parent.AdService)
 local Analytics = require(script.Parent.AnalyticsService)
 local AssemblyService = require(script.Parent.AssemblyService)
 local AuthoringService = require(script.Parent.AuthoringService)
@@ -32,6 +34,7 @@ local PayoutService = require(script.Parent.PayoutService)
 local ProgressionService = require(script.Parent.ProgressionService)
 local PurchaseService = require(script.Parent.PurchaseService)
 local QuestionService = require(script.Parent.QuestionService)
+local ShopService = require(script.Parent.ShopService)
 local RateLimiter = require(script.Parent.RateLimiter)
 
 local ClassService = {}
@@ -799,6 +802,8 @@ local function onClassAction(player: Player, request: unknown)
 		or action == "current"
 		or action == "myQuestions"
 		or action == "browseAssembly"
+		or action == "ads"
+		or action == "shop"
 		or action == "campus"
 	-- Submitting a question is six TextService calls and a store write, so it is
 	-- metered harder than an ordinary write, which is itself metered harder than
@@ -936,6 +941,20 @@ local function onClassAction(player: Player, request: unknown)
 			licensed = data.teacher.licensed,
 			graduatedCount = data.graduatedCount,
 		})
+	elseif action == "ads" then
+		respond(player, action, true, nil, AdService.availability(player))
+	elseif action == "shop" then
+		-- Ownership is resolved server-side: the client is told what the player
+		-- has, never asked.
+		local owned: { [string]: boolean } = {}
+		for _, pass in Monetization.Passes do
+			owned[pass.id] = PurchaseService.ownsPass(player, pass.id)
+		end
+		respond(player, action, true, nil, {
+			owned = owned,
+			licensed = data.teacher.licensed,
+			points = math.floor(data.points),
+		})
 	elseif action == "campus" then
 		respond(player, action, true, nil, CampusService.standings(data.locale))
 	elseif action == "nominate" then
@@ -991,6 +1010,9 @@ local function onClassAction(player: Player, request: unknown)
 end
 
 function ClassService.start()
+	AdService.setClassPromoter(ClassService.promote)
+	ShopService.setClassPromoter(ClassService.promote)
+
 	Remotes.event(Remotes.Names.ClassAction).OnServerEvent:Connect(function(player, request)
 		-- Every handler can yield on a DataStore or the text filter, so each
 		-- request runs on its own thread rather than blocking the remote.

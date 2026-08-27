@@ -10,13 +10,20 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Monetization = require(ReplicatedStorage.Shared.Config.Monetization)
 local Types = require(ReplicatedStorage.Shared.Types)
-local ClassService = require(script.Parent.ClassService)
 local PurchaseService = require(script.Parent.PurchaseService)
 
 local ShopService = {}
 
 local XP3_BOOST_SECONDS = 1200
 local CLASS_PROMO_SECONDS = 3600
+
+--- Same inversion as AdService: the shop grants a class promotion without
+--- importing the class service that performs it.
+local promoteClass: ((Player, number) -> ())? = nil
+
+function ShopService.setClassPromoter(fn: (Player, number) -> ())
+	promoteClass = fn
+end
 
 local function bump(map: { [string]: number }, key: string)
 	local current: number = map[key] or 0
@@ -31,7 +38,10 @@ local effects: { [string]: (Player, Types.ProfileData) -> () } = {
 		data.activeBoosts.lessonX3 = os.time() + XP3_BOOST_SECONDS
 	end,
 	classPromoHour = function(player, _data)
-		task.spawn(ClassService.promote, player, CLASS_PROMO_SECONDS)
+		local promote = promoteClass
+		if promote ~= nil then
+			task.spawn(promote, player, CLASS_PROMO_SECONDS)
+		end
 	end,
 	extraTestSlot = function(_player, data)
 		bump(data.consumables, "testSlot")

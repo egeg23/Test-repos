@@ -9,6 +9,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local L = require(script.Parent.Parent.Locale)
 
 local AssemblyController = {}
 
@@ -21,34 +22,6 @@ local FILLED = Color3.fromRGB(64, 120, 150)
 local TEXT = Color3.fromRGB(236, 238, 244)
 local MUTED = Color3.fromRGB(150, 156, 170)
 
-local NAMES: { [string]: string } = {
-	battery = "Батарейка",
-	wire = "Провод",
-	lamp = "Лампа",
-	switch = "Выключатель",
-	resistor = "Резистор",
-	magnet = "Магнит",
-	thermometer = "Термометр",
-	beaker = "Стакан",
-	funnel = "Воронка",
-	filter = "Фильтр",
-	seed = "Семечко",
-	soil = "Земля",
-	water = "Вода",
-	sunlight = "Свет",
-	sprout = "Росток",
-	red = "Красный",
-	blue = "Синий",
-	yellow = "Жёлтый",
-	green = "Зелёный",
-	orange = "Оранжевый",
-	purple = "Фиолетовый",
-	sky = "Небо",
-	horizon = "Горизонт",
-	foreground = "Передний план",
-	shadow = "Тень",
-	highlight = "Блик",
-}
 
 local panel: Frame
 local promptLabel: TextLabel
@@ -67,8 +40,10 @@ local function corner(instance: Instance, radius: number)
 	ui.Parent = instance
 end
 
+--- Component names live in the strings table under the same ids the catalogue
+--- uses, so there is no second list here to fall out of step with it.
 local function nameOf(id: string): string
-	return NAMES[id] or id
+	return L.text(`component.{id}`)
 end
 
 local function refreshSlots(slots: { string })
@@ -200,7 +175,7 @@ local function buildUi()
 	paletteCaption.TextSize = 13
 	paletteCaption.TextColor3 = MUTED
 	paletteCaption.TextXAlignment = Enum.TextXAlignment.Left
-	paletteCaption.Text = "Детали — лишние тоже есть"
+	paletteCaption.Text = L.text("assembly.palette")
 	paletteCaption.Parent = panel
 
 	paletteFrame = Instance.new("ScrollingFrame")
@@ -238,7 +213,7 @@ local function buildUi()
 	submit.Font = Enum.Font.GothamBold
 	submit.TextSize = 15
 	submit.TextColor3 = TEXT
-	submit.Text = "Проверить"
+	submit.Text = L.text("common.check")
 	submit.Parent = panel
 	corner(submit, 6)
 	submit.Activated:Connect(function()
@@ -277,9 +252,9 @@ function AssemblyController.init()
 		for _, piece in payload.answers do
 			table.insert(names, nameOf(piece))
 		end
-		resultLabel.Text = string.format(
-			"%s · верно %d из %d · +%d баллов\nПравильно: %s\n%s",
-			if payload.passed then "Задание зачтено" else "Задание не зачтено",
+		resultLabel.Text = L.text(
+			"assembly.result",
+			L.text(if payload.passed then "assembly.passed" else "assembly.failed"),
 			payload.correctCount,
 			payload.total,
 			payload.pointsAwarded,

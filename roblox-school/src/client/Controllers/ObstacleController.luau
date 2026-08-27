@@ -10,6 +10,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local L = require(script.Parent.Parent.Locale)
 
 local ObstacleController = {}
 
@@ -91,12 +92,17 @@ local function startTimer(seconds: number)
 	end)
 end
 
-local REASONS: { [string]: string } = {
-	fell = "Сорвался. Обратно на чекпоинт.",
-	hazard = "Задел препятствие.",
-	timeLimit = "Время вышло.",
-	impossibleSpeed = "Прохождение не засчитано.",
+local REASON_KEYS: { [string]: string } = {
+	fell = "course.fell",
+	hazard = "course.hazard",
+	timeLimit = "course.timeLimit",
+	impossibleSpeed = "course.rejected",
 }
+
+local function reasonText(reason: any): string
+	local key = if typeof(reason) == "string" then REASON_KEYS[reason] else nil
+	return if key ~= nil then L.text(key) else ""
+end
 
 function ObstacleController.init()
 	buildUi()
@@ -104,26 +110,24 @@ function ObstacleController.init()
 	Remotes.event(Remotes.Names.CourseState).OnClientEvent:Connect(function(payload: any)
 		if payload.event == "start" then
 			frame.Visible = true
-			titleLabel.Text = `{payload.title} · {payload.grade} класс`
+			titleLabel.Text = `{payload.title} · ` .. L.text("common.grade", payload.grade)
 			noticeLabel.Text = ""
 			startTimer(payload.timeLimitSeconds)
 		elseif payload.event == "reset" then
-			noticeLabel.Text = REASONS[payload.reason] or ""
+			noticeLabel.Text = reasonText(payload.reason)
 		elseif payload.event == "checkpoint" then
 			noticeLabel.Text = ""
 		end
-		progressLabel.Text = `Чекпоинты: {payload.reached} из {payload.total}`
+		progressLabel.Text = L.text("course.checkpoints", payload.reached, payload.total)
 	end)
 
 	Remotes.event(Remotes.Names.CourseFinished).OnClientEvent:Connect(function(payload: any)
 		stopTimer()
-		titleLabel.Text = if payload.passed then "Полоса пройдена" else "Полоса не пройдена"
-		progressLabel.Text =
-			`{payload.reached} из {payload.total} · +{payload.pointsAwarded} баллов`
+		titleLabel.Text = L.text(if payload.passed then "course.passed" else "course.failed")
+		progressLabel.Text = `{payload.reached} / {payload.total} · `
+			.. L.text("common.points", payload.pointsAwarded)
 		timerLabel.Text = ""
-		noticeLabel.Text = if payload.passed
-			then ""
-			else (REASONS[payload.reason] or "")
+		noticeLabel.Text = if payload.passed then "" else reasonText(payload.reason)
 		task.delay(6, function()
 			frame.Visible = false
 		end)

@@ -11,6 +11,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Campus = require(ReplicatedStorage.Shared.Config.Campus)
 local Subjects = require(ReplicatedStorage.Shared.Config.Subjects)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local L = require(script.Parent.Parent.Locale)
 
 local CampusController = {}
 
@@ -22,20 +23,7 @@ local ACCENT = Color3.fromRGB(70, 96, 190)
 local TEXT = Color3.fromRGB(236, 238, 244)
 local MUTED = Color3.fromRGB(150, 156, 170)
 
-local PHASE_NAMES: { [string]: string } = {
-	term = "Идёт семестр",
-	campaign = "Выдвижение кандидатов",
-	voting = "Голосование",
-}
 
-local MOTTO_NAMES: { [string]: string } = {
-	["motto.learnTogether"] = "Учимся вместе",
-	["motto.noOneLeftBehind"] = "Никого не бросаем",
-	["motto.askWhy"] = "Спрашивай «почему»",
-	["motto.tryAgain"] = "Попробуй ещё раз",
-	["motto.knowledgeIsPower"] = "Знание — сила",
-	["motto.everyDayCounts"] = "Каждый день важен",
-}
 
 local panel: Frame
 local headerLabel: TextLabel
@@ -107,33 +95,33 @@ local function render(view: any)
 	clearList()
 
 	local remaining = view.cycleDays - view.dayInCycle
-	local week = `{view.termIndex + 1} четверть, неделя {view.weekInTerm + 1} из {view.weeksPerTerm}`
-	local calendar = if view.isTestWeek then `{week} · контрольная неделя ×1.2` else week
-	phaseLabel.Text = `{PHASE_NAMES[view.phase] or view.phase} · {calendar}`
+	local week = L.text("campus.calendar", view.termIndex + 1, view.weekInTerm + 1, view.weeksPerTerm)
+	local calendar = if view.isTestWeek then L.text("campus.testWeek", week) else week
+	phaseLabel.Text = `{L.text(`campus.{view.phase}`)} · {calendar}`
 
 	local head = row(72)
 	text(
 		head,
 		if view.directorUserId > 0
-			then `Директор: {view.directorName}`
-			else "Директора нет — кампус ждёт выборов",
+			then L.text("campus.director", view.directorName)
+			else L.text("campus.noDirector"),
 		16,
 		TEXT,
 		8
 	)
 	local extras = {}
 	if view.subjectOfMonth ~= nil then
-		table.insert(extras, `предмет месяца: {view.subjectOfMonth}`)
+		table.insert(extras, L.text("campus.subjectOfMonth", L.text(`subject.{view.subjectOfMonth}`)))
 	end
 	if view.motto ~= nil then
-		table.insert(extras, MOTTO_NAMES[view.motto] or view.motto)
+		table.insert(extras, L.text(view.motto))
 	end
 	if view.eventUntil > os.time() then
-		table.insert(extras, "идёт школьное событие")
+		table.insert(extras, L.text("campus.eventRunning"))
 	end
 	text(
 		head,
-		if #extras > 0 then table.concat(extras, " · ") else `до конца срока {remaining} дн.`,
+		if #extras > 0 then table.concat(extras, " · ") else L.text("campus.daysLeft", remaining),
 		13,
 		MUTED,
 		34
@@ -141,37 +129,37 @@ local function render(view: any)
 
 	if view.phase == "campaign" then
 		local stand = row(46)
-		text(stand, "Выдвинуть свою кандидатуру", 15, TEXT, 12)
-		action(stand, "Выдвинуться", ACCENT, 120).Activated:Connect(function()
+		text(stand, L.text("campus.stand"), 15, TEXT, 12)
+		action(stand, L.text("campus.standButton"), ACCENT, 120).Activated:Connect(function()
 			send("nominate")
 		end)
 	end
 
 	for _, candidate in view.candidates do
 		local element = row(46)
-		text(element, `{candidate.name} — {math.floor(candidate.votes)} голосов`, 15, TEXT, 12)
+		text(element, L.text("campus.votes", candidate.name, math.floor(candidate.votes)), 15, TEXT, 12)
 		if view.phase == "voting" then
-			action(element, "Голос", ACCENT, 90).Activated:Connect(function()
+			action(element, L.text("campus.vote"), ACCENT, 90).Activated:Connect(function()
 				send("vote", { candidateUserId = candidate.userId })
 			end)
 		end
 	end
 
 	if view.phase ~= "term" and #view.candidates == 0 then
-		text(row(40), "Кандидатов пока нет.", 15, MUTED, 10)
+		text(row(40), L.text("campus.noCandidates"), 15, MUTED, 10)
 	end
 
 	-- The director's own controls. Shown when the server says this player holds
 	-- the office; refused server-side regardless.
 	if view.directorUserId == player.UserId then
 		local eventRow = row(46)
-		text(eventRow, `Школьное событие · осталось {view.eventsLeft}`, 15, TEXT, 12)
-		action(eventRow, "Запустить", ACCENT, 110).Activated:Connect(function()
+		text(eventRow, L.text("campus.event", view.eventsLeft), 15, TEXT, 12)
+		action(eventRow, L.text("campus.launch"), ACCENT, 110).Activated:Connect(function()
 			send("startEvent")
 		end)
 
 		local subjectRow = row(76)
-		text(subjectRow, "Предмет месяца (×1.5 всем)", 15, TEXT, 6)
+		text(subjectRow, L.text("campus.pickSubject"), 15, TEXT, 6)
 		local index = 0
 		for _, entry in Subjects.List do
 			local button = Instance.new("TextButton")
@@ -182,7 +170,7 @@ local function render(view: any)
 			button.Font = Enum.Font.Gotham
 			button.TextSize = 12
 			button.TextColor3 = TEXT
-			button.Text = entry.id
+			button.Text = L.text(entry.displayKey)
 			button.Parent = subjectRow
 			corner(button, 5)
 			button.Activated:Connect(function()
@@ -192,7 +180,7 @@ local function render(view: any)
 		end
 
 		local mottoRow = row(76)
-		text(mottoRow, "Девиз школы", 15, TEXT, 6)
+		text(mottoRow, L.text("campus.motto"), 15, TEXT, 6)
 		local mottoIndex = 0
 		for _, key in Campus.Mottos do
 			local button = Instance.new("TextButton")
@@ -204,7 +192,7 @@ local function render(view: any)
 			button.Font = Enum.Font.Gotham
 			button.TextSize = 12
 			button.TextColor3 = TEXT
-			button.Text = MOTTO_NAMES[key] or key
+			button.Text = L.text(key)
 			button.Parent = mottoRow
 			corner(button, 5)
 			button.Activated:Connect(function()
@@ -219,7 +207,7 @@ local function render(view: any)
 		table.insert(deanNames, `{subject}: {name}`)
 	end
 	if #deanNames > 0 then
-		text(row(40), `Завучи — {table.concat(deanNames, ", ")}`, 13, MUTED, 12)
+		text(row(40), L.text("campus.deans", table.concat(deanNames, ", ")), 13, MUTED, 12)
 	end
 end
 
@@ -238,7 +226,7 @@ local function buildUi()
 	toggle.Font = Enum.Font.GothamBold
 	toggle.TextSize = 16
 	toggle.TextColor3 = TEXT
-	toggle.Text = "Кампус"
+	toggle.Text = L.text("campus.title")
 	toggle.Parent = gui
 	corner(toggle, 8)
 
@@ -266,7 +254,7 @@ local function buildUi()
 	headerLabel.TextSize = 17
 	headerLabel.TextColor3 = TEXT
 	headerLabel.TextXAlignment = Enum.TextXAlignment.Left
-	headerLabel.Text = "Кампус"
+	headerLabel.Text = L.text("campus.title")
 	headerLabel.Parent = panel
 
 	phaseLabel = Instance.new("TextLabel")
@@ -307,18 +295,6 @@ local function buildUi()
 	statusLabel.Parent = panel
 end
 
-local REASONS: { [string]: string } = {
-	notCampaign = "Выдвигаться можно только в дни выдвижения",
-	notVoting = "Голосование ещё не началось",
-	notLicensed = "Нужна лицензия преподавателя",
-	notEnoughRatings = "Нужно больше оценок от учеников",
-	ratingTooLow = "Рейтинг слишком низкий",
-	termLimit = "Два срока подряд — предел",
-	notEligible = "Нужен аккаунт от недели и полчаса игры",
-	notDirector = "Только директор кампуса",
-	noEventsLeft = "События на этот срок закончились",
-	noCandidate = "Такого кандидата нет",
-}
 
 function CampusController.init()
 	buildUi()
@@ -335,7 +311,9 @@ function CampusController.init()
 		end
 
 		if not result.ok then
-			statusLabel.Text = REASONS[result.reason] or (result.reason or "Не вышло")
+			statusLabel.Text = if result.reason ~= nil
+				then L.text(`error.{result.reason}`)
+				else L.text("common.failed")
 			return
 		end
 		statusLabel.Text = ""

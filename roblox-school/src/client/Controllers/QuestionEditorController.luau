@@ -12,6 +12,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Authoring = require(ReplicatedStorage.Shared.Config.Authoring)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local L = require(script.Parent.Parent.Locale)
 
 local QuestionEditorController = {}
 
@@ -26,11 +27,6 @@ local BAD = Color3.fromRGB(184, 70, 70)
 local TEXT = Color3.fromRGB(236, 238, 244)
 local MUTED = Color3.fromRGB(150, 156, 170)
 
-local STATUS_NAMES: { [string]: string } = {
-	pending = "на проверке",
-	published = "опубликован",
-	rejected = "отклонён",
-}
 
 local STATUS_COLOURS: { [string]: Color3 } = {
 	pending = WAIT,
@@ -96,7 +92,7 @@ local function renderList(questions: { any })
 		empty.TextSize = 13
 		empty.TextColor3 = MUTED
 		empty.TextXAlignment = Enum.TextXAlignment.Left
-		empty.Text = "Своих вопросов пока нет."
+		empty.Text = L.text("authoring.empty")
 		empty.Parent = listFrame
 		return
 	end
@@ -129,7 +125,7 @@ local function renderList(questions: { any })
 		status.TextSize = 12
 		status.TextColor3 = STATUS_COLOURS[question.status] or MUTED
 		status.TextXAlignment = Enum.TextXAlignment.Right
-		status.Text = STATUS_NAMES[question.status] or question.status
+		status.Text = L.text(`authoring.{question.status}`)
 		status.Parent = element
 
 		local meta = Instance.new("TextLabel")
@@ -141,9 +137,10 @@ local function renderList(questions: { any })
 		meta.TextColor3 = MUTED
 		meta.TextXAlignment = Enum.TextXAlignment.Left
 		local waiting = math.max(0, question.publishAt - os.time())
+		local subject = L.text(`subject.{question.subject}`)
 		meta.Text = if question.status == "pending"
-			then `{question.subject} · {question.grade} кл. · выйдет через {math.ceil(waiting / 60)} мин`
-			else `{question.subject} · {question.grade} кл. · id {question.id}`
+			then L.text("authoring.pendingMeta", subject, question.grade, math.ceil(waiting / 60))
+			else `{subject} · ` .. L.text("common.grade", question.grade) .. ` · {question.id}`
 		meta.Parent = element
 	end
 end
@@ -172,7 +169,7 @@ local function buildUi()
 	heading.TextSize = 17
 	heading.TextColor3 = TEXT
 	heading.TextXAlignment = Enum.TextXAlignment.Left
-	heading.Text = "Свой вопрос"
+	heading.Text = L.text("authoring.title")
 	heading.Parent = panel
 
 	local hint = Instance.new("TextLabel")
@@ -184,20 +181,24 @@ local function buildUi()
 	hint.TextColor3 = MUTED
 	hint.TextXAlignment = Enum.TextXAlignment.Left
 	hint.TextWrapped = true
-	hint.Text = string.format(
-		"Вопрос до %d символов, четыре варианта примерно одной длины, объяснение "
-			.. "от %d символов. Объяснение — это то, ради чего всё; оно показывается "
-			.. "после ответа, верного или нет.",
-		Authoring.MaxStemChars,
-		Authoring.MinExplanationChars
-	)
+	hint.Text = L.text("authoring.hint", Authoring.MaxStemChars, Authoring.MinExplanationChars)
 	hint.Parent = panel
 
-	subjectBox = makeBox(panel, "предмет", UDim2.fromOffset(120, 30), UDim2.fromOffset(12, 68))
-	gradeBox = makeBox(panel, "класс", UDim2.fromOffset(70, 30), UDim2.fromOffset(138, 68))
+	subjectBox = makeBox(
+		panel,
+		L.text("class.subjectPlaceholder"),
+		UDim2.fromOffset(120, 30),
+		UDim2.fromOffset(12, 68)
+	)
+	gradeBox = makeBox(
+		panel,
+		L.text("class.gradePlaceholder"),
+		UDim2.fromOffset(70, 30),
+		UDim2.fromOffset(138, 68)
+	)
 	stemBox = makeBox(
 		panel,
-		"текст вопроса",
+		L.text("authoring.stemPlaceholder"),
 		UDim2.new(1, -226, 0, 30),
 		UDim2.fromOffset(214, 68)
 	)
@@ -223,7 +224,7 @@ local function buildUi()
 
 		optionBoxes[index] = makeBox(
 			panel,
-			`вариант {index}`,
+			L.text("authoring.optionPlaceholder", index),
 			UDim2.new(1, -70, 0, 30),
 			UDim2.fromOffset(52, y)
 		)
@@ -232,7 +233,7 @@ local function buildUi()
 
 	explanationBox = makeBox(
 		panel,
-		"объяснение — почему этот ответ верный",
+		L.text("authoring.explanationPlaceholder"),
 		UDim2.new(1, -24, 0, 54),
 		UDim2.fromOffset(12, 252)
 	)
@@ -273,7 +274,7 @@ local function buildUi()
 	submit.Font = Enum.Font.GothamBold
 	submit.TextSize = 14
 	submit.TextColor3 = TEXT
-	submit.Text = "Отправить"
+	submit.Text = L.text("common.send")
 	submit.Parent = panel
 	corner(submit, 6)
 	submit.Activated:Connect(function()
@@ -310,23 +311,6 @@ local function buildUi()
 	end)
 end
 
-local REASONS: { [string]: string } = {
-	stemTooShort = "Вопрос слишком короткий",
-	stemTooLong = "Вопрос слишком длинный",
-	optionCount = "Нужно ровно четыре варианта",
-	badAnswer = "Отметь верный вариант",
-	emptyOption = "Один из вариантов пустой",
-	optionTooLong = "Вариант слишком длинный",
-	duplicateOption = "Два варианта совпадают",
-	lopsidedOptions = "Один вариант заметно длиннее — по нему угадают",
-	explanationTooShort = "Объяснение слишком короткое",
-	explanationTooLong = "Объяснение слишком длинное",
-	badGrade = "Класс от 1 до 11",
-	textRejected = "Текст не прошёл фильтр",
-	authoredLimit = "Слишком много своих вопросов",
-	unknownSubject = "Нет такого предмета",
-	notLicensed = "Нужна лицензия преподавателя",
-}
 
 function QuestionEditorController.open()
 	panel.Visible = true
@@ -348,10 +332,12 @@ function QuestionEditorController.init()
 		end
 
 		if not result.ok then
-			statusLabel.Text = REASONS[result.reason] or (result.reason or "Не вышло")
+			statusLabel.Text = if result.reason ~= nil
+				then L.text(`error.{result.reason}`)
+				else L.text("common.failed")
 			return
 		end
-		statusLabel.Text = "Отправлено. Появится после проверки."
+		statusLabel.Text = L.text("authoring.sent")
 		stemBox.Text = ""
 		explanationBox.Text = ""
 		for _, box in optionBoxes do

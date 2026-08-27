@@ -13,6 +13,7 @@ local specs = {
 	require("./campus.spec"),
 	require("./authoring.spec"),
 	require("./progression.spec"),
+	require("./strings.spec"),
 }
 
 for _, spec in specs do

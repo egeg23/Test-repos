@@ -6,13 +6,13 @@
 --- has to be waited on is a client that can stall the server. So the next
 --- question is queued here and shown once the player has read the explanation.
 ---
---- Strings are hardcoded Russian for now. They move into a LocalizationTable
---- keyed by the `displayKey` fields in config when the locale work lands.
+--- All text comes from the shared Strings table, keyed by the player's locale.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local L = require(script.Parent.Parent.Locale)
 
 local LessonController = {}
 
@@ -131,7 +131,7 @@ local function buildUi()
 	continueButton.Font = Enum.Font.GothamBold
 	continueButton.TextSize = 18
 	continueButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-	continueButton.Text = "Дальше"
+	continueButton.Text = L.text("common.next")
 	continueButton.Visible = false
 	continueButton.LayoutOrder = 8
 	continueButton.Parent = panel
@@ -160,7 +160,7 @@ local function show(pending: Pending)
 	currentToken = pending.token
 	currentPosition = pending.position
 
-	progressLabel.Text = `Вопрос {pending.position} из {pending.total}`
+	progressLabel.Text = L.text("lesson.progress", pending.position, pending.total)
 	stemLabel.Text = pending.stem
 	explanationLabel.Visible = false
 	continueButton.Visible = false
@@ -259,16 +259,19 @@ function LessonController.init()
 			return
 		end
 		queued = nil
-		local verdict = if payload.passed then "Урок сдан" else "Урок не сдан"
-		progressLabel.Text = verdict
-		stemLabel.Text =
-			`Верных ответов: {payload.correctCount} из {payload.total}\n+{payload.pointsAwarded} баллов`
+		progressLabel.Text = L.text(if payload.passed then "lesson.passed" else "lesson.failed")
+		stemLabel.Text = L.text(
+			"lesson.score",
+			payload.correctCount,
+			payload.total,
+			payload.pointsAwarded
+		)
 		for _, button in optionButtons do
 			button.Visible = false
 		end
 		explanationLabel.Text = if payload.graduated
-			then "Все классы пройдены. Открой «Школа» и выбери, что дальше."
-			elseif payload.advanced then `Ты перешёл в {payload.grade} класс`
+			then L.text("lesson.graduated")
+			elseif payload.advanced then L.text("lesson.advanced", payload.grade)
 			else ""
 		explanationLabel.Visible = explanationLabel.Text ~= ""
 		continueButton.Visible = true

@@ -32,12 +32,12 @@ export type Module = {
 }
 
 Obstacles.Modules = {
-	{ id = "gap", minGrade = 1, length = 40, displayKey = "obstacle.gap" },
-	{ id = "narrowBeam", minGrade = 1, length = 48, displayKey = "obstacle.narrowBeam" },
-	{ id = "movingPlatform", minGrade = 2, length = 52, displayKey = "obstacle.movingPlatform" },
-	{ id = "vanishingTiles", minGrade = 4, length = 56, displayKey = "obstacle.vanishingTiles" },
-	{ id = "spinner", minGrade = 6, length = 44, displayKey = "obstacle.spinner" },
-	{ id = "hazardField", minGrade = 8, length = 60, displayKey = "obstacle.hazardField" },
+	{ id = "gap", minGrade = 1, length = 40, displayKey = "module.gap" },
+	{ id = "narrowBeam", minGrade = 1, length = 48, displayKey = "module.narrowBeam" },
+	{ id = "movingPlatform", minGrade = 2, length = 52, displayKey = "module.movingPlatform" },
+	{ id = "vanishingTiles", minGrade = 4, length = 56, displayKey = "module.vanishingTiles" },
+	{ id = "spinner", minGrade = 6, length = 44, displayKey = "module.spinner" },
+	{ id = "hazardField", minGrade = 8, length = 60, displayKey = "module.hazardField" },
 } :: { Module }
 
 local moduleById: { [string]: Module } = {}

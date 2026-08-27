@@ -12,6 +12,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Obstacles = require(ReplicatedStorage.Shared.Config.Obstacles)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local L = require(script.Parent.Parent.Locale)
 
 local CourseBuilderController = {}
 
@@ -24,14 +25,6 @@ local GOOD = Color3.fromRGB(64, 160, 92)
 local TEXT = Color3.fromRGB(236, 238, 244)
 local MUTED = Color3.fromRGB(150, 156, 170)
 
-local MODULE_NAMES: { [string]: string } = {
-	gap = "Пропасть",
-	narrowBeam = "Узкая балка",
-	movingPlatform = "Движущаяся платформа",
-	vanishingTiles = "Исчезающие плитки",
-	spinner = "Вертушка",
-	hazardField = "Поле шипов",
-}
 
 local panel: Frame
 local gradeRow: Frame
@@ -75,12 +68,7 @@ local function renderModules()
 		end
 	end
 	for _, entry in Obstacles.modulesForGrade(chosenGrade) do
-		local element = button(
-			moduleRow,
-			MODULE_NAMES[entry.id] or entry.id,
-			ROW,
-			UDim2.new(0, 150, 0, 34)
-		)
+		local element = button(moduleRow, L.text(entry.displayKey), ROW, UDim2.new(0, 150, 0, 34))
 		element.Activated:Connect(function()
 			table.insert(sequence, entry.id)
 			refresh()
@@ -125,7 +113,7 @@ refresh = function()
 	local distinctCount = 0
 	local names: { string } = {}
 	for _, id in sequence do
-		table.insert(names, MODULE_NAMES[id] or id)
+		table.insert(names, L.text(`module.{id}`))
 		if not distinct[id] then
 			distinct[id] = true
 			distinctCount += 1
@@ -133,20 +121,20 @@ refresh = function()
 	end
 
 	sequenceLabel.Text = if #sequence == 0
-		then "Пока пусто. Нажимай модули выше."
+		then L.text("course.empty")
 		else table.concat(names, " → ")
 
-	requirementLabel.Text = string.format(
-		"Модулей: %d из %d · Разных типов: %d из %d · Пропасть %.0f · Балка %.1f · %s",
+	requirementLabel.Text = L.text(
+		"course.requirements",
 		#sequence,
 		params.moduleCount,
 		distinctCount,
 		required,
-		params.gapStuds,
-		params.beamWidth,
+		string.format("%.0f", params.gapStuds),
+		string.format("%.1f", params.beamWidth),
 		if params.checkpointEvery == 0
-			then "без чекпоинтов"
-			else `чекпоинт каждые {params.checkpointEvery}`
+			then L.text("course.noCheckpoints")
+			else L.text("course.checkpointEvery", params.checkpointEvery)
 	)
 	requirementLabel.TextColor3 = if #sequence >= params.moduleCount
 			and distinctCount >= required
@@ -178,7 +166,7 @@ local function buildUi()
 	heading.TextSize = 17
 	heading.TextColor3 = TEXT
 	heading.TextXAlignment = Enum.TextXAlignment.Left
-	heading.Text = "Полоса препятствий"
+	heading.Text = L.text("course.title")
 	heading.Parent = panel
 
 	local gradeCaption = Instance.new("TextLabel")
@@ -189,7 +177,7 @@ local function buildUi()
 	gradeCaption.TextSize = 13
 	gradeCaption.TextColor3 = MUTED
 	gradeCaption.TextXAlignment = Enum.TextXAlignment.Left
-	gradeCaption.Text = "Сложность (класс):"
+	gradeCaption.Text = L.text("course.difficulty")
 	gradeCaption.Parent = panel
 
 	gradeRow = Instance.new("Frame")
@@ -246,13 +234,13 @@ local function buildUi()
 	titleBox.Font = Enum.Font.Gotham
 	titleBox.TextSize = 14
 	titleBox.TextColor3 = TEXT
-	titleBox.PlaceholderText = "название полосы"
+	titleBox.PlaceholderText = L.text("course.namePlaceholder")
 	titleBox.Text = ""
 	titleBox.ClearTextOnFocus = false
 	titleBox.Parent = panel
 	corner(titleBox, 6)
 
-	local undo = button(panel, "Убрать последний", ROW, UDim2.fromOffset(150, 32))
+	local undo = button(panel, L.text("course.undo"), ROW, UDim2.fromOffset(150, 32))
 	undo.Position = UDim2.new(0.5, 0, 1, -46)
 	undo.Activated:Connect(function()
 		if #sequence > 0 then
@@ -261,7 +249,7 @@ local function buildUi()
 		end
 	end)
 
-	local save = button(panel, "Сохранить", ACCENT, UDim2.fromOffset(120, 32))
+	local save = button(panel, L.text("common.save"), ACCENT, UDim2.fromOffset(120, 32))
 	save.Position = UDim2.new(1, -132, 1, -46)
 	save.Activated:Connect(function()
 		local target = classId

@@ -16,6 +16,11 @@
 #   Type errors are therefore printed as advisory and do not fail the run. Read
 #   them, but confirm anything they claim before acting on it. Real typechecking
 #   needs luau-lsp with a Rojo sourcemap, in Studio or an editor.
+#
+# tests/ is scanned alongside src/. It was not, once, and a syntax error sat in a
+# spec file unreported -- Luau's require returns the compile error as a *string*
+# rather than raising, so the runner failed with "attempt to call a string value"
+# and said nothing about where or why.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
@@ -50,7 +55,7 @@ while IFS= read -r file; do
 	if [ -n "$soft" ]; then
 		advisory=$((advisory + $(echo "$soft" | wc -l)))
 	fi
-done < <(find src -name '*.luau' -type f | sort)
+done < <(find src tests -name '*.luau' -type f | sort)
 
 if [ "$status" -eq 0 ]; then
 	echo "OK: $count Luau files, no syntax or lint errors."

@@ -25,7 +25,6 @@ local Monetization = require(ReplicatedStorage.Shared.Config.Monetization)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Types = require(ReplicatedStorage.Shared.Types)
 local Analytics = require(script.Parent.AnalyticsService)
-local ClassService = require(script.Parent.ClassService)
 local DataService = require(script.Parent.DataService)
 local PurchaseService = require(script.Parent.PurchaseService)
 local RateLimiter = require(script.Parent.RateLimiter)
@@ -43,6 +42,16 @@ local adsAllowedCache: { [Player]: boolean } = {}
 --- Rewards currently being shown, so a client cannot open six ads at once and
 --- have every one of them pass the cooldown check before any receipt lands.
 local inFlight: { [Player]: { [string]: boolean } } = {}
+
+--- Promoting a class is the one reward that reaches outside this service.
+--- Registered by ClassService rather than imported from it: an ad service that
+--- knows about classes and a class service that knows about ads is a cycle, and
+--- Luau resolves a cycle by erroring at whichever load order hits it first.
+local promoteClass: ((Player, number) -> ())? = nil
+
+function AdService.setClassPromoter(fn: (Player, number) -> ())
+	promoteClass = fn
+end
 
 local function dayStamp(): number
 	return math.floor(os.time() / SECONDS_PER_DAY)
@@ -124,6 +133,49 @@ local function bump(map: { [string]: number }, key: string)
 	map[key] = current + 1
 end
 
+--- What the player could watch right now, and why not where not.
+---
+--- The client needs this to draw anything at all: without it there is no way to
+--- show a student that a reward exists, which is how the entire student-facing
+--- half of the ad lane stayed unreachable while the server side was complete.
+function AdService.availability(player: Player): { any }
+	local data = DataService.getData(player)
+	if data == nil then
+		return {}
+	end
+	if not AdService.adsAllowed(player) then
+		-- Nothing is returned at all, so the interface has nothing to draw. A
+		-- player under 13 must not see a disabled ad button; they must see no ad
+		-- button.
+		return {}
+	end
+
+	resetDailyIfNeeded(data)
+	local now = os.time()
+	local results: { any } = {}
+
+	for _, reward in Monetization.AdRewards do
+		local allowed, reason = AdService.canWatch(player, reward.id)
+		local last: number = data.adCooldowns[reward.id] or 0
+		local remaining = 0
+		if reward.cooldownSeconds > 0 then
+			remaining = math.max(0, reward.cooldownSeconds - (now - last))
+		end
+
+		table.insert(results, {
+			id = reward.id,
+			audience = reward.audience,
+			available = allowed,
+			reason = reason,
+			cooldownLeft = remaining,
+			usedToday = data.adDailyCounts[reward.id] or 0,
+			dailyLimit = reward.dailyLimit,
+			boostSeconds = reward.boostSeconds,
+		})
+	end
+	return results
+end
+
 --- What each reward actually does. Timed effects go into activeBoosts, charges
 --- into consumables. Nothing here grants Robux or currency directly.
 local effects: { [string]: (Player, Types.ProfileData) -> () } = {
@@ -143,8 +195,10 @@ local effects: { [string]: (Player, Types.ProfileData) -> () } = {
 		-- Written onto the class, not the teacher's profile: the point of a
 		-- promotion is that it keeps drawing students in while the teacher is
 		-- offline, which is most of the time.
-		local seconds = boostSeconds("promoteClass")
-		task.spawn(ClassService.promote, player, seconds)
+		local promote = promoteClass
+		if promote ~= nil then
+			task.spawn(promote, player, boostSeconds("promoteClass"))
+		end
 	end,
 	teacherTestSlot = function(_player, data)
 		bump(data.consumables, "testSlot")

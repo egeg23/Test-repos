@@ -10,6 +10,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local L = require(script.Parent.Parent.Locale)
 
 local LiveLessonController = {}
 
@@ -57,7 +58,7 @@ end
 local function showQuestion(payload: any)
 	answered = false
 	stage.Visible = true
-	stageTitle.Text = `Вопрос {payload.position} из {payload.total}`
+	stageTitle.Text = L.text("lesson.progress", payload.position, payload.total)
 	stageBody.Text = payload.stem
 	for index, button in optionButtons do
 		local text = payload.options[index]
@@ -103,7 +104,7 @@ local function buildUi()
 	accept.Font = Enum.Font.GothamBold
 	accept.TextSize = 14
 	accept.TextColor3 = TEXT
-	accept.Text = "Зайти на урок"
+	accept.Text = L.text("live.join")
 	accept.Parent = invite
 	corner(accept, 6)
 	accept.Activated:Connect(function()
@@ -122,7 +123,7 @@ local function buildUi()
 	decline.Font = Enum.Font.Gotham
 	decline.TextSize = 14
 	decline.TextColor3 = MUTED
-	decline.Text = "Не сейчас"
+	decline.Text = L.text("common.notNow")
 	decline.Parent = invite
 	corner(decline, 6)
 	decline.Activated:Connect(function()
@@ -208,9 +209,14 @@ local function buildUi()
 	teacherLabel.Parent = teacherBar
 
 	local controls = {
-		{ caption = "Показать ответ", action = "reveal", x = 176, colour = ROW },
-		{ caption = "Дальше", action = "next", x = 288, colour = ACCENT },
-		{ caption = "Стоп", action = "end", x = 360, colour = Color3.fromRGB(120, 62, 62) },
+		{ caption = L.text("live.reveal"), action = "reveal", x = 176, colour = ROW },
+		{ caption = L.text("common.next"), action = "next", x = 288, colour = ACCENT },
+		{
+			caption = L.text("common.stop"),
+			action = "end",
+			x = 360,
+			colour = Color3.fromRGB(120, 62, 62),
+		},
 	}
 	for _, control in controls do
 		local button = Instance.new("TextButton")
@@ -230,16 +236,6 @@ local function buildUi()
 	end
 end
 
-local REASONS: { [string]: string } = {
-	notOwner = "Это не твой класс",
-	notALiveLesson = "Живьём можно вести только тест",
-	alreadyLive = "Урок уже идёт",
-	notEnrolled = "Ты не в этом классе",
-	noSession = "Урок уже закончился",
-	alreadyInLesson = "Ты уже на уроке",
-	teacherLeft = "Преподаватель вышел",
-	teacherEnded = "Преподаватель закончил урок",
-}
 
 function LiveLessonController.open(classId: string, lessonId: string)
 	send("open", { classId = classId, lessonId = lessonId })
@@ -254,17 +250,17 @@ function LiveLessonController.init()
 		if event == "invite" then
 			pendingInvite = payload.sessionId
 			inviteLabel.Text =
-				`{payload.teacherName} начинает урок «{payload.title}» — {payload.total} вопросов`
+				L.text("live.invite", payload.teacherName, payload.title, payload.total)
 			invite.Visible = true
 		elseif event == "opened" then
 			sessionId = payload.sessionId
 			teacherBar.Visible = true
-			teacherLabel.Text = `«{payload.title}» · ждём учеников`
+			teacherLabel.Text = L.text("live.waitingRoom", payload.title)
 		elseif event == "waiting" then
 			sessionId = payload.sessionId
 			stage.Visible = true
-			stageTitle.Text = "Урок вот-вот начнётся"
-			stageBody.Text = "Преподаватель сейчас задаст первый вопрос."
+			stageTitle.Text = L.text("live.waiting")
+			stageBody.Text = L.text("live.waitingBody")
 			for _, button in optionButtons do
 				button.Visible = false
 			end
@@ -280,16 +276,26 @@ function LiveLessonController.init()
 			stageTitle.Text = payload.explanation or ""
 		elseif event == "progress" or event == "revealed" then
 			teacherLabel.Text = if event == "revealed"
-				then `Ответ показан · вопрос {payload.position}`
-				else `Вопрос {payload.position} из {payload.total} · ответили `
-					.. `{payload.answered} из {payload.participants}`
+				then L.text("live.revealed", payload.position)
+				else L.text(
+					"live.answeredCount",
+					payload.position,
+					payload.total,
+					payload.answered,
+					payload.participants
+				)
 		elseif event == "received" then
-			stageTitle.Text = "Ответ принят. Ждём остальных."
+			stageTitle.Text = L.text("live.received")
 		elseif event == "finished" then
 			stage.Visible = true
-			stageTitle.Text = if payload.passed then "Урок сдан" else "Урок не сдан"
-			stageBody.Text = `Верно {payload.correctCount} из {payload.total}\n`
-				.. `+{payload.pointsAwarded} баллов, из них {payload.liveBonus} за живой урок`
+			stageTitle.Text = L.text(if payload.passed then "lesson.passed" else "lesson.failed")
+			stageBody.Text = L.text(
+				"live.result",
+				payload.correctCount,
+				payload.total,
+				payload.pointsAwarded,
+				payload.liveBonus
+			)
 			for _, button in optionButtons do
 				button.Visible = false
 			end
@@ -305,7 +311,7 @@ function LiveLessonController.init()
 			stage.Visible = false
 			invite.Visible = false
 		elseif event == "rejected" then
-			warn(`[school] live lesson: {REASONS[payload.reason] or payload.reason}`)
+			warn(`[school] live lesson: ` .. L.text(`error.{payload.reason}`))
 		end
 	end)
 end
