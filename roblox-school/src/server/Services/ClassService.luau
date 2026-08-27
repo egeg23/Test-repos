@@ -29,6 +29,7 @@ local AuthoringService = require(script.Parent.AuthoringService)
 local BankService = require(script.Parent.BankService)
 local CampusService = require(script.Parent.CampusService)
 local DataService = require(script.Parent.DataService)
+local ModerationQueueService = require(script.Parent.ModerationQueueService)
 local ModerationService = require(script.Parent.ModerationService)
 local PayoutService = require(script.Parent.PayoutService)
 local ProgressionService = require(script.Parent.ProgressionService)
@@ -863,6 +864,7 @@ local function onClassAction(player: Player, request: unknown)
 		or action == "browseAssembly"
 		or action == "ads"
 		or action == "shop"
+		or action == "reviewQueue"
 		or action == "campus"
 	-- Submitting a question is six TextService calls and a store write, so it is
 	-- metered harder than an ordinary write, which is itself metered harder than
@@ -974,6 +976,15 @@ local function onClassAction(player: Player, request: unknown)
 		local questionId, reason = AuthoringService.submit(player, data.locale, message.draft)
 		if questionId ~= nil then
 			Analytics.teacherEvent(player, "questionSubmitted")
+			-- Queued so a dean can find it. Without this the question is
+			-- reviewable in principle and unreachable in practice.
+			task.spawn(
+				ModerationQueueService.add,
+				data.locale,
+				(message.draft :: any).subject,
+				player.UserId,
+				questionId
+			)
 		end
 		respond(player, action, questionId ~= nil, reason, questionId)
 	elseif action == "myQuestions" then
@@ -1015,7 +1026,7 @@ local function onClassAction(player: Player, request: unknown)
 			points = math.floor(data.points),
 		})
 	elseif action == "campus" then
-		respond(player, action, true, nil, CampusService.standings(data.locale))
+		respond(player, action, true, nil, CampusService.standings(data.locale, player.UserId))
 	elseif action == "nominate" then
 		-- Standing requires a rating, and the cached one may be stale.
 		ClassService.refreshTeacherRating(player)
@@ -1037,6 +1048,22 @@ local function onClassAction(player: Player, request: unknown)
 		local ok, reason =
 			CampusService.appointDean(player, message.subject, message.teacherUserId)
 		respond(player, action, ok, reason)
+	elseif action == "reviewQueue" then
+		if typeof(message.subject) ~= "string" then
+			respond(player, action, false, "badRequest")
+			return
+		end
+		if not CampusService.isDean(data.locale, message.subject, player.UserId) then
+			respond(player, action, false, "notDean")
+			return
+		end
+		respond(
+			player,
+			action,
+			true,
+			nil,
+			ModerationQueueService.pending(data.locale, message.subject)
+		)
 	elseif action == "reviewQuestion" then
 		-- A dean rules on their own subject and nobody else's.
 		if typeof(message.subject) ~= "string" then
@@ -1060,6 +1087,14 @@ local function onClassAction(player: Player, request: unknown)
 			message.subject,
 			message.approve == true
 		)
+		if applied then
+			task.spawn(
+				ModerationQueueService.remove,
+				data.locale,
+				message.subject,
+				message.questionId
+			)
+		end
 		respond(player, action, applied, if applied then nil else "notFound")
 	elseif action == "collect" then
 		respond(player, action, true, nil, PayoutService.collect(player))

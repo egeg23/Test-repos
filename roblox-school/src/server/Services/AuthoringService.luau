@@ -204,6 +204,20 @@ local function translateInBackground(userId: number, questionId: string, draft: 
 	end)
 end
 
+--- The stored question as it is, pending included.
+---
+--- Separate from `resolve` on purpose: `resolve` is the path to a student and
+--- refuses anything unpublished, which is the guarantee the whole moderation
+--- design rests on. A dean has to see precisely the thing a student cannot.
+function AuthoringService.peek(teacherUserId: number, questionId: string): Authored?
+	local book = readBook(teacherUserId)
+	local question = book.questions[questionId]
+	if question == nil then
+		return nil
+	end
+	return settleStatus(question)
+end
+
 --- Filters every field. Returns nil if any one of them could not be cleared,
 --- because a question with one unfiltered option is an unfiltered question.
 local function filterDraft(draft: Authoring.Draft, authorUserId: number): Authoring.Draft?

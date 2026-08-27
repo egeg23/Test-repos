@@ -317,7 +317,7 @@ function CampusService.vote(player: Player, candidateUserId: unknown): (boolean,
 	return applied, if applied then nil else "noCandidate"
 end
 
-function CampusService.standings(locale: string): any
+function CampusService.standings(locale: string, userId: number?): any
 	local now = os.time()
 	local cycle = Campus.cycleIndex(now)
 	local votes = readVotes(locale, cycle)
@@ -335,7 +335,19 @@ function CampusService.standings(locale: string): any
 		return a.votes > b.votes
 	end)
 
+	-- Which offices this player holds, so the interface can offer the controls
+	-- that go with them instead of guessing from a name.
+	local deanOf: { string } = {}
+	if userId ~= nil then
+		for subject, holder in record.deans do
+			if holder == userId then
+				table.insert(deanOf, subject)
+			end
+		end
+	end
+
 	return {
+		deanOf = deanOf,
 		phase = Campus.phase(now),
 		dayInCycle = Campus.dayInCycle(now),
 		cycleDays = Campus.CycleDays,

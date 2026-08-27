@@ -25,6 +25,7 @@ local MUTED = Color3.fromRGB(150, 156, 170)
 
 
 
+local reviewSubject: string? = nil
 local panel: Frame
 local headerLabel: TextLabel
 local phaseLabel: TextLabel
@@ -202,12 +203,83 @@ local function render(view: any)
 		end
 	end
 
+	-- A dean's own queue. Shown here rather than in a panel of its own because
+	-- the office is a campus office, and this is where a player comes to see what
+	-- their office lets them do.
+	if #view.deanOf > 0 then
+		local subjects: { string } = {}
+		for _, subject in view.deanOf do
+			table.insert(subjects, L.text(`subject.{subject}`))
+		end
+
+		local deanRow = row(46)
+		text(deanRow, L.text("review.deanOf", table.concat(subjects, ", ")), 15, TEXT, 12)
+		action(deanRow, L.text("common.open"), ACCENT, 100).Activated:Connect(function()
+			reviewSubject = view.deanOf[1]
+			send("reviewQueue", { subject = reviewSubject })
+		end)
+	end
+
 	local deanNames: { string } = {}
 	for subject, name in view.deans do
 		table.insert(deanNames, `{subject}: {name}`)
 	end
 	if #deanNames > 0 then
 		text(row(40), L.text("campus.deans", table.concat(deanNames, ", ")), 13, MUTED, 12)
+	end
+end
+
+--- The pending questions in a subject this player is dean of. Answer and
+--- explanation are shown: a dean judging a question without seeing what it
+--- claims is right is not reviewing anything.
+local function renderQueue(entries: { any })
+	clearList()
+
+	local head = row(46)
+	text(head, L.text("review.queue", #entries), 16, TEXT, 12)
+	action(head, L.text("campus.title"), ROW, 100).Activated:Connect(function()
+		reviewSubject = nil
+		send("campus")
+	end)
+
+	if #entries == 0 then
+		text(row(40), L.text("review.none"), 15, MUTED, 10)
+		return
+	end
+
+	for _, item in entries do
+		local element = row(96)
+		text(element, item.stem, 15, TEXT, 8)
+		text(
+			element,
+			L.text("review.answer", item.options[item.answer] or "?"),
+			13,
+			MUTED,
+			30
+		)
+		text(element, item.explanation, 12, MUTED, 50)
+
+		local approve = action(element, L.text("review.approve"), ACCENT, 108)
+		approve.Position = UDim2.new(1, -116, 0, 8)
+		approve.Activated:Connect(function()
+			send("reviewQuestion", {
+				subject = reviewSubject,
+				teacherUserId = item.teacherUserId,
+				questionId = item.questionId,
+				approve = true,
+			})
+		end)
+
+		local reject = action(element, L.text("review.reject"), Color3.fromRGB(120, 62, 62), 108)
+		reject.Position = UDim2.new(1, -116, 0, 48)
+		reject.Activated:Connect(function()
+			send("reviewQuestion", {
+				subject = reviewSubject,
+				teacherUserId = item.teacherUserId,
+				questionId = item.questionId,
+				approve = false,
+			})
+		end)
 	end
 end
 
@@ -301,6 +373,8 @@ function CampusController.init()
 
 	Remotes.event(Remotes.Names.ClassResult).OnClientEvent:Connect(function(result: any)
 		local watched = result.action == "campus"
+			or result.action == "reviewQueue"
+			or result.action == "reviewQuestion"
 			or result.action == "nominate"
 			or result.action == "vote"
 			or result.action == "subjectOfMonth"
@@ -320,6 +394,11 @@ function CampusController.init()
 
 		if result.action == "campus" then
 			render(result.payload)
+		elseif result.action == "reviewQueue" then
+			renderQueue(result.payload or {})
+		elseif result.action == "reviewQuestion" then
+			statusLabel.Text = L.text("review.done")
+			send("reviewQueue", { subject = reviewSubject })
 		else
 			-- Any successful change re-reads the campus, so the panel always shows
 			-- what the server actually stored rather than what was asked for.

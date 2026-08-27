@@ -380,6 +380,15 @@ Strings.Entries = {
 	["ad.promoteClass"] = { ru = "Продвинуть класс", en = "Promote your class", es = "Promocionar tu clase", pt = "Promover sua turma" },
 	["ad.teacherTestSlot"] = { ru = "Ещё один слот теста", en = "One more test slot", es = "Otra ranura de prueba", pt = "Mais um espaço de teste" },
 
+	-- ---- moderation ----
+	["review.queue"] = { ru = "На проверке: {1}", en = "In review: {1}", es = "En revisión: {1}", pt = "Em revisão: {1}" },
+	["review.none"] = { ru = "Проверять нечего.", en = "Nothing to review.", es = "Nada que revisar.", pt = "Nada para revisar." },
+	["review.approve"] = { ru = "Пропустить", en = "Approve", es = "Aprobar", pt = "Aprovar" },
+	["review.reject"] = { ru = "Отклонить", en = "Reject", es = "Rechazar", pt = "Rejeitar" },
+	["review.answer"] = { ru = "Ответ: {1}", en = "Answer: {1}", es = "Respuesta: {1}", pt = "Resposta: {1}" },
+	["review.done"] = { ru = "Решение принято", en = "Decision recorded", es = "Decisión registrada", pt = "Decisão registrada" },
+	["review.deanOf"] = { ru = "Ты завуч: {1}", en = "You are dean of: {1}", es = "Eres decano de: {1}", pt = "Você é coordenador de: {1}" },
+
 	-- ---- refusals ----
 	--
 	-- Keyed by the reason code the server returns, so a new refusal on the server
