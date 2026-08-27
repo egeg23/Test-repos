@@ -134,6 +134,14 @@ else:
         if reward_id not in declared_effects:
             problems.append(f"ad reward '{reward_id}' has no effect and would grant nothing")
 
+# --- products -------------------------------------------------------------------
+
+shop_service = server_text.get("ShopService.luau", "")
+product_effects = set(re.findall(r"^\t(\w+) = function", shop_service, re.M))
+for product_id in ids("Products"):
+    if product_id not in product_effects:
+        problems.append(f"product '{product_id}' is sold but ShopService has no grant for it")
+
 print(f"  {len(ids('Passes'))} passes, {len(ids('Products'))} products, "
       f"{len(ids('AdRewards'))} ad rewards, {len(written)} consumables")
 

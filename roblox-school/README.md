@@ -160,6 +160,23 @@ and links.
 Tipalti pays Uzbekistan by **USD wire, T to T+1**; global ACH and PayPal are not
 available there.
 
+## Checks
+
+`tools/check_all.sh` runs everything that can be verified outside Studio. Each
+Python checker was written after a real bug and verified against it — every one
+of them has been made to fail on the defect it exists to catch, because a checker
+that has only ever passed is a checker nobody has tested.
+
+| Check | What it caught |
+|---|---|
+| `check_monetization.py` | Six passes, four consumables and four ad rewards on sale that did nothing |
+| `check_limits.py` | A duplicated lesson cap, and a pass not worth buying at the point players meet the curve |
+| `check_achievements.py` | A branch keyed to a stat nothing writes; a duplicated threshold drifting |
+| `check_world.py` | Two halls occupying the same studs; a spawn inside the assembly hall |
+| `check_decor.py` | An unthemed subject; an emitter over the particle budget |
+| `check_hardcoded.py` | A string key that does not exist, printed raw on a button |
+| `check_obstacles.py` | A module with no builder, which fails a course at run time silently |
+
 ## Moving this into its own repository
 
 It lives in a subdirectory because the GitHub integration for this session could

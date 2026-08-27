@@ -158,7 +158,17 @@ local function finish(attempt: Attempt)
 	-- brute-forced and the cheapest way to farm the teacher who wrote it.
 	local data = DataService.getData(attempt.player)
 	if data ~= nil and not passed then
-		data.retryCooldowns[attempt.statKey] = os.time()
+		local now = os.time()
+		-- Expired entries are dropped on the way in. Without this the table only
+		-- ever grows: a player who fails a hundred different lessons over a year
+		-- carries a hundred dead timestamps in their profile forever, and a
+		-- profile has a size limit that nothing warns you about until you hit it.
+		for statKey, failedAt in data.retryCooldowns do
+			if Limits.retryRemaining(failedAt, now) <= 0 then
+				data.retryCooldowns[statKey] = nil
+			end
+		end
+		data.retryCooldowns[attempt.statKey] = now
 	end
 
 	local summary = RewardService.settle(attempt.player, {

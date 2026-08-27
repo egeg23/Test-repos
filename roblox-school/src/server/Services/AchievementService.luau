@@ -126,10 +126,12 @@ function AchievementService.bump(player: Player, stat: string, amount: number?)
 	data.stats[stat] = (data.stats[stat] or 0) + step
 	announce(player, grantPending(data))
 	-- Published from here rather than from each call site: every ranked stat is
-	-- moved through this function, so one hook cannot miss one.
+	-- moved through this function, so one hook cannot miss one. Narrowed to the
+	-- stat that moved, because writing all three boards on every lesson would be
+	-- two wasted MemoryStore calls per lesson per player.
 	local publish = LeaderboardService
 	if publish ~= nil then
-		publish.publish(player)
+		publish.publish(player, stat)
 	end
 end
 

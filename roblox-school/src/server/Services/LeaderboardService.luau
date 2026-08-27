@@ -102,11 +102,16 @@ local function rollWeek(data: any)
 	data.weeklyBaselines = baselines
 end
 
---- Writes this player's current standing to every board they are on.
+--- Writes this player's standing to the boards a given stat ranks.
+---
+--- `stat` is optional and narrows the write: bumping lessonsPassed changes one
+--- board, and writing all three would be two wasted MemoryStore calls on every
+--- lesson every player finishes. Omitting it writes all of them, which is what
+--- a join wants.
 ---
 --- Fire and forget: a board that fails to update is a cosmetic loss, and a
 --- lesson must never fail because a MemoryStore call did.
-function LeaderboardService.publish(player: Player)
+function LeaderboardService.publish(player: Player, stat: string?)
 	local data = DataService.getData(player)
 	if data == nil then
 		return
@@ -116,6 +121,9 @@ function LeaderboardService.publish(player: Player)
 	local locale = data.locale
 	local name = player.DisplayName
 	for _, board in LeaderboardService.Boards do
+		if stat ~= nil and board.stat ~= stat then
+			continue
+		end
 		local score = weeklyScore(data, board.stat)
 		if score <= 0 then
 			continue
