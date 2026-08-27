@@ -12,14 +12,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Economy = require(ReplicatedStorage.Shared.Config.Economy)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Subjects = require(ReplicatedStorage.Shared.Config.Subjects)
-local Types = require(ReplicatedStorage.Shared.Types)
 local BankService = require(script.Parent.BankService)
 local DataService = require(script.Parent.DataService)
-local PayoutService = require(script.Parent.PayoutService)
-local ProgressionService = require(script.Parent.ProgressionService)
 local ClassService = require(script.Parent.ClassService)
 local LessonStatsService = require(script.Parent.LessonStatsService)
-local PurchaseService = require(script.Parent.PurchaseService)
 local RateLimiter = require(script.Parent.RateLimiter)
 
 local LessonService = {}
@@ -174,7 +170,7 @@ local function onStartLesson(player: Player, payload: unknown)
 			local spec = lesson.assembly
 			if lesson.kind == "assembly" and spec ~= nil and #spec.taskIds > 0 then
 				local taskId = spec.taskIds[Random.new():NextInteger(1, #spec.taskIds)]
-				local failure = AssemblyService.begin(player, {
+				local refusal = AssemblyService.begin(player, {
 					subject = class.subject,
 					statKey = lesson.id,
 					teacherUserId = class.teacherUserId,
@@ -182,8 +178,8 @@ local function onStartLesson(player: Player, payload: unknown)
 					teacherRating = class.rating,
 					translated = class.locale ~= data.locale,
 				}, data.locale, data.grade, taskId)
-				if failure ~= nil then
-					reject(player, failure)
+				if refusal ~= nil then
+					reject(player, refusal)
 				end
 				return
 			end
@@ -297,6 +293,14 @@ local function onSubmitAnswer(player: Player, payload: unknown)
 	else
 		sendQuestion(attempt)
 	end
+end
+
+--- Starts a bank lesson without a client request. Used by the world's NPC
+--- teachers, where the proximity prompt the server itself heard is the whole
+--- authorisation -- passing it back through a remote would only add a step a
+--- client could lie in.
+function LessonService.startFromWorld(player: Player, subject: string, kind: string?)
+	onStartLesson(player, { subject = subject, kind = kind })
 end
 
 function LessonService.start()

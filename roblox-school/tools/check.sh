@@ -45,7 +45,7 @@ while IFS= read -r file; do
 	out="$("$LUAU" "$file" 2>&1)"
 	[ -z "$out" ] && continue
 
-	hard="$(echo "$out" | grep -E ': (SyntaxError|LocalUnused|SameLineStatement|DuplicateFunction|UnreachableCode|DuplicateLocal):' || true)"
+	hard="$(echo "$out" | grep -E ': (SyntaxError|LocalUnused|ImportUnused|SameLineStatement|DuplicateFunction|UnreachableCode|DuplicateLocal|LocalShadow):' || true)"
 	if [ -n "$hard" ]; then
 		echo "$hard"
 		status=1

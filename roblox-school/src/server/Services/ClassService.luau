@@ -647,12 +647,12 @@ function ClassService.addAssembly(
 		if typeof(raw) ~= "string" or seen[raw] then
 			return nil, "badTask"
 		end
-		local task = AssemblyService.get(raw :: string)
-		if task == nil or task.subject ~= class.subject then
+		local entry = AssemblyService.get(raw :: string)
+		if entry == nil or entry.subject ~= class.subject then
 			return nil, "badTask"
 		end
 		seen[raw] = true
-		gradeTotal += task.grade
+		gradeTotal += entry.grade
 		table.insert(ids, raw :: string)
 	end
 	if #ids == 0 or #ids > 8 then

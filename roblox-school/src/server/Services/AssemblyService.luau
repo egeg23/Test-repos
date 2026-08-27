@@ -20,7 +20,6 @@ local Components = require(ReplicatedStorage.Shared.Config.Components)
 local Economy = require(ReplicatedStorage.Shared.Config.Economy)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local BankService = require(script.Parent.BankService)
-local DataService = require(script.Parent.DataService)
 local RateLimiter = require(script.Parent.RateLimiter)
 local RewardService = require(script.Parent.RewardService)
 
