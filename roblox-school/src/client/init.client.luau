@@ -8,6 +8,7 @@ local CourseBuilderController = require(script.Controllers.CourseBuilderControll
 local LessonController = require(script.Controllers.LessonController)
 local LiveLessonController = require(script.Controllers.LiveLessonController)
 local ObstacleController = require(script.Controllers.ObstacleController)
+local ShopController = require(script.Controllers.ShopController)
 local QuestionEditorController = require(script.Controllers.QuestionEditorController)
 
 LessonController.init()
@@ -19,5 +20,6 @@ CourseBuilderController.init()
 QuestionEditorController.init()
 ClassController.init()
 CampusController.init()
+ShopController.init()
 
 print("[school] client ready")
