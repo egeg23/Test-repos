@@ -1,0 +1,66 @@
+{
+  "subject": "logic",
+  "locale": "en",
+  "questions": [
+    {
+      "id": "logic.en.0001", "grade": 2,
+      "stem": "There were 5 apples on the table. You took 2. How many do you have?",
+      "options": ["2", "3", "5", "7"], "answer": 1,
+      "explanation": "The question asks how many you have, not how many are left on the table. You took 2."
+    },
+    {
+      "id": "logic.en.0002", "grade": 4,
+      "stem": "All cats are animals. Murka is a cat. What follows?",
+      "options": ["Murka isn't an animal", "Murka is an animal", "Can't say", "Murka is a dog"], "answer": 2,
+      "explanation": "If every cat is an animal, then so is Murka. That follows directly from the two facts."
+    },
+    {
+      "id": "logic.en.0003", "grade": 6,
+      "stem": "If it rains, the ground is wet. The ground is wet. Is it raining?",
+      "options": ["Definitely yes", "Definitely no", "Not necessarily", "Never"], "answer": 3,
+      "explanation": "A sprinkler wets the ground too. A cause doesn't follow from its effect."
+    },
+    {
+      "id": "logic.en.0004", "grade": 3,
+      "stem": "Which is heavier: a kilo of cotton or a kilo of iron?",
+      "options": ["Iron", "Cotton", "Depends", "The same"], "answer": 4,
+      "explanation": "A kilo is a kilo. What differs is volume, not weight: the cotton takes up more room."
+    },
+    {
+      "id": "logic.en.0005", "grade": 4,
+      "stem": "Continue the sequence: 2, 4, 8, 16, ...",
+      "options": ["32", "18", "20", "24"], "answer": 1,
+      "explanation": "Each number is double the last, not two more. So next is 16 × 2 = 32."
+    },
+    {
+      "id": "logic.en.0006", "grade": 5,
+      "stem": "Two brothers each have one sister. How many children in the family?",
+      "options": ["4", "3", "6", "2"], "answer": 2,
+      "explanation": "The brothers share the same sister. Two brothers and one sister is three children."
+    },
+    {
+      "id": "logic.en.0007", "grade": 7,
+      "stem": "Some birds cannot fly. A penguin is a bird. Can it fly?",
+      "options": ["Definitely yes", "It certainly flies", "This doesn't tell us", "It isn't a bird"], "answer": 3,
+      "explanation": "The word 'some' says nothing about any particular bird. No conclusion follows."
+    },
+    {
+      "id": "logic.en.0008", "grade": 3,
+      "stem": "What happens if you swap the two numbers you are adding?",
+      "options": ["The sum grows", "The sum shrinks", "It becomes zero", "Nothing changes"], "answer": 4,
+      "explanation": "Order doesn't matter when adding: 3 + 5 and 5 + 3 give exactly the same answer."
+    },
+    {
+      "id": "logic.en.0009", "grade": 5,
+      "stem": "A box holds 3 red balls and 2 blue. Which colour are you likelier to draw?",
+      "options": ["Red", "Blue", "Equal", "Unknown"], "answer": 1,
+      "explanation": "There are more red ones, so red is likelier. Blue is still perfectly possible."
+    },
+    {
+      "id": "logic.en.0010", "grade": 4,
+      "stem": "Sasha is taller than Pete, and Pete is taller than Kolya. Who is shortest?",
+      "options": ["Sasha", "Kolya", "Pete", "Unclear"], "answer": 2,
+      "explanation": "Line them up: Sasha, Pete, Kolya. Kolya is below Pete, who is below Sasha."
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "subject": "science",
+  "locale": "en",
+  "tasks": [
+    {
+      "id": "asm.science.en.0001", "grade": 5,
+      "prompt": "Build a simple electric circuit in order",
+      "slots": ["Power source", "Conductor", "Control", "The thing it powers"],
+      "answers": ["battery", "wire", "switch", "lamp"],
+      "palette": ["battery", "wire", "switch", "lamp", "magnet", "beaker", "filter"],
+      "explanation": "Current runs from the battery along the wire through the switch to the lamp. Break the loop anywhere and the lamp goes out."
+    },
+    {
+      "id": "asm.science.en.0002", "grade": 4,
+      "prompt": "What a seed needs in order to sprout",
+      "slots": ["Where to plant it", "What to pour on it", "What it needs above", "What you get"],
+      "answers": ["soil", "water", "sunlight", "sprout"],
+      "palette": ["soil", "water", "sunlight", "sprout", "magnet", "lamp", "wire"],
+      "explanation": "A seed needs soil, water and light. Miss any one of the three and nothing sprouts — these are conditions, not a wish list."
+    },
+    {
+      "id": "asm.science.en.0003", "grade": 6,
+      "prompt": "Set up apparatus to separate sand from water",
+      "slots": ["What to pour the mix into", "What sits on top", "What goes inside it", "What ends up below"],
+      "answers": ["beaker", "funnel", "filter", "water"],
+      "palette": ["beaker", "funnel", "filter", "water", "soil", "battery", "thermometer"],
+      "explanation": "A filter in the funnel lets water through and holds the sand back. They separate by particle size, not by weight."
+    }
+  ]
+}

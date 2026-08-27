@@ -33,6 +33,17 @@ local FALL_DISTANCE = 60
 --- Generous: a character runs at 16 studs a second. Anything faster than this is
 --- not a fast player.
 local IMPLAUSIBLE_SPEED = 40
+--- Horizontal studs per second no single frame may exceed. Far above running
+--- speed so a spinner's knockback and a long jump both pass, far below a
+--- teleport, which crosses the whole course between two frames.
+local IMPLAUSIBLE_FRAME_SPEED = 140
+--- How far above the lane a player may legitimately get. A jump reaches a few
+--- studs and a spinner throws them further; anything past this is flying over
+--- the course rather than running it.
+local CEILING_HEIGHT = 40
+--- Slack around the built course, so brushing the edge of a platform is not an
+--- accusation.
+local BOUNDS_MARGIN = 60
 
 local COLOUR_PLATFORM = Color3.fromRGB(96, 104, 124)
 local COLOUR_BEAM = Color3.fromRGB(120, 132, 160)
@@ -68,6 +79,14 @@ type Run = {
 	startedAt: number,
 	legStartedAt: number,
 	legLength: number,
+	--- Horizontal box the run is allowed to happen inside, plus a ceiling.
+	--- Leaving it means going over the obstacles rather than through them.
+	minX: number,
+	maxX: number,
+	maxZ: number,
+	ceilingY: number,
+	--- Last sampled position, for the per-frame distance check.
+	lastPosition: Vector3?,
 	animated: { Animated },
 	finished: boolean,
 }
@@ -590,6 +609,11 @@ function ObstacleService.begin(
 		startedAt = os.clock(),
 		legStartedAt = os.clock(),
 		legLength = (built.checkpoints[1].Position - built.spawnCFrame.Position).Magnitude,
+		minX = laneOrigin(lane).X - BOUNDS_MARGIN,
+		maxX = laneOrigin(lane).X + built.length + BOUNDS_MARGIN,
+		maxZ = BOUNDS_MARGIN,
+		ceilingY = laneOrigin(lane).Y + CEILING_HEIGHT,
+		lastPosition = nil,
 		animated = built.animated,
 		finished = false,
 	}
@@ -622,7 +646,14 @@ function ObstacleService.start()
 		return
 	end
 	heartbeat = RunService.Heartbeat:Connect(function(delta: number)
+		-- Snapshotted, because settling a run yields and another run can start or
+		-- end during that yield -- mutating the table this loop is walking.
+		local active: { Run } = {}
 		for _, run in runs do
+			table.insert(active, run)
+		end
+
+		for _, run in active do
 			if run.finished then
 				continue
 			end
@@ -639,8 +670,34 @@ function ObstacleService.start()
 			end
 
 			local origin = laneOrigin(run.lane)
-			if root.Position.Y < origin.Y - FALL_DISTANCE then
+			local position = root.Position
+
+			if position.Y < origin.Y - FALL_DISTANCE then
 				failLeg(run, "fell")
+				continue
+			end
+
+			-- Over the top of the course rather than along it, or off the side of
+			-- the lane entirely. A checkpoint order check cannot see this: a flier
+			-- still touches every pad, in order.
+			local offLane = position.X < run.minX
+				or position.X > run.maxX
+				or math.abs(position.Z - origin.Z) > run.maxZ
+			if offLane or position.Y > run.ceilingY then
+				finish(run, false, "impossibleSpeed")
+				continue
+			end
+
+			-- Horizontal only. Falling accelerates and would trip a check that
+			-- counted vertical distance, and falling is already handled above.
+			local previous = run.lastPosition
+			run.lastPosition = position
+			if previous ~= nil and delta > 0 then
+				local moved = (Vector3.new(position.X, 0, position.Z)
+					- Vector3.new(previous.X, 0, previous.Z)).Magnitude
+				if moved / delta > IMPLAUSIBLE_FRAME_SPEED then
+					finish(run, false, "impossibleSpeed")
+				end
 			end
 		end
 	end)

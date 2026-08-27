@@ -1,0 +1,78 @@
+{
+  "subject": "math",
+  "locale": "en",
+  "questions": [
+    {
+      "id": "math.en.0001", "grade": 3,
+      "stem": "Masha has 3 boxes of 4 pencils. She gives away 5. How many are left?",
+      "options": ["7", "12", "17", "2"], "answer": 1,
+      "explanation": "Count them all first: 3 × 4 = 12. Then take away the 5 she gave: 12 − 5 = 7."
+    },
+    {
+      "id": "math.en.0002", "grade": 3,
+      "stem": "Half of a number is 8. What is the number?",
+      "options": ["4", "8", "16", "12"], "answer": 3,
+      "explanation": "If half is 8, the whole is twice that: 8 × 2 = 16. Dividing goes the wrong way."
+    },
+    {
+      "id": "math.en.0003", "grade": 5,
+      "stem": "Which is bigger: 0.5 or 0.45?",
+      "options": ["0.45", "0.5", "They're equal", "Can't tell"], "answer": 2,
+      "explanation": "0.5 is the same as 0.50. Compare hundredths: 50 beats 45. Longer isn't larger."
+    },
+    {
+      "id": "math.en.0004", "grade": 4,
+      "stem": "A square has a perimeter of 20 cm. How long is one side?",
+      "options": ["10 cm", "80 cm", "4 cm", "5 cm"], "answer": 4,
+      "explanation": "A square has four equal sides, so divide the perimeter by 4: 20 ÷ 4 = 5 cm."
+    },
+    {
+      "id": "math.en.0005", "grade": 4,
+      "stem": "A class has 12 boys and half as many girls. How many children in total?",
+      "options": ["18", "24", "6", "36"], "answer": 1,
+      "explanation": "Girls: 12 ÷ 2 = 6. The question asks for everyone: 12 + 6 = 18, not just the girls."
+    },
+    {
+      "id": "math.en.0006", "grade": 6,
+      "stem": "What happens to a square's area if you double the length of its side?",
+      "options": ["It doubles", "It grows 4 times", "It triples", "Nothing changes"], "answer": 2,
+      "explanation": "Area is side times side. Both doubled, so the area grows 2 × 2 = 4 times."
+    },
+    {
+      "id": "math.en.0007", "grade": 6,
+      "stem": "A number is cut by 20%, then raised by 20%. What happened to it?",
+      "options": ["It grew", "It's unchanged", "It shrank", "It halved"], "answer": 3,
+      "explanation": "The percentages are taken from different numbers: less was added back than was removed."
+    },
+    {
+      "id": "math.en.0008", "grade": 3,
+      "stem": "How many minutes are in a quarter of an hour?",
+      "options": ["25", "4", "40", "15"], "answer": 4,
+      "explanation": "An hour is 60 minutes. A quarter means divide by 4: 60 ÷ 4 = 15 minutes."
+    },
+    {
+      "id": "math.en.0009", "grade": 5,
+      "stem": "Pete had 20 coins. He spent a quarter of them. How many are left?",
+      "options": ["15", "5", "16", "4"], "answer": 1,
+      "explanation": "A quarter of 20 is 5. The question asks what's left: 20 − 5 = 15, not what he spent."
+    },
+    {
+      "id": "math.en.0010", "grade": 6,
+      "stem": "What must you add to 7 to get 3?",
+      "options": ["plus 4", "minus 4", "the number 10", "nothing works"], "answer": 2,
+      "explanation": "Going from 7 down to 3 means taking away 4. Adding a negative is the same as subtracting."
+    },
+    {
+      "id": "math.en.0011", "grade": 5,
+      "stem": "Which is bigger: a third of 30, or a quarter of 40?",
+      "options": ["A third of 30", "A quarter of 40", "They're equal", "Can't tell"], "answer": 3,
+      "explanation": "A third of 30 is 10. A quarter of 40 is also 10. Different sums, same answer."
+    },
+    {
+      "id": "math.en.0012", "grade": 4,
+      "stem": "A bus travels 60 km in an hour. How far does it go in half an hour?",
+      "options": ["120 km", "60 km", "15 km", "30 km"], "answer": 4,
+      "explanation": "Half the time means half the distance: 60 ÷ 2 = 30 km. The speed hasn't changed."
+    }
+  ]
+}

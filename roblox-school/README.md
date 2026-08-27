@@ -66,6 +66,10 @@ tools/          checks that run outside Studio
   constants out of the source and reason about them, while these run the code
   the game runs. Each one was confirmed to fail when the rule it guards is
   removed.
+- `tools/check_hardcoded.py` refuses display text written straight into the
+  interface. Localisation is undone one convenient string at a time, so it fails
+  on non-Latin text outside the strings table and on any literal assigned to a
+  `.Text` or `.PlaceholderText` property.
 - `tools/check.sh` parses every Luau file with the upstream Luau binary
   (downloaded on first run) and gates on syntax errors and lints.
 
@@ -210,5 +214,16 @@ so a single fall ends the run with nothing scored. That is the intent — the fi
 year is meant to be genuinely hard — but it is the first thing to revisit if
 retention data says the last two grades are where players stop.
 
-Ids in `Monetization.luau` are still `0`, so nothing can actually be sold until
-they are filled in from the Creator Hub.
+There is a school to walk around — a corridor of classrooms with a teacher
+standing in each, always on duty, which is what keeps the place playable with
+nobody else online. A shop sells the passes and consumables and offers the ad
+rewards; ids in `Monetization.luau` are still `0`, so it shows them as not set
+up and refuses to prompt until they come out of the Creator Hub.
+
+Every string a player reads comes from a table keyed by their locale, in all
+four launch languages.
+
+Still open, in rough order of cost: nothing has ever run inside Roblox, so every
+engine call is written against documentation and unverified; the DataStore write
+budget under load has not been modelled; and the question bank holds 64
+questions where it wants thousands.

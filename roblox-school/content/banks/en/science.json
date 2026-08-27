@@ -1,0 +1,66 @@
+{
+  "subject": "science",
+  "locale": "en",
+  "questions": [
+    {
+      "id": "science.en.0001", "grade": 2,
+      "stem": "Why is it light during the day?",
+      "options": ["The Sun shines", "Moon reflects", "The sky is blue", "That's just how"], "answer": 1,
+      "explanation": "The light comes from the Sun. The Moon has none of its own — it only reflects sunlight."
+    },
+    {
+      "id": "science.en.0002", "grade": 3,
+      "stem": "What happens to water at −5 °C?",
+      "options": ["Evaporates", "Freezes", "Boils", "No change"], "answer": 2,
+      "explanation": "Water freezes at 0 °C, and −5 °C is below that. It turns to ice."
+    },
+    {
+      "id": "science.en.0003", "grade": 6,
+      "stem": "Why do we see lightning before we hear the thunder?",
+      "options": ["Thunder is faint", "Lightning is near", "Light outruns sound", "It just seems so"], "answer": 3,
+      "explanation": "Light travels almost instantly; sound manages about 340 m a second. Hence the delay."
+    },
+    {
+      "id": "science.en.0004", "grade": 4,
+      "stem": "What are a plant's leaves for?",
+      "options": ["For beauty", "For drinking", "For shade", "Catching light"], "answer": 4,
+      "explanation": "In its leaves a plant makes food from light, water and air. That is their job."
+    },
+    {
+      "id": "science.en.0005", "grade": 3,
+      "stem": "Which sinks in water: a stone or dry wood?",
+      "options": ["Stone", "Wood", "Both", "Neither"], "answer": 1,
+      "explanation": "Stone is denser than water and sinks. Dry wood is less dense, so it floats."
+    },
+    {
+      "id": "science.en.0006", "grade": 5,
+      "stem": "Where does rain come from?",
+      "options": ["From the sky somehow", "Water rises as vapour", "From sponge clouds", "From wind"], "answer": 2,
+      "explanation": "Water evaporates, gathers into clouds and falls back down. That's the water cycle."
+    },
+    {
+      "id": "science.en.0007", "grade": 7,
+      "stem": "Why is summer warmer than winter?",
+      "options": ["The Sun is closer", "The Sun is hotter", "Rays strike steeper", "Earth is resting"], "answer": 3,
+      "explanation": "It isn't distance, it's angle. In summer the rays hit steeply and warm the ground more."
+    },
+    {
+      "id": "science.en.0008", "grade": 4,
+      "stem": "What does a fire need in order to burn?",
+      "options": ["Only wood", "Only heat", "Only a spark", "Air as well"], "answer": 4,
+      "explanation": "Fire needs fuel, heat and air together. Take the air away and the flame goes out."
+    },
+    {
+      "id": "science.en.0009", "grade": 7,
+      "stem": "Why does an iron nail sink while an iron ship floats?",
+      "options": ["The ship is hollow", "The ship is light", "Water holds steel", "The nail is denser"], "answer": 1,
+      "explanation": "A ship is full of air, so it pushes aside a lot of water. The material has nothing to do with it."
+    },
+    {
+      "id": "science.en.0010", "grade": 5,
+      "stem": "What happens to an inflated balloon in the cold?",
+      "options": ["It bursts", "It shrinks", "It grows", "It flies off"], "answer": 2,
+      "explanation": "Cold air inside contracts and takes up less room, so the balloon goes limp."
+    }
+  ]
+}
