@@ -3,6 +3,8 @@
 
 local AchievementController = require(script.Controllers.AchievementController)
 local HudController = require(script.Controllers.HudController)
+local LeaderboardController = require(script.Controllers.LeaderboardController)
+local OnboardingController = require(script.Controllers.OnboardingController)
 local AssemblyController = require(script.Controllers.AssemblyController)
 local CampusController = require(script.Controllers.CampusController)
 local ClassController = require(script.Controllers.ClassController)
@@ -29,6 +31,8 @@ ClassController.init()
 CampusController.init()
 ShopController.init()
 AchievementController.init()
+LeaderboardController.init()
+OnboardingController.init()
 UniformController.init()
 PromptLabelController.init()
 

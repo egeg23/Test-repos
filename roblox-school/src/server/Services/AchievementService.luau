@@ -30,6 +30,10 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Types = require(ReplicatedStorage.Shared.Types)
 local Analytics = require(script.Parent.AnalyticsService)
 local DataService = require(script.Parent.DataService)
+--- Set by LeaderboardService at start, rather than required: a plain require
+--- would be a cycle, because the board reads profiles through the same service
+--- that grants the counters it ranks.
+local LeaderboardService: any = nil
 
 local AchievementService = {}
 
@@ -121,6 +125,12 @@ function AchievementService.bump(player: Player, stat: string, amount: number?)
 	end
 	data.stats[stat] = (data.stats[stat] or 0) + step
 	announce(player, grantPending(data))
+	-- Published from here rather than from each call site: every ranked stat is
+	-- moved through this function, so one hook cannot miss one.
+	local publish = LeaderboardService
+	if publish ~= nil then
+		publish.publish(player)
+	end
 end
 
 --- What this player's unlocked tiers add up to for one effect.
@@ -260,6 +270,12 @@ function AchievementService.board(player: Player): any
 			attemptRefund = Achievements.perkTotal(data.achievements, "attemptRefund"),
 		},
 	}
+end
+
+--- Registered by LeaderboardService so this module can publish without requiring
+--- it. Same inversion as AdService and ClassService use for the class promoter.
+function AchievementService.setLeaderboard(service: any)
+	LeaderboardService = service
 end
 
 function AchievementService.start()

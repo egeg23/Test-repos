@@ -235,6 +235,12 @@ export type ProfileData = {
 	retryCooldowns: { [string]: number },
 	--- Unix second this profile was last released. Offline notes accrue from it.
 	lastSeenAt: number,
+	--- The week number the weekly baselines were taken in, and what each ranked
+	--- stat read at that moment. The weekly board score is the difference from
+	--- these, so the lifetime counters stay the single source and there is no
+	--- second set to keep in step.
+	weeklyWeek: number,
+	weeklyBaselines: { [string]: number },
 }
 
 return Types

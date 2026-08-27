@@ -59,6 +59,8 @@ local TEMPLATE: Types.ProfileData = {
 	lessonDayStamp = 0,
 	retryCooldowns = {},
 	lastSeenAt = 0,
+	weeklyWeek = 0,
+	weeklyBaselines = {},
 }
 
 local store = ProfileStore.New(STORE_NAME, TEMPLATE)

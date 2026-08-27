@@ -29,6 +29,7 @@ local AuthoringService = require(script.Parent.AuthoringService)
 local BankService = require(script.Parent.BankService)
 local CampusService = require(script.Parent.CampusService)
 local AchievementService = require(script.Parent.AchievementService)
+local LeaderboardService = require(script.Parent.LeaderboardService)
 local DataService = require(script.Parent.DataService)
 local ModerationQueueService = require(script.Parent.ModerationQueueService)
 local ModerationService = require(script.Parent.ModerationService)
@@ -921,6 +922,7 @@ local function onClassAction(player: Player, request: unknown)
 		or action == "shop"
 		or action == "reviewQueue"
 		or action == "achievements"
+		or action == "board"
 		or action == "me"
 		or action == "campus"
 	-- Submitting a question is six TextService calls and a store write, so it is
@@ -1142,7 +1144,20 @@ local function onClassAction(player: Player, request: unknown)
 			pendingPayout = math.floor(data.teacher.pendingPayout),
 			streak = data.streak,
 			boosts = boosts,
+			-- Whether they are in a class, for the onboarding checklist. A
+			-- boolean rather than the id: the checklist asks a yes-or-no
+			-- question, and sending the id would invite a client to use it.
+			enrolled = data.enrolledClassId ~= nil,
 		})
+	elseif action == "board" then
+		local boardId = message.boardId
+		respond(
+			player,
+			action,
+			typeof(boardId) == "string",
+			nil,
+			if typeof(boardId) == "string" then LeaderboardService.read(player, boardId) else nil
+		)
 	elseif action == "achievements" then
 		respond(player, action, true, nil, AchievementService.board(player))
 	elseif action == "reviewQueue" then
