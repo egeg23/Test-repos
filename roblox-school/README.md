@@ -131,20 +131,34 @@ Ad and purchase ids in `src/shared/Config/Monetization.luau` are all `0`, which
 the services treat as "not configured" and refuse to sell. Fill them in from the
 Creator Hub after creating each pass and product.
 
-Three things gate revenue and none of them are code:
+Three things gate revenue and none of them are code. All three were verified
+against primary sources on 27 August 2026 — see `docs/LEGAL.md` for the quotes
+and links.
 
 1. **Ads need 2,000 unique monthly visitors**, a 13+ ID-verified account with 2FA,
-   and an approved Maturity & Compliance questionnaire. Declare the moderation
-   pipeline honestly there, and confirm with Roblox Support that it clears the
-   free-form bar before scaling.
+   an approved Maturity & Compliance questionnaire, and an experience that
+   "offers no free-form user creation". The content-maturity docs exempt anything
+   moderated before publication or replication — which is what the authoring
+   pipeline does — but the questionnaire's own wording repeats only the
+   3D-assembly half of that exemption, and no Roblox staff answer confirms the
+   rest. `Authoring.FreeTextEnabled = false` drops player-written text entirely
+   and leaves the bank, prefab courses and assembly tasks intact, so the
+   questionnaire can be answered "no" without argument. Get the answer in writing
+   from Roblox Support before the MAU threshold arrives.
 2. **DevEx is the only legal way out.** Roblox's terms void any sale of
-   in-experience content for money outside the platform, and attempting it
-   disqualifies the account from DevEx permanently. No external processor touches
-   this game, ever.
+   in-experience content for money outside the platform, and "attempting to
+   exchange Robux for real currency other than through DevEx" disqualifies the
+   account. No external processor touches this game, ever.
 3. **Tax information must be filed before 31 October 2026.** DevEx payments
-   become royalties on 1 November; without a valid form up to 24% is withheld
-   from the whole payout, and with one it is 0–30% on the US-player share
-   depending on the treaty that covers your residence.
+   become royalties on 1 November; without a valid form 24% is withheld from the
+   whole payout, and with one it is 0–30% on the US-player share. For a resident
+   of Uzbekistan that share is **0%** — Article III(1)(a) of the 1973 US–USSR
+   convention, still in force for Uzbekistan, taxes royalties (computer programs
+   named explicitly) only in the state of residence. Filing the form is what
+   turns 24% into 0%, so file it whatever the game's state.
+
+Tipalti pays Uzbekistan by **USD wire, T to T+1**; global ACH and PayPal are not
+available there.
 
 ## Moving this into its own repository
 

@@ -287,6 +287,13 @@ function AuthoringService.submit(
 	locale: string,
 	payload: any
 ): (string?, string?)
+	-- The switch is checked before anything else, including parsing: when free
+	-- text is off, a submission is not a malformed request, it is a request for a
+	-- feature this build does not have.
+	if not Authoring.FreeTextEnabled then
+		return nil, "authoringDisabled"
+	end
+
 	local draft = coerceDraft(payload)
 	if draft == nil then
 		return nil, "badRequest"

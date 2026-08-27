@@ -22,6 +22,24 @@ Authoring.MaxOptionLengthRatio = 1.8
 Authoring.MinGrade = 1
 Authoring.MaxGrade = 11
 
+--- Roblox's rewarded-video eligibility list requires that an experience "offer no
+--- free-form user creation". The content-maturity documentation exempts "anything
+--- that goes through Roblox moderation before it's published or replicated" --
+--- which is exactly what AuthoringService does -- but the Maturity & Compliance
+--- questionnaire repeats only the 3D-assembly half of that exemption, and no
+--- Roblox staff answer confirms the moderation half in writing.
+---
+--- So this switch decides which side of an unconfirmed bet the build is on:
+---   true  -- teachers may write their own questions. Full design, ad eligibility
+---            rests on the moderation exemption holding.
+---   false -- bank picks and prefab assembly only. Nothing a player typed ever
+---            reaches another player, so the questionnaire answer is "no" with
+---            nothing to argue about.
+--- Flipping it to false must not break anything: prefab courses, assembly tasks
+--- and the whole bank stay available, and a teacher's income formula does not
+--- reference authored questions.
+Authoring.FreeTextEnabled = true
+
 --- How many questions one teacher may have live at once. A cap on volume is
 --- also a cap on how much damage one bad actor can do before a dean notices.
 Authoring.MaxAuthoredPerTeacher = 60

@@ -11,6 +11,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Authoring = require(ReplicatedStorage.Shared.Config.Authoring)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local L = require(script.Parent.Parent.Locale)
 local CourseBuilderController = require(script.Parent.CourseBuilderController)
@@ -177,13 +178,18 @@ local function renderMine(payload: any)
 		send("collect")
 	end)
 
-	local authoring = makeRow(44)
-	makeLabel(authoring, L.text("class.myQuestions"), 15, TEXT, 12)
-	local openEditor = makeButton(L.text("common.open"), ACCENT, 100)
-	openEditor.Parent = authoring
-	openEditor.Activated:Connect(function()
-		QuestionEditorController.open()
-	end)
+	-- When free text is switched off the editor is not disabled, it is absent:
+	-- a greyed-out button still advertises a feature the build does not have,
+	-- and the whole point of the switch is that nothing player-written exists.
+	if Authoring.FreeTextEnabled then
+		local authoring = makeRow(44)
+		makeLabel(authoring, L.text("class.myQuestions"), 15, TEXT, 12)
+		local openEditor = makeButton(L.text("common.open"), ACCENT, 100)
+		openEditor.Parent = authoring
+		openEditor.Activated:Connect(function()
+			QuestionEditorController.open()
+		end)
+	end
 
 	for _, class in payload.classes do
 		local row = makeRow(58)

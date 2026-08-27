@@ -112,4 +112,22 @@ return function()
 			"a stem one character over"
 		)
 	end)
+	t.suite("Authoring: ad-eligibility switch")
+
+	t.test("free text is a switch, and the rest of authoring does not depend on it", function()
+		-- The switch exists so the experience can be made unambiguously ads-eligible
+		-- (Roblox requires "no free-form user creation") without losing the bank,
+		-- prefab courses or assembly tasks. This test guards the two things that
+		-- would quietly break that: the flag disappearing, and the structural rules
+		-- starting to consult it.
+		t.isTrue(typeof(Authoring.FreeTextEnabled) == "boolean", "the flag exists and is a boolean")
+
+		local before = Authoring.FreeTextEnabled
+		Authoring.FreeTextEnabled = false
+		t.isTrue(
+			Authoring.validate(draft({})).ok,
+			"validate() judges structure only -- the switch is enforced at the service, not here"
+		)
+		Authoring.FreeTextEnabled = before
+	end)
 end

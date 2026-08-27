@@ -434,6 +434,7 @@ Strings.Entries = {
 	["error.explanationTooLong"] = { ru = "Объяснение слишком длинное", en = "The explanation is too long", es = "La explicación es muy larga", pt = "A explicação está longa demais" },
 	["error.textRejected"] = { ru = "Текст не прошёл фильтр", en = "The text didn't clear the filter", es = "El texto no pasó el filtro", pt = "O texto não passou no filtro" },
 	["error.authoredLimit"] = { ru = "Слишком много своих вопросов", en = "Too many questions of your own", es = "Demasiadas preguntas propias", pt = "Questões próprias demais" },
+	["error.authoringDisabled"] = { ru = "Свои вопросы сейчас отключены", en = "Writing your own questions is off", es = "Escribir preguntas propias está desactivado", pt = "Escrever perguntas próprias está desativado" },
 	["error.notOwner"] = { ru = "Это не твой класс", en = "That isn't your class", es = "Esa no es tu clase", pt = "Essa não é sua turma" },
 	["error.notALiveLesson"] = { ru = "Живьём можно вести только тест", en = "Only a quiz can be taught live", es = "Solo se puede dar un test en vivo", pt = "Só um teste pode ser dado ao vivo" },
 	["error.alreadyLive"] = { ru = "Урок уже идёт", en = "A lesson is already running", es = "Ya hay una lección en curso", pt = "Já há uma aula em andamento" },
