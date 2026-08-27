@@ -174,7 +174,7 @@ local function onStartLesson(player: Player, payload: unknown)
 					subject = class.subject,
 					statKey = lesson.id,
 					teacherUserId = class.teacherUserId,
-					classMembers = #class.memberUserIds,
+					classMembers = ClassService.liveMembers(class),
 					teacherRating = class.rating,
 					translated = class.locale ~= data.locale,
 				}, data.locale, data.grade, taskId)

@@ -18,6 +18,7 @@ local Workspace = game:GetService("Workspace")
 local Obstacles = require(ReplicatedStorage.Shared.Config.Obstacles)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Types = require(ReplicatedStorage.Shared.Types)
+local ClassService = require(script.Parent.ClassService)
 local RewardService = require(script.Parent.RewardService)
 
 local ObstacleService = {}
@@ -577,7 +578,7 @@ function ObstacleService.begin(
 		subject = class.subject,
 		statKey = lesson.id,
 		teacherUserId = class.teacherUserId,
-		classMembers = #class.memberUserIds,
+		classMembers = ClassService.liveMembers(class),
 		teacherRating = class.rating,
 		-- A course has no text in it, so there is no translated version of it
 		-- for anyone to complete and no reach share to pay.

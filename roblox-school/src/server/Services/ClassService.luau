@@ -43,6 +43,9 @@ local DIRECTORY_TTL_SECONDS = 3 * 24 * 60 * 60
 local CACHE_TTL_SECONDS = 30
 local MAX_DIRECTORY_RESULTS = 40
 local MAX_LESSONS_PER_CLASS = 12
+--- A member's timestamp is only rewritten once it is this stale, so an active
+--- student costs one class write a day rather than one per lesson.
+local MEMBER_TOUCH_SECONDS = 24 * 60 * 60
 local MIN_QUESTIONS_PER_LESSON = 4
 local MAX_QUESTIONS_PER_LESSON = 12
 
@@ -62,6 +65,35 @@ local function directoryFor(locale: string): MemoryStoreSortedMap
 	local map = MemoryStoreService:GetSortedMap(`ClassDirectory_v1_{locale}`)
 	directories[locale] = map
 	return map
+end
+
+--- Members still inside the staleness window, and how many there are.
+---
+--- Counting is done here rather than read off a field because the answer depends
+--- on the time it is asked.
+function ClassService.liveMembers(class: Types.Class): number
+	local now = os.time()
+	local count = 0
+	for _, seen in class.members do
+		if Economy.isMemberLive(seen, now) then
+			count += 1
+		end
+	end
+	return count
+end
+
+--- Drops members past the window from a stored class. Returns whether anything
+--- changed, so a write is only spent when there is something to write.
+local function pruneMembers(class: Types.Class): boolean
+	local now = os.time()
+	local removed = false
+	for userId, seen in class.members do
+		if not Economy.isMemberLive(seen, now) then
+			class.members[userId] = nil
+			removed = true
+		end
+	end
+	return removed
 end
 
 local function capacityFor(player: Player): number
@@ -85,7 +117,7 @@ end
 --- for fifteen minutes, not a permanent seat at the top.
 local function directoryScore(class: Types.Class): number
 	local fill = if class.capacity > 0
-		then math.clamp(#class.memberUserIds / class.capacity, 0, 1)
+		then math.clamp(ClassService.liveMembers(class) / class.capacity, 0, 1)
 		else 0
 	local score = math.floor(fill * 400) + math.floor(class.rating * 100)
 	if class.promoUntil > os.time() then
@@ -105,7 +137,7 @@ local function publish(class: Types.Class)
 				title = class.title,
 				grade = class.grade,
 				teacherName = class.teacherName,
-				members = #class.memberUserIds,
+				members = ClassService.liveMembers(class),
 				capacity = class.capacity,
 				rating = class.rating,
 				ratingCount = class.ratingCount,
@@ -214,7 +246,7 @@ function ClassService.create(
 		title = cleanTitle,
 		grade = classGrade,
 		capacity = capacityFor(player),
-		memberUserIds = {},
+		members = {},
 		lessons = {},
 		rating = 0,
 		ratingCount = 0,
@@ -255,13 +287,10 @@ function ClassService.leave(player: Player): boolean
 	end
 
 	local updated = mutate(classId, function(current)
-		local index = table.find(current.memberUserIds, player.UserId)
-		if index ~= nil then
-			table.remove(current.memberUserIds, index)
-		end
-		-- Not being in the list is success, not failure: the goal is to not be a
-		-- member, and returning nil here would be indistinguishable from the
-		-- write having failed.
+		current.members[tostring(player.UserId)] = nil
+		-- Not being a member is success, not failure: the goal is to not be one,
+		-- and returning nil here would be indistinguishable from the write having
+		-- failed.
 		return current
 	end)
 
@@ -304,13 +333,18 @@ function ClassService.join(player: Player, classId: unknown): (boolean, string?)
 	end
 
 	local updated = mutate(id, function(current)
-		if table.find(current.memberUserIds, player.UserId) ~= nil then
+		local key = tostring(player.UserId)
+		if current.members[key] ~= nil then
+			current.members[key] = os.time()
 			return current
 		end
-		if #current.memberUserIds >= current.capacity then
+		-- Stale members are cleared before the seat count is taken, so a class
+		-- full of people who stopped playing is not full.
+		pruneMembers(current)
+		if ClassService.liveMembers(current) >= current.capacity then
 			return nil
 		end
-		table.insert(current.memberUserIds, player.UserId)
+		current.members[key] = os.time()
 		return current
 	end)
 
@@ -358,6 +392,31 @@ function ClassService.rate(player: Player, classId: unknown, stars: unknown): (b
 	end
 	data.classRatings[id] = score
 	return true, nil
+end
+
+--- Marks a member as still here.
+---
+--- Only writes when the stored stamp is already a day old, so an active student
+--- costs one write a day rather than one on every lesson. Silent when the player
+--- is not a member: touching is a side effect of activity, not a claim to a seat.
+function ClassService.touchMember(player: Player, classId: string)
+	local class = ClassService.get(classId)
+	if class == nil then
+		return
+	end
+	local key = tostring(player.UserId)
+	local seen = class.members[key]
+	if seen == nil or os.time() - seen < MEMBER_TOUCH_SECONDS then
+		return
+	end
+
+	mutate(classId, function(current)
+		if current.members[key] == nil then
+			return nil
+		end
+		current.members[key] = os.time()
+		return current
+	end)
 end
 
 --- Extends a class's spotlight. Called from an ad reward or a purchase, and it
@@ -776,7 +835,7 @@ local function studentView(class: Types.Class): any
 		title = class.title,
 		grade = class.grade,
 		teacherName = class.teacherName,
-		members = #class.memberUserIds,
+		members = ClassService.liveMembers(class),
 		capacity = class.capacity,
 		rating = class.rating,
 		ratingCount = class.ratingCount,

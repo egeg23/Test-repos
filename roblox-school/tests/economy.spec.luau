@@ -72,6 +72,27 @@ return function()
 		t.equal(expanded, full, "rate after buying extra seats")
 	end)
 
+	t.suite("Economy: class membership expiry")
+
+	t.test("a member seen today counts", function()
+		local now = 1_700_000_000
+		t.isTrue(Economy.isMemberLive(now, now), "seen this second")
+		t.isTrue(Economy.isMemberLive(now - 3600, now), "seen an hour ago")
+	end)
+
+	t.test("a fortnight away does not cost a seat", function()
+		local now = 1_700_000_000
+		t.isTrue(Economy.isMemberLive(now - 13 * 24 * 3600, now), "away thirteen days")
+	end)
+
+	t.test("someone who stopped playing stops counting", function()
+		-- Without this the member list only grows, and since the count is the
+		-- fill rate, every teacher's income drifts upward forever.
+		local now = 1_700_000_000
+		t.isFalse(Economy.isMemberLive(now - 30 * 24 * 3600, now), "away a month")
+		t.isFalse(Economy.isMemberLive(now - 365 * 24 * 3600, now), "away a year")
+	end)
+
 	t.suite("Economy: teacher payout")
 
 	local function input(overrides: { [string]: any }): any

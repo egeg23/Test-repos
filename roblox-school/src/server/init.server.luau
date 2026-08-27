@@ -22,6 +22,15 @@ local WorldService = require(script.Services.WorldService)
 Analytics.start()
 DataService.start()
 DataService.ProfileLoaded:Connect(Analytics.playerJoined)
+
+-- Logging in counts as being present, so a student who plays other subjects for
+-- a fortnight does not lose the seat they are still using.
+DataService.ProfileLoaded:Connect(function(player, data)
+	local classId = data.enrolledClassId
+	if classId ~= nil then
+		task.spawn(ClassService.touchMember, player, classId)
+	end
+end)
 PurchaseService.start()
 PayoutService.start()
 ShopService.start()

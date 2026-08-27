@@ -296,7 +296,7 @@ local function open(teacher: Player, classId: unknown, lessonId: unknown): (bool
 		classId = classId :: string,
 		subject = class.subject,
 		statKey = lesson.id,
-		classMembers = #class.memberUserIds,
+		classMembers = ClassService.liveMembers(class),
 		teacherRating = class.rating,
 		questions = questions,
 		index = 0,

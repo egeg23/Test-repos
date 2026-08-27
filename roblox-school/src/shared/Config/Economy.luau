@@ -65,6 +65,19 @@ Economy.MinPlaySecondsToCount = 900
 --- not a value scattered through the reward tables.
 Economy.AdCatchUpTarget = 0.55
 
+--- A class member unseen for this long stops counting toward the fill rate.
+---
+--- Without an expiry a member list only grows: a student who joins and stops
+--- playing is counted forever, and since the count is the fill rate, every
+--- teacher's income drifts upward for the life of the game. Long enough that a
+--- fortnight away does not cost a seat, short enough that a class cannot inflate
+--- itself on people who left.
+Economy.StaleMemberSeconds = 14 * 24 * 60 * 60
+
+function Economy.isMemberLive(lastSeen: number, now: number): boolean
+	return now - lastSeen < Economy.StaleMemberSeconds
+end
+
 --- Class sizing. The capacity pass adds seats, which is what makes it worth
 --- buying: a fuller class pays its teacher more per student.
 Economy.BaseClassCapacity = 20

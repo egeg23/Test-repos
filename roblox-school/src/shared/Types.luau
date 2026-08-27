@@ -100,7 +100,14 @@ export type Class = {
 	--- meant for them.
 	grade: number,
 	capacity: number,
-	memberUserIds: { number },
+	--- User id (as a string, because DataStore serialises through JSON) -> the
+	--- unix second that member was last seen active in this class.
+	---
+	--- A list of ids would grow and never shrink: a student who joins and stops
+	--- playing stays counted forever, and the member count is the fill rate,
+	--- which is what the teacher is paid on. Timestamps let a class forget people
+	--- who left without saying so.
+	members: { [string]: number },
 	--- Lessons are embedded rather than stored separately: a class holds a
 	--- handful of them, they are always read together with it, and one read per
 	--- lesson start beats two.
