@@ -1,0 +1,266 @@
+{
+  "subject": "science",
+  "locale": "es",
+  "questions": [
+    {
+      "id": "science.es.0001",
+      "grade": 1,
+      "stem": "¿Por qué hay luz durante el día?",
+      "options": [
+        "El cielo brilla",
+        "Las nubes calientan",
+        "Brilla el Sol",
+        "La Tierra arde"
+      ],
+      "answer": 3,
+      "explanation": "La luz viene del Sol. El cielo se ve azul justamente porque la luz se dispersa en el aire."
+    },
+    {
+      "id": "science.es.0002",
+      "grade": 2,
+      "stem": "¿Qué necesita una planta para crecer?",
+      "options": [
+        "Luz y agua",
+        "Solo oscuridad y calma",
+        "Solo calor de un radiador",
+        "Solo tierra muy rica"
+      ],
+      "answer": 1,
+      "explanation": "Con luz, agua y aire la planta fabrica su alimento. La tierra sujeta las raíces y aporta sales."
+    },
+    {
+      "id": "science.es.0003",
+      "grade": 3,
+      "stem": "¿Adónde va un charco después de la lluvia cuando sale el sol?",
+      "options": [
+        "Sube al cielo",
+        "Se lo beben los pájaros",
+        "Desaparece sin más",
+        "Se convierte en vapor"
+      ],
+      "answer": 4,
+      "explanation": "El agua se evapora y pasa a ser vapor invisible en el aire. Luego volverá a ser lluvia."
+    },
+    {
+      "id": "science.es.0004",
+      "grade": 3,
+      "stem": "¿Por qué el invierno es más frío que el verano?",
+      "options": [
+        "El Sol se aleja mucho",
+        "Los rayos llegan oblicuos",
+        "El Sol alumbra menos",
+        "La Tierra se cansa"
+      ],
+      "answer": 2,
+      "explanation": "En invierno los rayos rozan la superficie y calientan menos. La distancia al Sol casi no influye."
+    },
+    {
+      "id": "science.es.0005",
+      "grade": 4,
+      "stem": "El hielo flota en el agua. ¿Qué nos dice eso?",
+      "options": [
+        "Es más ligero",
+        "Es más pesado",
+        "Contiene aire",
+        "Está tibio"
+      ],
+      "answer": 1,
+      "explanation": "Flota lo que pesa menos que el mismo volumen de agua. El agua es rara: al congelarse se expande."
+    },
+    {
+      "id": "science.es.0006",
+      "grade": 4,
+      "stem": "¿Qué le pasa a un globo si lo sacas al frío?",
+      "options": [
+        "Estalla",
+        "Se agranda",
+        "Se encoge",
+        "No pasa nada"
+      ],
+      "answer": 3,
+      "explanation": "Con frío el aire de dentro ocupa menos y el globo se desinfla. Al calor vuelve a hincharse."
+    },
+    {
+      "id": "science.es.0007",
+      "grade": 5,
+      "stem": "¿Por qué vemos la Luna si no brilla por sí misma?",
+      "options": [
+        "Está caliente",
+        "Refleja la luz solar",
+        "Tiene fuego dentro",
+        "La alumbran estrellas"
+      ],
+      "answer": 2,
+      "explanation": "La Luna funciona como espejo de la luz del Sol. Por eso vemos sus fases."
+    },
+    {
+      "id": "science.es.0008",
+      "grade": 5,
+      "stem": "Disolviste azúcar en el té. ¿Adónde fue?",
+      "options": [
+        "Desapareció sin dejar rastro",
+        "Se convirtió en agua",
+        "Se evaporó con el vapor",
+        "Se repartió entre moléculas"
+      ],
+      "answer": 4,
+      "explanation": "El azúcar no desapareció: se separó en partículas diminutas. El té pesa ahora justo lo del azúcar más."
+    },
+    {
+      "id": "science.es.0009",
+      "grade": 6,
+      "stem": "¿Por qué cuesta más respirar en la montaña?",
+      "options": [
+        "El aire es más fino",
+        "No hay oxígeno",
+        "Hace mucho frío",
+        "Molesta el viento"
+      ],
+      "answer": 1,
+      "explanation": "Arriba cada respiración lleva menos aire. El oxígeno sigue ahí, pero llegan menos moléculas."
+    },
+    {
+      "id": "science.es.0010",
+      "grade": 6,
+      "stem": "Se sueltan un martillo y una pluma en un tubo sin aire. ¿Qué cae primero?",
+      "options": [
+        "El martillo, claro",
+        "La pluma, curiosamente",
+        "Caen a la vez",
+        "No cae ninguno"
+      ],
+      "answer": 3,
+      "explanation": "Sin aire la caída no depende de la masa. En una sala normal es el aire lo que frena la pluma."
+    },
+    {
+      "id": "science.es.0011",
+      "grade": 7,
+      "stem": "¿Para qué necesitan las plantas el dióxido de carbono?",
+      "options": [
+        "Para respirar de noche",
+        "Para fabricar azúcares",
+        "Para oler bien",
+        "Para no pasar frío"
+      ],
+      "answer": 2,
+      "explanation": "Con dióxido de carbono y agua, a la luz, la planta fabrica azúcar y suelta oxígeno como residuo."
+    },
+    {
+      "id": "science.es.0012",
+      "grade": 7,
+      "stem": "Un pomo de metal se siente más frío que uno de madera en la misma sala. ¿Por qué?",
+      "options": [
+        "De verdad está más frío al tacto",
+        "El metal teme cualquier calor",
+        "La madera se calienta sola",
+        "El metal se lleva el calor rápido"
+      ],
+      "answer": 4,
+      "explanation": "Ambos están a la misma temperatura. El metal roba calor a la mano más deprisa y la mano lo lee como frío."
+    },
+    {
+      "id": "science.es.0013",
+      "grade": 8,
+      "stem": "¿De dónde sale la masa de un árbol mientras crece?",
+      "options": [
+        "Sobre todo del aire",
+        "Sobre todo del suelo",
+        "Sobre todo del agua",
+        "De la nada"
+      ],
+      "answer": 1,
+      "explanation": "Casi todo el árbol es carbono tomado del dióxido de carbono. El suelo aporta poco del peso."
+    },
+    {
+      "id": "science.es.0014",
+      "grade": 8,
+      "stem": "¿Por qué no se apaga con agua el aceite ardiendo?",
+      "options": [
+        "El agua está demasiado fría",
+        "El aceite caliente no arde",
+        "El agua hierve y lo salpica",
+        "Sí se puede, es un viejo mito"
+      ],
+      "answer": 3,
+      "explanation": "El agua pesa más que el aceite, hierve al instante debajo y lanza gotas ardiendo hacia arriba."
+    },
+    {
+      "id": "science.es.0015",
+      "grade": 9,
+      "stem": "Los antibióticos no sirven para el resfriado. ¿Por qué?",
+      "options": [
+        "Son demasiado débiles para eso",
+        "El resfriado lo causan virus",
+        "Casi siempre se toman mal",
+        "Sí sirven, pero muy despacio"
+      ],
+      "answer": 2,
+      "explanation": "Los antibióticos matan bacterias, y un virus está hecho de otra forma. Contra él no hacen nada."
+    },
+    {
+      "id": "science.es.0016",
+      "grade": 9,
+      "stem": "¿Por qué flotan los astronautas si la gravedad terrestre llega hasta allí?",
+      "options": [
+        "Allí no hay gravedad alguna",
+        "Estorban los trajes pesados",
+        "En el espacio pesan muy poco",
+        "Están cayendo sin parar"
+      ],
+      "answer": 4,
+      "explanation": "La estación y quienes van dentro caen alrededor de la Tierra al mismo ritmo, así que nadie siente peso."
+    },
+    {
+      "id": "science.es.0017",
+      "grade": 10,
+      "stem": "¿Qué tienen en común todas las células vivas?",
+      "options": [
+        "Membrana y ADN",
+        "El color verde",
+        "Poder moverse",
+        "Tener cerebro"
+      ],
+      "answer": 1,
+      "explanation": "Toda célula está separada del exterior por una membrana y guarda instrucciones en el ADN."
+    },
+    {
+      "id": "science.es.0018",
+      "grade": 10,
+      "stem": "¿Por qué las bacterias se vuelven resistentes a los antibióticos?",
+      "options": [
+        "Aprenden poco a poco",
+        "Se acostumbran al fármaco",
+        "Sobreviven las más duras",
+        "El fármaco mismo se estropea"
+      ],
+      "answer": 3,
+      "explanation": "Ninguna bacteria cambia sola. Sobreviven las que ya eran resistentes y dejan descendencia."
+    },
+    {
+      "id": "science.es.0019",
+      "grade": 11,
+      "stem": "¿Qué significa que la energía se conserva?",
+      "options": [
+        "Se puede almacenar",
+        "Solo cambia de forma",
+        "Nunca se acaba",
+        "No se puede gastar"
+      ],
+      "answer": 2,
+      "explanation": "La energía no se crea ni se destruye: pasa de una forma a otra, a menudo a calor."
+    },
+    {
+      "id": "science.es.0020",
+      "grade": 11,
+      "stem": "¿Por qué no basta con un solo experimento exitoso?",
+      "options": [
+        "Los experimentos cuestan",
+        "Es la costumbre",
+        "Hace falta un buen gráfico",
+        "No se descarta el azar"
+      ],
+      "answer": 4,
+      "explanation": "Un resultado aislado puede salir por suerte. La ciencia cree lo que otros logran repetir."
+    }
+  ]
+}

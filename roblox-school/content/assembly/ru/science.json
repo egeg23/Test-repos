@@ -3,28 +3,202 @@
   "locale": "ru",
   "tasks": [
     {
-      "id": "asm.science.ru.0001", "grade": 5,
+      "id": "asm.science.ru.0001",
+      "grade": 5,
       "prompt": "Собери простую электрическую цепь по порядку",
-      "slots": ["Источник тока", "Провод", "Выключатель", "Потребитель"],
-      "answers": ["battery", "wire", "switch", "lamp"],
-      "palette": ["battery", "wire", "switch", "lamp", "magnet", "beaker", "filter"],
-      "explanation": "Ток идёт от батарейки по проводу через выключатель к лампе. Разорви цепь в любом месте — лампа погаснет."
+      "slots": [
+        "Источник тока",
+        "Провод",
+        "Выключатель",
+        "Потребитель"
+      ],
+      "answers": [
+        "battery",
+        "wire",
+        "switch",
+        "lamp"
+      ],
+      "palette": [
+        "battery",
+        "wire",
+        "switch",
+        "lamp",
+        "magnet",
+        "beaker",
+        "filter"
+      ],
+      "explanation": "Ток идёт по кругу: от батарейки через провод и выключатель к лампе и обратно. Разомкни кольцо — и света нет."
     },
     {
-      "id": "asm.science.ru.0002", "grade": 4,
-      "prompt": "Что нужно семечку, чтобы прорасти",
-      "slots": ["Куда посадить", "Что налить", "Что нужно сверху", "Что вырастет"],
-      "answers": ["soil", "water", "sunlight", "sprout"],
-      "palette": ["soil", "water", "sunlight", "sprout", "magnet", "lamp", "wire"],
-      "explanation": "Семечку нужны земля, вода и свет. Без любого из трёх ростка не будет — это не список пожеланий, а условия."
+      "id": "asm.science.ru.0002",
+      "grade": 4,
+      "prompt": "Что нужно семени, чтобы прорасти",
+      "slots": [
+        "Куда посадить",
+        "Чем полить",
+        "Что даёт свет"
+      ],
+      "answers": [
+        "soil",
+        "water",
+        "sunlight"
+      ],
+      "palette": [
+        "soil",
+        "water",
+        "sunlight",
+        "battery",
+        "magnet",
+        "lamp"
+      ],
+      "explanation": "Земля держит корень, вода запускает рост, свет кормит росток. Убери одно — и всходов не будет."
     },
     {
-      "id": "asm.science.ru.0003", "grade": 6,
-      "prompt": "Собери установку, чтобы отделить песок от воды",
-      "slots": ["Во что налить смесь", "Что поставить сверху", "Что положить внутрь", "Что окажется внизу"],
-      "answers": ["beaker", "funnel", "filter", "water"],
-      "palette": ["beaker", "funnel", "filter", "water", "soil", "battery", "thermometer"],
-      "explanation": "Фильтр в воронке пропускает воду и задерживает песок. Разделяют не по весу, а по размеру частиц."
+      "id": "asm.science.ru.0003",
+      "grade": 6,
+      "prompt": "Собери установку для очистки мутной воды",
+      "slots": [
+        "Куда налить",
+        "Через что лить",
+        "Что задержит грязь"
+      ],
+      "answers": [
+        "beaker",
+        "funnel",
+        "filter"
+      ],
+      "palette": [
+        "beaker",
+        "funnel",
+        "filter",
+        "magnet",
+        "battery",
+        "seed"
+      ],
+      "explanation": "Фильтр задерживает частицы, а вода проходит. Растворённое так не убрать — для этого нужно кипячение."
+    },
+    {
+      "id": "asm.science.ru.0004",
+      "grade": 7,
+      "prompt": "Что добавить в цепь, чтобы лампа светила слабее",
+      "slots": [
+        "Источник",
+        "Что ограничит ток",
+        "Сама лампа"
+      ],
+      "answers": [
+        "battery",
+        "resistor",
+        "lamp"
+      ],
+      "palette": [
+        "battery",
+        "resistor",
+        "lamp",
+        "magnet",
+        "water",
+        "funnel"
+      ],
+      "explanation": "Резистор мешает току, и лампа получает меньше энергии. Именно так работают регуляторы яркости."
+    },
+    {
+      "id": "asm.science.ru.0005",
+      "grade": 5,
+      "prompt": "Собери прибор, чтобы измерить температуру воды",
+      "slots": [
+        "Во что налить",
+        "Что налить",
+        "Чем измерить"
+      ],
+      "answers": [
+        "beaker",
+        "water",
+        "thermometer"
+      ],
+      "palette": [
+        "beaker",
+        "water",
+        "thermometer",
+        "magnet",
+        "battery",
+        "soil"
+      ],
+      "explanation": "Термометр должен быть в самой воде, а не рядом. Иначе он покажет температуру воздуха."
+    },
+    {
+      "id": "asm.science.ru.0006",
+      "grade": 8,
+      "prompt": "Собери опыт, показывающий действие магнита",
+      "slots": [
+        "Что притягивает",
+        "На чём проверить",
+        "Что не притянется"
+      ],
+      "answers": [
+        "magnet",
+        "wire",
+        "water"
+      ],
+      "palette": [
+        "magnet",
+        "wire",
+        "water",
+        "seed",
+        "sunlight",
+        "soil"
+      ],
+      "explanation": "Магнит тянет железо в проводе, но не воду. Так видно, что действие избирательно."
+    },
+    {
+      "id": "asm.science.ru.0007",
+      "grade": 6,
+      "prompt": "Проследи путь от семени до растения",
+      "slots": [
+        "Начало",
+        "Что запускает рост",
+        "Что появится"
+      ],
+      "answers": [
+        "seed",
+        "water",
+        "sprout"
+      ],
+      "palette": [
+        "seed",
+        "water",
+        "sprout",
+        "battery",
+        "magnet",
+        "beaker"
+      ],
+      "explanation": "Сухое семя может лежать годами. Вода будит его, и только тогда появляется росток."
+    },
+    {
+      "id": "asm.science.ru.0008",
+      "grade": 9,
+      "prompt": "Собери цепь, которую можно включать и выключать",
+      "slots": [
+        "Даёт энергию",
+        "Соединяет",
+        "Управляет",
+        "Показывает результат"
+      ],
+      "answers": [
+        "battery",
+        "wire",
+        "switch",
+        "lamp"
+      ],
+      "palette": [
+        "battery",
+        "wire",
+        "switch",
+        "lamp",
+        "resistor",
+        "filter",
+        "soil"
+      ],
+      "explanation": "Выключатель просто разрывает кольцо. Энергия никуда не пропадает — ей больше некуда идти."
     }
   ]
 }

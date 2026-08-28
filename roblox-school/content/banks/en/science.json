@@ -3,64 +3,264 @@
   "locale": "en",
   "questions": [
     {
-      "id": "science.en.0001", "grade": 2,
+      "id": "science.en.0001",
+      "grade": 1,
       "stem": "Why is it light during the day?",
-      "options": ["The Sun shines", "Moon reflects", "The sky is blue", "That's just how"], "answer": 1,
-      "explanation": "The light comes from the Sun. The Moon has none of its own — it only reflects sunlight."
+      "options": [
+        "The sky glows",
+        "Clouds warm us",
+        "The Sun shines",
+        "Earth is hot"
+      ],
+      "answer": 3,
+      "explanation": "The light comes from the Sun. The sky looks blue precisely because sunlight scatters in the air."
     },
     {
-      "id": "science.en.0002", "grade": 3,
-      "stem": "What happens to water at −5 °C?",
-      "options": ["Evaporates", "Freezes", "Boils", "No change"], "answer": 2,
-      "explanation": "Water freezes at 0 °C, and −5 °C is below that. It turns to ice."
+      "id": "science.en.0002",
+      "grade": 2,
+      "stem": "What does a plant need in order to grow?",
+      "options": [
+        "Light and water",
+        "Only darkness and quiet",
+        "Only warmth from a pipe",
+        "Only very rich soil"
+      ],
+      "answer": 1,
+      "explanation": "From light, water and air a plant makes its own food. Soil mostly holds the roots and supplies salts."
     },
     {
-      "id": "science.en.0003", "grade": 6,
-      "stem": "Why do we see lightning before we hear the thunder?",
-      "options": ["Thunder is faint", "Lightning is near", "Light outruns sound", "It just seems so"], "answer": 3,
-      "explanation": "Light travels almost instantly; sound manages about 340 m a second. Hence the delay."
+      "id": "science.en.0003",
+      "grade": 3,
+      "stem": "Where does a puddle go after the rain when the sun comes out?",
+      "options": [
+        "It rises whole to the sky",
+        "Birds drink all of it",
+        "It just vanishes",
+        "It turns into vapour"
+      ],
+      "answer": 4,
+      "explanation": "The water evaporates into invisible vapour in the air. Later that vapour becomes rain again."
     },
     {
-      "id": "science.en.0004", "grade": 4,
-      "stem": "What are a plant's leaves for?",
-      "options": ["For beauty", "For drinking", "For shade", "Catching light"], "answer": 4,
-      "explanation": "In its leaves a plant makes food from light, water and air. That is their job."
+      "id": "science.en.0004",
+      "grade": 3,
+      "stem": "Why is winter colder than summer?",
+      "options": [
+        "The Sun moves farther off",
+        "Rays hit at a slant",
+        "The Sun burns dimmer",
+        "Earth tires by winter"
+      ],
+      "answer": 2,
+      "explanation": "In winter the rays graze the surface and warm it less. Distance to the Sun has almost nothing to do with it."
     },
     {
-      "id": "science.en.0005", "grade": 3,
-      "stem": "Which sinks in water: a stone or dry wood?",
-      "options": ["Stone", "Wood", "Both", "Neither"], "answer": 1,
-      "explanation": "Stone is denser than water and sinks. Dry wood is less dense, so it floats."
+      "id": "science.en.0005",
+      "grade": 4,
+      "stem": "Ice floats in water. What does that tell us about it?",
+      "options": [
+        "It is lighter",
+        "It is heavier",
+        "It contains air",
+        "It is warm"
+      ],
+      "answer": 1,
+      "explanation": "Anything lighter than an equal volume of water floats. Water is unusual: it expands as it freezes."
     },
     {
-      "id": "science.en.0006", "grade": 5,
-      "stem": "Where does rain come from?",
-      "options": ["From the sky somehow", "Water rises as vapour", "From sponge clouds", "From wind"], "answer": 2,
-      "explanation": "Water evaporates, gathers into clouds and falls back down. That's the water cycle."
+      "id": "science.en.0006",
+      "grade": 4,
+      "stem": "What happens to a balloon if you take it out into the frost?",
+      "options": [
+        "It bursts",
+        "It gets bigger",
+        "It shrinks",
+        "Nothing happens"
+      ],
+      "answer": 3,
+      "explanation": "In the cold the air inside takes up less room and the balloon sags. Back in the warm it puffs up again."
     },
     {
-      "id": "science.en.0007", "grade": 7,
-      "stem": "Why is summer warmer than winter?",
-      "options": ["The Sun is closer", "The Sun is hotter", "Rays strike steeper", "Earth is resting"], "answer": 3,
-      "explanation": "It isn't distance, it's angle. In summer the rays hit steeply and warm the ground more."
+      "id": "science.en.0007",
+      "grade": 5,
+      "stem": "Why can we see the Moon if it does not shine by itself?",
+      "options": [
+        "It is hot",
+        "It reflects sunlight",
+        "There is fire inside",
+        "Stars light it up"
+      ],
+      "answer": 2,
+      "explanation": "The Moon acts as a mirror for sunlight. That is also why we see its phases."
     },
     {
-      "id": "science.en.0008", "grade": 4,
-      "stem": "What does a fire need in order to burn?",
-      "options": ["Only wood", "Only heat", "Only a spark", "Air as well"], "answer": 4,
-      "explanation": "Fire needs fuel, heat and air together. Take the air away and the flame goes out."
+      "id": "science.en.0008",
+      "grade": 5,
+      "stem": "You dissolved sugar in tea. Where did it go?",
+      "options": [
+        "Gone for good, no trace",
+        "It turned into water",
+        "It evaporated with steam",
+        "It spread between molecules"
+      ],
+      "answer": 4,
+      "explanation": "The sugar did not vanish; it broke into tiny particles. The tea got heavier by exactly the sugar's weight."
     },
     {
-      "id": "science.en.0009", "grade": 7,
-      "stem": "Why does an iron nail sink while an iron ship floats?",
-      "options": ["The ship is hollow", "The ship is light", "Water holds steel", "The nail is denser"], "answer": 1,
-      "explanation": "A ship is full of air, so it pushes aside a lot of water. The material has nothing to do with it."
+      "id": "science.en.0009",
+      "grade": 6,
+      "stem": "Why is it harder to breathe in the mountains?",
+      "options": [
+        "The air is thinner",
+        "There is no oxygen at all",
+        "It is far too cold to breathe",
+        "The wind gets in the way"
+      ],
+      "answer": 1,
+      "explanation": "Higher up each breath holds less air. Oxygen is still there, but a breath brings fewer molecules of it."
     },
     {
-      "id": "science.en.0010", "grade": 5,
-      "stem": "What happens to an inflated balloon in the cold?",
-      "options": ["It bursts", "It shrinks", "It grows", "It flies off"], "answer": 2,
-      "explanation": "Cold air inside contracts and takes up less room, so the balloon goes limp."
+      "id": "science.en.0010",
+      "grade": 6,
+      "stem": "A hammer and a feather are dropped in a tube with no air. Which lands first?",
+      "options": [
+        "The hammer, clearly",
+        "The feather, oddly",
+        "They land together",
+        "Neither one falls"
+      ],
+      "answer": 3,
+      "explanation": "Without air, falling does not depend on mass. In a normal room it is the air that slows the feather."
+    },
+    {
+      "id": "science.en.0011",
+      "grade": 7,
+      "stem": "Why do plants need carbon dioxide?",
+      "options": [
+        "To breathe at night",
+        "To build sugars",
+        "To smell nice",
+        "To keep warm"
+      ],
+      "answer": 2,
+      "explanation": "From carbon dioxide and water, in light, a plant builds sugar and releases oxygen as waste."
+    },
+    {
+      "id": "science.en.0012",
+      "grade": 7,
+      "stem": "A metal handle feels colder than a wooden one in the same room. Why?",
+      "options": [
+        "It really is colder to touch",
+        "Metal is afraid of heat",
+        "Wood warms itself up",
+        "Metal draws heat away fast"
+      ],
+      "answer": 4,
+      "explanation": "Both are the same temperature. Metal simply pulls heat from your hand faster, and the hand reads that as cold."
+    },
+    {
+      "id": "science.en.0013",
+      "grade": 8,
+      "stem": "Where does a tree's mass come from as it grows?",
+      "options": [
+        "Mostly from the air",
+        "Mostly from the soil",
+        "Mostly from water",
+        "Out of nothing"
+      ],
+      "answer": 1,
+      "explanation": "Most of a tree is carbon taken from carbon dioxide. Soil supplies only a small share of the weight."
+    },
+    {
+      "id": "science.en.0014",
+      "grade": 8,
+      "stem": "Why must you never put out burning oil with water?",
+      "options": [
+        "Water is far too cold for that",
+        "Hot oil does not really burn",
+        "Water boils and sprays it",
+        "You can, it is an old myth"
+      ],
+      "answer": 3,
+      "explanation": "Water is heavier than oil, boils instantly underneath it and throws burning droplets upward."
+    },
+    {
+      "id": "science.en.0015",
+      "grade": 9,
+      "stem": "Antibiotics do not help with a common cold. Why not?",
+      "options": [
+        "They are far too weak for it",
+        "Colds are caused by viruses",
+        "People almost always take them wrong",
+        "They help, only very slowly"
+      ],
+      "answer": 2,
+      "explanation": "Antibiotics kill bacteria, and a virus is built differently. Against it they do nothing."
+    },
+    {
+      "id": "science.en.0016",
+      "grade": 9,
+      "stem": "Why do astronauts float in orbit even though Earth's gravity reaches there?",
+      "options": [
+        "There is no gravity up there",
+        "The heavy suits get in the way",
+        "In space they weigh very little",
+        "They are constantly falling"
+      ],
+      "answer": 4,
+      "explanation": "The station and everyone in it fall around Earth at the same rate, so nobody feels any weight."
+    },
+    {
+      "id": "science.en.0017",
+      "grade": 10,
+      "stem": "What do all living cells have in common?",
+      "options": [
+        "A membrane and DNA",
+        "A green colour",
+        "The ability to move",
+        "Having a brain"
+      ],
+      "answer": 1,
+      "explanation": "Every cell is separated from the world by a membrane and stores instructions in DNA. The rest varies."
+    },
+    {
+      "id": "science.en.0018",
+      "grade": 10,
+      "stem": "Why do bacteria become resistant to antibiotics?",
+      "options": [
+        "They gradually learn",
+        "They get used to the drug",
+        "The toughest survive",
+        "The drug itself goes stale"
+      ],
+      "answer": 3,
+      "explanation": "No single bacterium changes. The ones that already had resistance survive and leave descendants."
+    },
+    {
+      "id": "science.en.0019",
+      "grade": 11,
+      "stem": "What does it mean that energy is conserved?",
+      "options": [
+        "It can be stockpiled for later",
+        "It only changes form",
+        "It simply never runs out",
+        "It cannot be spent at all"
+      ],
+      "answer": 2,
+      "explanation": "Energy is neither created nor destroyed; it moves from one form to another, often into heat."
+    },
+    {
+      "id": "science.en.0020",
+      "grade": 11,
+      "stem": "Why should one successful experiment not be trusted on its own?",
+      "options": [
+        "Experiments cost real money",
+        "It is simply the convention",
+        "A prettier graph is needed",
+        "Chance is not ruled out"
+      ],
+      "answer": 4,
+      "explanation": "A single result can happen by luck. Science trusts what other people can repeat."
     }
   ]
 }

@@ -1,0 +1,201 @@
+{
+  "subject": "art",
+  "locale": "en",
+  "tasks": [
+    {
+      "id": "asm.art.en.0001",
+      "grade": 3,
+      "prompt": "Which colours come from mixing the primaries",
+      "slots": [
+        "Red and yellow",
+        "Blue and yellow",
+        "Red and blue"
+      ],
+      "answers": [
+        "orange",
+        "green",
+        "purple"
+      ],
+      "palette": [
+        "orange",
+        "green",
+        "purple",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "explanation": "Red, blue and yellow cannot be mixed from anything else, which is why they are primary. Everything else comes from them."
+    },
+    {
+      "id": "asm.art.en.0002",
+      "grade": 4,
+      "prompt": "Build the warm side of the palette, hottest first",
+      "slots": [
+        "The hottest one",
+        "Next after it",
+        "Closing the three"
+      ],
+      "answers": [
+        "red",
+        "orange",
+        "yellow"
+      ],
+      "palette": [
+        "red",
+        "orange",
+        "yellow",
+        "blue",
+        "purple",
+        "green"
+      ],
+      "explanation": "Warm colours recall fire and sun. They are used for whatever should feel nearer and more alive."
+    },
+    {
+      "id": "asm.art.en.0003",
+      "grade": 5,
+      "prompt": "Lay out a landscape from far to near",
+      "slots": [
+        "The furthest layer",
+        "The line far off",
+        "The near layer",
+        "Where it goes dark"
+      ],
+      "answers": [
+        "sky",
+        "horizon",
+        "foreground",
+        "shadow"
+      ],
+      "palette": [
+        "sky",
+        "horizon",
+        "foreground",
+        "shadow",
+        "highlight",
+        "red",
+        "green"
+      ],
+      "explanation": "Distant things are painted paler and higher, near things larger and darker. That is how flat paper gains depth."
+    },
+    {
+      "id": "asm.art.en.0004",
+      "grade": 6,
+      "prompt": "Build the cool side of the palette",
+      "slots": [
+        "The coolest one",
+        "Between the two",
+        "Closest to warm"
+      ],
+      "answers": [
+        "blue",
+        "purple",
+        "green"
+      ],
+      "palette": [
+        "blue",
+        "purple",
+        "green",
+        "red",
+        "orange",
+        "yellow"
+      ],
+      "explanation": "Cool colours pull the eye into the picture. That is why distant hills are painted blueish rather than brown."
+    },
+    {
+      "id": "asm.art.en.0005",
+      "grade": 7,
+      "prompt": "Where an object is lightest and where it is darkest",
+      "slots": [
+        "Where light lands",
+        "The opposite side",
+        "The far background"
+      ],
+      "answers": [
+        "highlight",
+        "shadow",
+        "horizon"
+      ],
+      "palette": [
+        "highlight",
+        "shadow",
+        "horizon",
+        "sky",
+        "foreground",
+        "red"
+      ],
+      "explanation": "A highlight and a shadow on one object make it solid. Without them a ball is just a flat circle."
+    },
+    {
+      "id": "asm.art.en.0006",
+      "grade": 8,
+      "prompt": "Build a pair of complementary colours and what sits between",
+      "slots": [
+        "First of the pair",
+        "Its opposite",
+        "A mix of the two"
+      ],
+      "answers": [
+        "blue",
+        "orange",
+        "green"
+      ],
+      "palette": [
+        "blue",
+        "orange",
+        "green",
+        "red",
+        "purple",
+        "yellow"
+      ],
+      "explanation": "Complementary colours face each other on the wheel. Side by side they shout; mixed together they cancel out."
+    },
+    {
+      "id": "asm.art.en.0007",
+      "grade": 9,
+      "prompt": "Compose a picture with a clear main subject",
+      "slots": [
+        "Looked at first",
+        "What leads inward",
+        "What lifts the figure"
+      ],
+      "answers": [
+        "foreground",
+        "horizon",
+        "shadow"
+      ],
+      "palette": [
+        "foreground",
+        "horizon",
+        "shadow",
+        "sky",
+        "highlight",
+        "purple"
+      ],
+      "explanation": "The subject goes large and near; depth comes from the far line. A shadow separates the figure from the ground."
+    },
+    {
+      "id": "asm.art.en.0008",
+      "grade": 10,
+      "prompt": "Build a sunset in layers, from the ground up",
+      "slots": [
+        "Ground underfoot",
+        "The band at the edge",
+        "Highest of all"
+      ],
+      "answers": [
+        "foreground",
+        "orange",
+        "sky"
+      ],
+      "palette": [
+        "foreground",
+        "orange",
+        "sky",
+        "shadow",
+        "green",
+        "blue"
+      ],
+      "explanation": "At sunset the sky warms near the horizon and cools above. A hard edge between them gives away painting from memory."
+    }
+  ]
+}

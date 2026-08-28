@@ -1,0 +1,188 @@
+{
+  "subject": "history",
+  "locale": "es",
+  "questions": [
+    {
+      "id": "history.es.0001",
+      "grade": 3,
+      "stem": "¿Por qué las ciudades antiguas se levantaban junto a los ríos?",
+      "options": [
+        "Agua, comida y camino",
+        "Los ríos son bonitos",
+        "Allí hacía más calor",
+        "Había menos insectos"
+      ],
+      "answer": 1,
+      "explanation": "El río daba de beber, peces y una vía para mover mercancías. Sin caminos, el agua era el mejor camino."
+    },
+    {
+      "id": "history.es.0002",
+      "grade": 4,
+      "stem": "¿Para qué inventaron la escritura?",
+      "options": [
+        "Para decorar paredes",
+        "Para llevar cuentas",
+        "Para enseñar a leer",
+        "Para escribir poemas al rey"
+      ],
+      "answer": 2,
+      "explanation": "Las primeras tablillas son listas de grano y ganado. La literatura llegó mucho después que la contabilidad."
+    },
+    {
+      "id": "history.es.0003",
+      "grade": 5,
+      "stem": "¿Por qué la imprenta cambió tantas cosas?",
+      "options": [
+        "Los libros quedaron bonitos",
+        "Los monjes descansaron",
+        "El saber se abarató",
+        "El papel se hizo fuerte"
+      ],
+      "answer": 3,
+      "explanation": "Copiar a mano llevaba meses; la prensa hacía cientos. Por primera vez las ideas corrieron más que el rumor."
+    },
+    {
+      "id": "history.es.0004",
+      "grade": 5,
+      "stem": "¿Qué buscaban las coronas europeas al cruzar el Atlántico?",
+      "options": [
+        "Conocer tierras nuevas",
+        "Extender su idioma",
+        "Dar trabajo a marinos",
+        "Oro, plata y una ruta"
+      ],
+      "answer": 4,
+      "explanation": "Buscaban una ruta a las especias y metales para pagar guerras. El descubrimiento fue el efecto, no el plan."
+    },
+    {
+      "id": "history.es.0005",
+      "grade": 6,
+      "stem": "¿Por qué la Revolución Industrial empezó por el tejido?",
+      "options": [
+        "La demanda era enorme",
+        "La tela es más bonita",
+        "Lo mandó el gobierno",
+        "Sobraba demasiada lana"
+      ],
+      "answer": 1,
+      "explanation": "Todo el mundo necesita ropa, así que el mercado ya existía. Allí la máquina se pagaba sola antes que en nada."
+    },
+    {
+      "id": "history.es.0006",
+      "grade": 7,
+      "stem": "¿Qué les pasó a las ciudades con la industria?",
+      "options": [
+        "Se quedaron vacías",
+        "Crecieron muy deprisa",
+        "Casi no cambiaron nada",
+        "Se volvieron más limpias"
+      ],
+      "answer": 2,
+      "explanation": "Las fábricas llamaban obreros y el campo se mudó a la ciudad. Vivienda y agua limpia no siguieron ese ritmo."
+    },
+    {
+      "id": "history.es.0007",
+      "grade": 7,
+      "stem": "¿Por qué las colonias americanas buscaron la independencia?",
+      "options": [
+        "Odiaban a los españoles",
+        "Querían otro idioma",
+        "Decidían otros por ellas",
+        "Se lo pidió Inglaterra"
+      ],
+      "answer": 3,
+      "explanation": "Las decisiones y el comercio se fijaban al otro lado del mar. Criollos con dinero y sin voz acabaron rompiendo."
+    },
+    {
+      "id": "history.es.0008",
+      "grade": 8,
+      "stem": "¿Por qué la Primera Guerra Mundial llevó a la Segunda?",
+      "options": [
+        "Se olvidó el horror",
+        "Faltaron armas suficientemente nuevas",
+        "Coincidió en el tiempo",
+        "La paz se hizo como castigo"
+      ],
+      "answer": 4,
+      "explanation": "Condiciones duras y una economía rota alimentaron el resentimiento, y sobre él subieron regímenes nuevos."
+    },
+    {
+      "id": "history.es.0009",
+      "grade": 8,
+      "stem": "¿Por qué los historiadores comparan varias fuentes?",
+      "options": [
+        "Una puede errar o mentir",
+        "Para tardar más tiempo",
+        "Lo exige la tradición",
+        "Para hallar la más antigua"
+      ],
+      "answer": 1,
+      "explanation": "Cada testigo tiene su interés y su memoria. Que fuentes independientes coincidan es la única prueba real."
+    },
+    {
+      "id": "history.es.0010",
+      "grade": 9,
+      "stem": "¿Qué significa revolución en historia?",
+      "options": [
+        "Una mejora lenta",
+        "Una ruptura del orden",
+        "Un cambio legal de mando",
+        "Una guerra con otro país"
+      ],
+      "answer": 2,
+      "explanation": "Una revolución cambia cómo funcionan el poder y la propiedad, no solo quién manda, y suele hacerlo rápido."
+    },
+    {
+      "id": "history.es.0011",
+      "grade": 9,
+      "stem": "¿Por qué la independencia no trajo igualdad enseguida?",
+      "options": [
+        "Sencillamente nadie quería trabajar",
+        "Se fueron los maestros",
+        "La tierra no cambió de dueño",
+        "Bajaron las cosechas"
+      ],
+      "answer": 3,
+      "explanation": "Cambió la bandera, no el reparto de la tierra ni del poder. Las mismas familias siguieron decidiendo."
+    },
+    {
+      "id": "history.es.0012",
+      "grade": 10,
+      "stem": "¿Por qué vencedores y vencidos escriben historias distintas?",
+      "options": [
+        "Uno estudió peor",
+        "Se pierden documentos",
+        "Los idiomas son distintos",
+        "Cada uno cuenta su verdad"
+      ],
+      "answer": 4,
+      "explanation": "Elegir qué hechos contar ya es interpretar. Un mismo suceso puede ser honestamente hazaña y tragedia."
+    },
+    {
+      "id": "history.es.0013",
+      "grade": 10,
+      "stem": "¿Por qué importa la prensa libre para una democracia?",
+      "options": [
+        "Da hechos comunes para discutir",
+        "Entretiene a la gente",
+        "Emplea a muchísimos autores",
+        "Registra el día a día"
+      ],
+      "answer": 1,
+      "explanation": "Solo se decide en común si se discute con la misma información. Por eso la libertad de prensa se disputa tanto."
+    },
+    {
+      "id": "history.es.0014",
+      "grade": 11,
+      "stem": "¿Por qué es arriesgado juzgar el pasado con ojos de hoy?",
+      "options": [
+        "Antes no había leyes",
+        "Las opciones eran otras",
+        "La gente de entonces era más torpe",
+        "Se conservó poco papel"
+      ],
+      "answer": 2,
+      "explanation": "Cada uno decide dentro de su tiempo y su saber. Entender una decisión no es disculparla, pero sin eso la historia es un juicio."
+    }
+  ]
+}

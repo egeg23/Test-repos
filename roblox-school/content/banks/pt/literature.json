@@ -1,0 +1,188 @@
+{
+  "subject": "literature",
+  "locale": "pt",
+  "questions": [
+    {
+      "id": "literature.pt.0001",
+      "grade": 2,
+      "stem": "Na fábula da lebre e da tartaruga, por que a tartaruga vence?",
+      "options": [
+        "Ela não para de andar",
+        "Ela é mais rápida",
+        "A lebre trapaceia",
+        "O caminho era curto demais"
+      ],
+      "answer": 1,
+      "explanation": "A lebre corre mais, mas para para dormir. O esforço constante vence o talento que não aparece."
+    },
+    {
+      "id": "literature.pt.0002",
+      "grade": 3,
+      "stem": "O que ensina a história do menino que gritava \"lobo\"?",
+      "options": [
+        "Que lobos são ferozes",
+        "Que mentir custa confiança",
+        "Que não se anda sozinho",
+        "Que pastorear é muito chato"
+      ],
+      "answer": 2,
+      "explanation": "Quando o lobo vem de verdade, ninguém acredita. O que ele perde não são as ovelhas, é a palavra."
+    },
+    {
+      "id": "literature.pt.0003",
+      "grade": 4,
+      "stem": "Por que os contos repetem tantas vezes a mesma coisa?",
+      "options": [
+        "O autor esqueceu",
+        "Para encher páginas",
+        "Para ajudar a lembrar",
+        "Porque escrever assim é mais fácil"
+      ],
+      "answer": 3,
+      "explanation": "Esses contos foram falados em voz alta por séculos. A repetição ajudava a contar e a lembrar."
+    },
+    {
+      "id": "literature.pt.0004",
+      "grade": 5,
+      "stem": "Quem escreveu Dom Casmurro?",
+      "options": [
+        "José Martiniano de Alencar",
+        "Carlos Drummond",
+        "Jorge Amado",
+        "Machado de Assis"
+      ],
+      "answer": 4,
+      "explanation": "Machado de Assis. O livro é contado por Bentinho, e é ele quem decide o que contamos como verdade."
+    },
+    {
+      "id": "literature.pt.0005",
+      "grade": 5,
+      "stem": "Em Dom Casmurro, por que não sabemos se Capitu traiu?",
+      "options": [
+        "Quem conta é o marido",
+        "Machado simplesmente se esqueceu",
+        "Falta uma página",
+        "O final foi cortado"
+      ],
+      "answer": 1,
+      "explanation": "Tudo chega pelos olhos de Bentinho, que tem motivo para acusar. A dúvida é a construção, não a falha."
+    },
+    {
+      "id": "literature.pt.0006",
+      "grade": 6,
+      "stem": "O que é uma fábula?",
+      "options": [
+        "Um romance longo",
+        "Um conto curto com moral",
+        "Um poema sobre o campo",
+        "Uma página de um diário íntimo"
+      ],
+      "answer": 2,
+      "explanation": "Na fábula os animais agem como gente, e o final diz sem rodeios o que a história ensina."
+    },
+    {
+      "id": "literature.pt.0007",
+      "grade": 6,
+      "stem": "O que o nome de um personagem revela quando é bem escolhido?",
+      "options": [
+        "Nada em absoluto",
+        "Onde o livro foi impresso",
+        "Sugere como ele é",
+        "A idade do autor"
+      ],
+      "answer": 3,
+      "explanation": "Um bom nome apresenta a pessoa antes de ela falar e poupa uma página de descrição ao autor."
+    },
+    {
+      "id": "literature.pt.0008",
+      "grade": 7,
+      "stem": "Por que um autor descreve o tempo antes de uma cena importante?",
+      "options": [
+        "Para encher linguiça",
+        "As regras exigem",
+        "Para o leitor descansar",
+        "Para criar clima"
+      ],
+      "answer": 4,
+      "explanation": "Uma tempestade antes de uma briga prepara o leitor antes que ele saiba explicar. A paisagem carrega a emoção."
+    },
+    {
+      "id": "literature.pt.0009",
+      "grade": 7,
+      "stem": "Qual a diferença entre o autor e o narrador?",
+      "options": [
+        "O narrador vive na história",
+        "Nenhuma diferença",
+        "O autor é o editor",
+        "O narrador sempre mente um pouco"
+      ],
+      "answer": 1,
+      "explanation": "O autor escreve o livro; o narrador mora dentro dele. Ele pode errar, e muitas vezes esse é o plano."
+    },
+    {
+      "id": "literature.pt.0010",
+      "grade": 8,
+      "stem": "O que é conflito numa história?",
+      "options": [
+        "Uma briga entre pessoas",
+        "Forças que puxam em sentidos opostos",
+        "Um erro do livro",
+        "Uma longa discussão entre leitores"
+      ],
+      "answer": 2,
+      "explanation": "O conflito pode estar dentro de uma pessoa: dever contra desejo. Sem tensão não há enredo."
+    },
+    {
+      "id": "literature.pt.0011",
+      "grade": 8,
+      "stem": "Por que Monteiro Lobato criou o Sítio do Picapau Amarelo?",
+      "options": [
+        "Copiou um livro inglês",
+        "Por encomenda direta do governo",
+        "Para dar livros brasileiros a crianças",
+        "Para vender brinquedos"
+      ],
+      "answer": 3,
+      "explanation": "Ele queria histórias em que crianças brasileiras se reconhecessem, com o folclore daqui e não o de fora."
+    },
+    {
+      "id": "literature.pt.0012",
+      "grade": 9,
+      "stem": "Por que ainda lemos obras de séculos atrás?",
+      "options": [
+        "A língua é fácil",
+        "A escola exige",
+        "Simplesmente não há nada mais novo",
+        "Os problemas ainda são nossos"
+      ],
+      "answer": 4,
+      "explanation": "Ciúme, ambição e luto não mudaram. As palavras envelhecem; as pessoas dentro delas, não."
+    },
+    {
+      "id": "literature.pt.0013",
+      "grade": 10,
+      "stem": "O que um narrador não confiável provoca no leitor?",
+      "options": [
+        "Vontade de reler",
+        "Tédio",
+        "Explicação de tudo",
+        "Um fim antecipado"
+      ],
+      "answer": 1,
+      "explanation": "Se você não pode confiar na voz, passa a ler em volta dela. O leitor é quem faz o trabalho."
+    },
+    {
+      "id": "literature.pt.0014",
+      "grade": 11,
+      "stem": "Por que escritores usam símbolos em vez de dizer direto?",
+      "options": [
+        "Para parecer espertos",
+        "Para dizer mais de uma vez",
+        "Para esconder o sentido",
+        "Para alongar mais ainda o livro"
+      ],
+      "answer": 2,
+      "explanation": "Uma imagem carrega emoção, argumento e memória ao mesmo tempo. Dizer de forma plana achataria tudo."
+    }
+  ]
+}

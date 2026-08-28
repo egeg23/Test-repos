@@ -1,0 +1,266 @@
+{
+  "subject": "science",
+  "locale": "pt",
+  "questions": [
+    {
+      "id": "science.pt.0001",
+      "grade": 1,
+      "stem": "Por que é claro durante o dia?",
+      "options": [
+        "O céu brilha",
+        "As nuvens aquecem",
+        "O Sol brilha",
+        "A Terra é quente"
+      ],
+      "answer": 3,
+      "explanation": "A luz vem do Sol. O céu parece azul justamente porque a luz se espalha no ar."
+    },
+    {
+      "id": "science.pt.0002",
+      "grade": 2,
+      "stem": "Do que uma planta precisa para crescer?",
+      "options": [
+        "Luz e água",
+        "Só escuridão e sossego",
+        "Só calor de aquecedor",
+        "Só terra bem rica"
+      ],
+      "answer": 1,
+      "explanation": "Com luz, água e ar a planta fabrica o próprio alimento. A terra segura as raízes e dá sais."
+    },
+    {
+      "id": "science.pt.0003",
+      "grade": 3,
+      "stem": "Para onde vai a poça depois da chuva quando o sol aparece?",
+      "options": [
+        "Sobe para o céu",
+        "Os pássaros bebem",
+        "Simplesmente some",
+        "Vira vapor"
+      ],
+      "answer": 4,
+      "explanation": "A água evapora e vira vapor invisível no ar. Mais tarde esse vapor volta como chuva."
+    },
+    {
+      "id": "science.pt.0004",
+      "grade": 3,
+      "stem": "Por que o inverno é mais frio que o verão?",
+      "options": [
+        "O Sol se afasta muito",
+        "Os raios chegam inclinados",
+        "O Sol brilha mais fraco",
+        "A Terra se cansa"
+      ],
+      "answer": 2,
+      "explanation": "No inverno os raios raspam a superfície e aquecem menos. A distância ao Sol quase não conta."
+    },
+    {
+      "id": "science.pt.0005",
+      "grade": 4,
+      "stem": "O gelo flutua na água. O que isso nos diz?",
+      "options": [
+        "É mais leve",
+        "É mais pesado",
+        "Contém ar",
+        "Está morno"
+      ],
+      "answer": 1,
+      "explanation": "Flutua o que pesa menos que o mesmo volume de água. A água é rara: ao congelar, ela se expande."
+    },
+    {
+      "id": "science.pt.0006",
+      "grade": 4,
+      "stem": "O que acontece com um balão se você o levar para o frio?",
+      "options": [
+        "Estoura",
+        "Fica maior",
+        "Encolhe",
+        "Nada acontece"
+      ],
+      "answer": 3,
+      "explanation": "No frio o ar de dentro ocupa menos e o balão murcha. No calor ele volta a encher."
+    },
+    {
+      "id": "science.pt.0007",
+      "grade": 5,
+      "stem": "Por que vemos a Lua se ela não brilha sozinha?",
+      "options": [
+        "Ela é quente",
+        "Reflete a luz do Sol",
+        "Tem fogo dentro",
+        "As estrelas a iluminam"
+      ],
+      "answer": 2,
+      "explanation": "A Lua funciona como espelho da luz solar. É por isso que vemos suas fases."
+    },
+    {
+      "id": "science.pt.0008",
+      "grade": 5,
+      "stem": "Você dissolveu açúcar no chá. Para onde ele foi?",
+      "options": [
+        "Sumiu sem deixar rastro",
+        "Transformou-se em água",
+        "Evaporou junto com o vapor",
+        "Espalhou-se entre moléculas"
+      ],
+      "answer": 4,
+      "explanation": "O açúcar não sumiu: separou-se em partículas minúsculas. O chá ficou mais pesado exatamente o peso do açúcar."
+    },
+    {
+      "id": "science.pt.0009",
+      "grade": 6,
+      "stem": "Por que é mais difícil respirar nas montanhas?",
+      "options": [
+        "O ar é mais rarefeito",
+        "Não há oxigênio nenhum",
+        "Faz frio demais para respirar",
+        "O vento forte atrapalha"
+      ],
+      "answer": 1,
+      "explanation": "Lá em cima cada respiração leva menos ar. O oxigênio continua ali, mas chegam menos moléculas."
+    },
+    {
+      "id": "science.pt.0010",
+      "grade": 6,
+      "stem": "Um martelo e uma pena são soltos num tubo sem ar. O que cai primeiro?",
+      "options": [
+        "O martelo, claro",
+        "A pena, curiosamente",
+        "Caem juntos",
+        "Nenhum dos dois cai"
+      ],
+      "answer": 3,
+      "explanation": "Sem ar a queda não depende da massa. Numa sala normal é o ar que freia a pena."
+    },
+    {
+      "id": "science.pt.0011",
+      "grade": 7,
+      "stem": "Por que as plantas precisam de gás carbônico?",
+      "options": [
+        "Para respirar de madrugada",
+        "Para fabricar açúcares",
+        "Para cheirar bem",
+        "Para não sentir frio nenhum"
+      ],
+      "answer": 2,
+      "explanation": "Com gás carbônico e água, na luz, a planta fabrica açúcar e libera oxigênio como resto."
+    },
+    {
+      "id": "science.pt.0012",
+      "grade": 7,
+      "stem": "Uma maçaneta de metal parece mais fria que uma de madeira na mesma sala. Por quê?",
+      "options": [
+        "Está mesmo mais fria ao toque",
+        "O metal teme qualquer calor",
+        "A madeira se aquece sozinha",
+        "O metal tira calor rápido"
+      ],
+      "answer": 4,
+      "explanation": "As duas estão na mesma temperatura. O metal puxa calor da mão mais rápido, e a mão sente isso como frio."
+    },
+    {
+      "id": "science.pt.0013",
+      "grade": 8,
+      "stem": "De onde vem a massa de uma árvore enquanto ela cresce?",
+      "options": [
+        "Sobretudo do ar",
+        "Sobretudo do solo",
+        "Sobretudo da água",
+        "Do nada"
+      ],
+      "answer": 1,
+      "explanation": "Quase toda a árvore é carbono tirado do gás carbônico. O solo dá só uma pequena parte do peso."
+    },
+    {
+      "id": "science.pt.0014",
+      "grade": 8,
+      "stem": "Por que nunca se apaga óleo em chamas com água?",
+      "options": [
+        "A água é fria demais para isso",
+        "Óleo quente não queima mesmo",
+        "A água ferve e espirra",
+        "Pode sim, é um velho mito"
+      ],
+      "answer": 3,
+      "explanation": "A água é mais pesada que o óleo, ferve na hora por baixo e joga gotas em chamas para cima."
+    },
+    {
+      "id": "science.pt.0015",
+      "grade": 9,
+      "stem": "Antibióticos não ajudam no resfriado. Por quê?",
+      "options": [
+        "São fracos demais para isso",
+        "O resfriado vem de vírus",
+        "Quase sempre são tomados errado",
+        "Ajudam, só que bem devagar"
+      ],
+      "answer": 2,
+      "explanation": "Antibióticos matam bactérias, e um vírus é feito de outro jeito. Contra ele não fazem nada."
+    },
+    {
+      "id": "science.pt.0016",
+      "grade": 9,
+      "stem": "Por que astronautas flutuam em órbita se a gravidade da Terra chega lá?",
+      "options": [
+        "Lá não há gravidade",
+        "As roupas atrapalham",
+        "Eles são muito leves",
+        "Estão sempre caindo"
+      ],
+      "answer": 4,
+      "explanation": "A estação e quem está dentro caem em volta da Terra no mesmo ritmo, então ninguém sente peso."
+    },
+    {
+      "id": "science.pt.0017",
+      "grade": 10,
+      "stem": "O que todas as células vivas têm em comum?",
+      "options": [
+        "Membrana e DNA",
+        "A cor verde",
+        "Poder se mover",
+        "Ter cérebro"
+      ],
+      "answer": 1,
+      "explanation": "Toda célula é separada do exterior por uma membrana e guarda instruções no DNA."
+    },
+    {
+      "id": "science.pt.0018",
+      "grade": 10,
+      "stem": "Por que as bactérias ficam resistentes a antibióticos?",
+      "options": [
+        "Elas aprendem aos poucos",
+        "Se acostumam com o remédio",
+        "Sobrevivem as mais duras",
+        "O próprio remédio estraga"
+      ],
+      "answer": 3,
+      "explanation": "Nenhuma bactéria muda sozinha. Sobrevivem as que já eram resistentes e deixam descendentes."
+    },
+    {
+      "id": "science.pt.0019",
+      "grade": 11,
+      "stem": "O que significa dizer que a energia se conserva?",
+      "options": [
+        "Pode ser estocada",
+        "Só muda de forma",
+        "Nunca acaba",
+        "Não pode ser gasta"
+      ],
+      "answer": 2,
+      "explanation": "A energia não é criada nem destruída: passa de uma forma a outra, muitas vezes para calor."
+    },
+    {
+      "id": "science.pt.0020",
+      "grade": 11,
+      "stem": "Por que não se deve confiar em um único experimento bem-sucedido?",
+      "options": [
+        "Experimentos custam caro demais",
+        "É simplesmente o costume",
+        "Falta um gráfico mais bonito",
+        "O acaso não foi descartado"
+      ],
+      "answer": 4,
+      "explanation": "Um resultado isolado pode sair por sorte. A ciência confia no que outros conseguem repetir."
+    }
+  ]
+}

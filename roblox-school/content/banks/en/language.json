@@ -1,0 +1,188 @@
+{
+  "subject": "language",
+  "locale": "en",
+  "questions": [
+    {
+      "id": "language.en.0001",
+      "grade": 2,
+      "stem": "Which sentence is correct?",
+      "options": [
+        "The dog wagged its tail",
+        "The dog wagged it's tail",
+        "The dog wagged its' tail",
+        "The dog wagged it is tail"
+      ],
+      "answer": 1,
+      "explanation": "\"Its\" shows belonging; \"it's\" is short for \"it is\". Try reading it as \"it is\" — if that fails, drop the apostrophe."
+    },
+    {
+      "id": "language.en.0002",
+      "grade": 3,
+      "stem": "Which spelling belongs in \"They left ___ coats here\"?",
+      "options": [
+        "there coats here",
+        "their coats here",
+        "they're coats here",
+        "theyre coats here"
+      ],
+      "answer": 2,
+      "explanation": "\"Their\" shows belonging, \"there\" is a place, \"they're\" means \"they are\". Only belonging fits coats."
+    },
+    {
+      "id": "language.en.0003",
+      "grade": 4,
+      "stem": "What does an apostrophe in \"the dogs' bowls\" tell you?",
+      "options": [
+        "One dog owns bowls",
+        "The bowls are broken",
+        "More than one dog",
+        "Nothing much at all"
+      ],
+      "answer": 3,
+      "explanation": "The apostrophe after the s marks several owners. \"The dog's bowls\" would mean just one dog."
+    },
+    {
+      "id": "language.en.0004",
+      "grade": 4,
+      "stem": "Which word is spelled correctly?",
+      "options": [
+        "definately",
+        "definitly",
+        "definatly",
+        "definitely"
+      ],
+      "answer": 4,
+      "explanation": "It comes from \"finite\" — there is an \"i\" where people expect an \"a\". Spotting the root fixes it for good."
+    },
+    {
+      "id": "language.en.0005",
+      "grade": 5,
+      "stem": "What does the idiom \"to bite the bullet\" mean?",
+      "options": [
+        "To face something painful",
+        "To eat something hard",
+        "To speak very angrily",
+        "To make a bad choice"
+      ],
+      "answer": 1,
+      "explanation": "Wounded soldiers bit a bullet during surgery before anaesthetic. It means going through what cannot be avoided."
+    },
+    {
+      "id": "language.en.0006",
+      "grade": 6,
+      "stem": "Why does a comma matter in \"Let's eat, Grandma\"?",
+      "options": [
+        "It makes it prettier",
+        "It saves Grandma",
+        "Tradition demands it",
+        "It marks a pause"
+      ],
+      "answer": 2,
+      "explanation": "Without the comma the sentence proposes eating Grandma. Commas mark boundaries of meaning, not just breaths."
+    },
+    {
+      "id": "language.en.0007",
+      "grade": 6,
+      "stem": "What is the difference between a synonym and an antonym?",
+      "options": [
+        "Synonyms are longer",
+        "Synonyms sound the same",
+        "Synonyms are close in meaning",
+        "Synonyms are foreign words"
+      ],
+      "answer": 3,
+      "explanation": "Synonyms sit close in meaning: brave and courageous. Antonyms sit opposite: brave and cowardly."
+    },
+    {
+      "id": "language.en.0008",
+      "grade": 7,
+      "stem": "Which sentence uses \"less\" and \"fewer\" correctly?",
+      "options": [
+        "Less cars on the road",
+        "Fewer traffic on the road",
+        "Less of cars on the road",
+        "Fewer cars on the road"
+      ],
+      "answer": 4,
+      "explanation": "\"Fewer\" counts separate things; \"less\" measures an amount. You can count cars, so it is fewer."
+    },
+    {
+      "id": "language.en.0009",
+      "grade": 8,
+      "stem": "What makes a word ambiguous?",
+      "options": [
+        "It carries several meanings",
+        "It has many letters",
+        "It came from another language",
+        "It is hard to pronounce"
+      ],
+      "answer": 1,
+      "explanation": "\"Bank\" is money or a riverside. Context, not the word itself, decides which one is meant."
+    },
+    {
+      "id": "language.en.0010",
+      "grade": 8,
+      "stem": "Why does English borrow so many words?",
+      "options": [
+        "To sound fashionable",
+        "New things need names",
+        "Other nations push them in",
+        "To make writing harder"
+      ],
+      "answer": 2,
+      "explanation": "Along with a thing comes its name: pyjamas, algebra, tsunami. A language borrows exactly what it lacks a word for."
+    },
+    {
+      "id": "language.en.0011",
+      "grade": 9,
+      "stem": "Why does formal writing differ from how we speak?",
+      "options": [
+        "Speech is always wrong",
+        "Writing has more words",
+        "Each fits its purpose",
+        "Speech is only spoken"
+      ],
+      "answer": 3,
+      "explanation": "\"Hi, quick one\" works in a message and fails in a job application. Register is chosen for the reader, not for correctness."
+    },
+    {
+      "id": "language.en.0012",
+      "grade": 10,
+      "stem": "What does a metaphor do?",
+      "options": [
+        "Decorates a sentence",
+        "Swaps one word for another",
+        "Makes the phrase longer",
+        "Carries meaning across"
+      ],
+      "answer": 4,
+      "explanation": "\"A heart of stone\" is not about geology. A metaphor moves a quality from one thing onto another."
+    },
+    {
+      "id": "language.en.0013",
+      "grade": 10,
+      "stem": "Why is the passive voice sometimes a warning sign?",
+      "options": [
+        "It hides who acted",
+        "It is grammatically wrong",
+        "It is always too long",
+        "It confuses the tense"
+      ],
+      "answer": 1,
+      "explanation": "\"Mistakes were made\" never says by whom. The grammar is fine; the missing actor is the point."
+    },
+    {
+      "id": "language.en.0014",
+      "grade": 11,
+      "stem": "Why do dictionaries change over time?",
+      "options": [
+        "Editors get bored",
+        "Speakers change first",
+        "Rules are voted on",
+        "Foreign influence grows"
+      ],
+      "answer": 2,
+      "explanation": "A dictionary records how people actually use words. Usage moves, and the book follows it rather than leading."
+    }
+  ]
+}

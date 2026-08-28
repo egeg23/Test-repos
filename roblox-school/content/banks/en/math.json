@@ -3,76 +3,316 @@
   "locale": "en",
   "questions": [
     {
-      "id": "math.en.0001", "grade": 3,
-      "stem": "Masha has 3 boxes of 4 pencils. She gives away 5. How many are left?",
-      "options": ["7", "12", "17", "2"], "answer": 1,
-      "explanation": "Count them all first: 3 × 4 = 12. Then take away the 5 she gave: 12 − 5 = 7."
+      "id": "math.en.0001",
+      "grade": 1,
+      "stem": "Five birds sat on a branch. Two flew away, then three arrived. How many are there now?",
+      "options": [
+        "5",
+        "6",
+        "4",
+        "10"
+      ],
+      "answer": 2,
+      "explanation": "In order: 5 − 2 = 3, then 3 + 3 = 6. More arrived than left, so the number grew."
     },
     {
-      "id": "math.en.0002", "grade": 3,
-      "stem": "Half of a number is 8. What is the number?",
-      "options": ["4", "8", "16", "12"], "answer": 3,
-      "explanation": "If half is 8, the whole is twice that: 8 × 2 = 16. Dividing goes the wrong way."
+      "id": "math.en.0002",
+      "grade": 2,
+      "stem": "Katya has 4 sweets. Vanya has 3 more than her. How many does Vanya have?",
+      "options": [
+        "3",
+        "4",
+        "12",
+        "7"
+      ],
+      "answer": 4,
+      "explanation": "\"Three more\" means add: 4 + 3 = 7. The 3 is the difference, not the answer."
     },
     {
-      "id": "math.en.0003", "grade": 5,
-      "stem": "Which is bigger: 0.5 or 0.45?",
-      "options": ["0.45", "0.5", "They're equal", "Can't tell"], "answer": 2,
-      "explanation": "0.5 is the same as 0.50. Compare hundredths: 50 beats 45. Longer isn't larger."
+      "id": "math.en.0003",
+      "grade": 3,
+      "stem": "Masha has 3 boxes of 4 pencils. She gave away 5 pencils. How many are left?",
+      "options": [
+        "7",
+        "12",
+        "17",
+        "2"
+      ],
+      "answer": 1,
+      "explanation": "First count everything: 3 × 4 = 12. Then subtract what she gave: 12 − 5 = 7."
     },
     {
-      "id": "math.en.0004", "grade": 4,
-      "stem": "A square has a perimeter of 20 cm. How long is one side?",
-      "options": ["10 cm", "80 cm", "4 cm", "5 cm"], "answer": 4,
-      "explanation": "A square has four equal sides, so divide the perimeter by 4: 20 ÷ 4 = 5 cm."
+      "id": "math.en.0004",
+      "grade": 3,
+      "stem": "Half of a number is 8. What is the number itself?",
+      "options": [
+        "4",
+        "8",
+        "16",
+        "12"
+      ],
+      "answer": 3,
+      "explanation": "If half is 8, the whole is twice as much: 8 × 2 = 16. No dividing needed."
     },
     {
-      "id": "math.en.0005", "grade": 4,
-      "stem": "A class has 12 boys and half as many girls. How many children in total?",
-      "options": ["18", "24", "6", "36"], "answer": 1,
-      "explanation": "Girls: 12 ÷ 2 = 6. The question asks for everyone: 12 + 6 = 18, not just the girls."
-    },
-    {
-      "id": "math.en.0006", "grade": 6,
-      "stem": "What happens to a square's area if you double the length of its side?",
-      "options": ["It doubles", "It grows 4 times", "It triples", "Nothing changes"], "answer": 2,
-      "explanation": "Area is side times side. Both doubled, so the area grows 2 × 2 = 4 times."
-    },
-    {
-      "id": "math.en.0007", "grade": 6,
-      "stem": "A number is cut by 20%, then raised by 20%. What happened to it?",
-      "options": ["It grew", "It's unchanged", "It shrank", "It halved"], "answer": 3,
-      "explanation": "The percentages are taken from different numbers: less was added back than was removed."
-    },
-    {
-      "id": "math.en.0008", "grade": 3,
-      "stem": "How many minutes are in a quarter of an hour?",
-      "options": ["25", "4", "40", "15"], "answer": 4,
+      "id": "math.en.0005",
+      "grade": 3,
+      "stem": "How many minutes are there in a quarter of an hour?",
+      "options": [
+        "25",
+        "4",
+        "40",
+        "15"
+      ],
+      "answer": 4,
       "explanation": "An hour is 60 minutes. A quarter means divide by 4: 60 ÷ 4 = 15 minutes."
     },
     {
-      "id": "math.en.0009", "grade": 5,
-      "stem": "Pete had 20 coins. He spent a quarter of them. How many are left?",
-      "options": ["15", "5", "16", "4"], "answer": 1,
-      "explanation": "A quarter of 20 is 5. The question asks what's left: 20 − 5 = 15, not what he spent."
+      "id": "math.en.0006",
+      "grade": 4,
+      "stem": "A square has a perimeter of 20 cm. How long is one side?",
+      "options": [
+        "10 cm",
+        "80 cm",
+        "4 cm",
+        "5 cm"
+      ],
+      "answer": 4,
+      "explanation": "A square has four equal sides, so 20 ÷ 4 = 5 cm."
     },
     {
-      "id": "math.en.0010", "grade": 6,
-      "stem": "What must you add to 7 to get 3?",
-      "options": ["plus 4", "minus 4", "the number 10", "nothing works"], "answer": 2,
-      "explanation": "Going from 7 down to 3 means taking away 4. Adding a negative is the same as subtracting."
+      "id": "math.en.0007",
+      "grade": 4,
+      "stem": "A class has 12 boys and half as many girls. How many children are there in total?",
+      "options": [
+        "18",
+        "24",
+        "6",
+        "36"
+      ],
+      "answer": 1,
+      "explanation": "Girls: 12 ÷ 2 = 6. The question asks for everyone: 12 + 6 = 18, not just the girls."
     },
     {
-      "id": "math.en.0011", "grade": 5,
-      "stem": "Which is bigger: a third of 30, or a quarter of 40?",
-      "options": ["A third of 30", "A quarter of 40", "They're equal", "Can't tell"], "answer": 3,
-      "explanation": "A third of 30 is 10. A quarter of 40 is also 10. Different sums, same answer."
-    },
-    {
-      "id": "math.en.0012", "grade": 4,
+      "id": "math.en.0008",
+      "grade": 4,
       "stem": "A bus travels 60 km in an hour. How far does it go in half an hour?",
-      "options": ["120 km", "60 km", "15 km", "30 km"], "answer": 4,
-      "explanation": "Half the time means half the distance: 60 ÷ 2 = 30 km. The speed hasn't changed."
+      "options": [
+        "120 km",
+        "60 km",
+        "15 km",
+        "30 km"
+      ],
+      "answer": 4,
+      "explanation": "Half the time means half the distance: 60 ÷ 2 = 30 km."
+    },
+    {
+      "id": "math.en.0009",
+      "grade": 5,
+      "stem": "Which is bigger: 0.5 or 0.45?",
+      "options": [
+        "0.45",
+        "0.5",
+        "Equal",
+        "Unclear"
+      ],
+      "answer": 2,
+      "explanation": "0.5 is the same as 0.50. Compare hundredths: 50 is more than 45."
+    },
+    {
+      "id": "math.en.0010",
+      "grade": 5,
+      "stem": "Petya had 20 coins. He spent a quarter of them. How many are left?",
+      "options": [
+        "15",
+        "5",
+        "16",
+        "4"
+      ],
+      "answer": 1,
+      "explanation": "A quarter of 20 is 5. The question asks what is left: 20 − 5 = 15, not what was spent."
+    },
+    {
+      "id": "math.en.0011",
+      "grade": 5,
+      "stem": "Which is bigger: a third of 30 or a quarter of 40?",
+      "options": [
+        "A third of 30",
+        "A quarter of 40",
+        "They are equal",
+        "Cannot compare"
+      ],
+      "answer": 3,
+      "explanation": "A third of 30 is 10, a quarter of 40 is also 10. Different sums, same answer."
+    },
+    {
+      "id": "math.en.0012",
+      "grade": 6,
+      "stem": "What happens to the area of a square if you double its side?",
+      "options": [
+        "It doubles",
+        "It grows four times",
+        "It triples",
+        "It stays the same"
+      ],
+      "answer": 2,
+      "explanation": "Area is side times side. Both doubled, so 2 × 2 = four times bigger."
+    },
+    {
+      "id": "math.en.0013",
+      "grade": 6,
+      "stem": "A number is cut by 20%, then raised by 20%. What happened to it?",
+      "options": [
+        "It got bigger",
+        "It stayed the same",
+        "It got smaller",
+        "It halved"
+      ],
+      "answer": 3,
+      "explanation": "The percents come off different numbers: taken from the bigger one, added to the smaller one."
+    },
+    {
+      "id": "math.en.0014",
+      "grade": 6,
+      "stem": "What number do you add to 7 to get 3?",
+      "options": [
+        "plus 4",
+        "minus 4",
+        "the number 10",
+        "there is none"
+      ],
+      "answer": 2,
+      "explanation": "To get from 7 to 3 you take away 4. Adding minus 4 is exactly that."
+    },
+    {
+      "id": "math.en.0015",
+      "grade": 7,
+      "stem": "A price went up by 100%. How many times bigger is it now?",
+      "options": [
+        "Twice",
+        "A hundred times",
+        "Ten times",
+        "It did not change"
+      ],
+      "answer": 1,
+      "explanation": "Up 100% means adding as much again as there was. That makes it twice the size."
+    },
+    {
+      "id": "math.en.0016",
+      "grade": 7,
+      "stem": "Which is bigger: 2/3 or 3/5?",
+      "options": [
+        "3/5",
+        "2/3",
+        "Equal",
+        "Unclear"
+      ],
+      "answer": 2,
+      "explanation": "Same bottom number: 2/3 = 10/15 and 3/5 = 9/15. Ten fifteenths beats nine."
+    },
+    {
+      "id": "math.en.0017",
+      "grade": 7,
+      "stem": "An item goes up 10%, then down 10%. Is the price back where it started?",
+      "options": [
+        "Yes, back to start",
+        "It is higher",
+        "It halved",
+        "No, it is lower"
+      ],
+      "answer": 4,
+      "explanation": "The discount comes off the new, higher price, so more was taken off than was added on."
+    },
+    {
+      "id": "math.en.0018",
+      "grade": 8,
+      "stem": "Number a is greater than number b. What is true of −a and −b?",
+      "options": [
+        "−a is greater",
+        "They are equal",
+        "−a is smaller",
+        "Depends on the sign"
+      ],
+      "answer": 3,
+      "explanation": "A minus flips the order: the bigger the number was, the smaller it becomes when negated."
+    },
+    {
+      "id": "math.en.0019",
+      "grade": 8,
+      "stem": "A triangle's angles add to 180°. What do a quadrilateral's angles add to?",
+      "options": [
+        "360°",
+        "180°",
+        "270°",
+        "540°"
+      ],
+      "answer": 1,
+      "explanation": "A quadrilateral splits into two triangles, so 180 × 2 = 360°."
+    },
+    {
+      "id": "math.en.0020",
+      "grade": 9,
+      "stem": "A coin landed heads five times in a row. What is the chance of heads on the sixth toss?",
+      "options": [
+        "Less than half",
+        "More than half",
+        "Almost zero",
+        "Exactly half"
+      ],
+      "answer": 4,
+      "explanation": "A coin has no memory of past tosses. Every toss starts fresh, so the odds are unchanged."
+    },
+    {
+      "id": "math.en.0021",
+      "grade": 9,
+      "stem": "Five people average 160 cm. A sixth joins at 172 cm. What happens to the average?",
+      "options": [
+        "No change",
+        "It goes up",
+        "It goes down",
+        "It becomes 172 cm"
+      ],
+      "answer": 2,
+      "explanation": "The newcomer is above the average, so it rises — but not to his height, the others hold it down."
+    },
+    {
+      "id": "math.en.0022",
+      "grade": 10,
+      "stem": "A number was made four times bigger. What happened to its square root?",
+      "options": [
+        "Four times bigger",
+        "No change",
+        "Twice as big",
+        "Sixteen times bigger"
+      ],
+      "answer": 3,
+      "explanation": "The root of 4 is 2, and the factor passes through the root: it doubles."
+    },
+    {
+      "id": "math.en.0023",
+      "grade": 10,
+      "stem": "What happens to 2 to the power of x when x grows by one?",
+      "options": [
+        "The result doubles",
+        "It grows by 2",
+        "It grows by x",
+        "It stays the same"
+      ],
+      "answer": 1,
+      "explanation": "Each step multiplies by 2 rather than adding 2, which is why the growth speeds up."
+    },
+    {
+      "id": "math.en.0024",
+      "grade": 11,
+      "stem": "A pack has 40 cards and 8 of them are red. What share of the pack is red?",
+      "options": [
+        "8%",
+        "32%",
+        "40%",
+        "20%"
+      ],
+      "answer": 4,
+      "explanation": "A share is part over whole: 8 ÷ 40 = 0.2, which is 20%. The 8 on its own is not a percentage."
     }
   ]
 }

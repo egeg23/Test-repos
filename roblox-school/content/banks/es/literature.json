@@ -1,0 +1,188 @@
+{
+  "subject": "literature",
+  "locale": "es",
+  "questions": [
+    {
+      "id": "literature.es.0001",
+      "grade": 2,
+      "stem": "En la fábula de la liebre y la tortuga, ¿por qué gana la tortuga?",
+      "options": [
+        "No deja de avanzar",
+        "Es más rápida",
+        "La liebre hace trampa",
+        "El camino era corto"
+      ],
+      "answer": 1,
+      "explanation": "La liebre corre más, pero se detiene a dormir. El esfuerzo constante vence al talento que no aparece."
+    },
+    {
+      "id": "literature.es.0002",
+      "grade": 3,
+      "stem": "¿Qué enseña el cuento del pastor que gritaba \"lobo\"?",
+      "options": [
+        "Que los lobos son fieros",
+        "Que mentir cuesta confianza",
+        "Que no se anda solo",
+        "Que pastorear aburre muchísimo"
+      ],
+      "answer": 2,
+      "explanation": "Cuando el lobo llega de verdad, nadie le cree. Lo que pierde no son las ovejas, sino su palabra."
+    },
+    {
+      "id": "literature.es.0003",
+      "grade": 4,
+      "stem": "¿Por qué los cuentos repiten tantas veces lo mismo?",
+      "options": [
+        "El autor lo olvidó",
+        "Para llenar páginas",
+        "Para ayudar a recordar",
+        "Porque escribir así es más fácil"
+      ],
+      "answer": 3,
+      "explanation": "Estos cuentos se contaban en voz alta durante siglos. La repetición ayudaba a contar y a recordar."
+    },
+    {
+      "id": "literature.es.0004",
+      "grade": 5,
+      "stem": "¿Quién escribió Don Quijote de la Mancha?",
+      "options": [
+        "Lope de Vega",
+        "Federico García Lorca",
+        "Gustavo Adolfo Bécquer",
+        "Miguel de Cervantes"
+      ],
+      "answer": 4,
+      "explanation": "Cervantes lo publicó en dos partes y creó con ellas la primera novela moderna."
+    },
+    {
+      "id": "literature.es.0005",
+      "grade": 5,
+      "stem": "Don Quijote ataca molinos creyéndolos gigantes. ¿Qué muestra esa escena?",
+      "options": [
+        "Que ve el mundo como quiere",
+        "Que estaba enfermo",
+        "Que los molinos dan mucho miedo",
+        "Que era muy valiente"
+      ],
+      "answer": 1,
+      "explanation": "Cervantes no se ríe solo de él: pregunta quién decide qué es real, el que mira o el que mide."
+    },
+    {
+      "id": "literature.es.0006",
+      "grade": 6,
+      "stem": "¿Qué es una fábula?",
+      "options": [
+        "Una novela larga",
+        "Un relato breve con moraleja",
+        "Un poema sobre el campo",
+        "Una página de un diario íntimo"
+      ],
+      "answer": 2,
+      "explanation": "En la fábula los animales actúan como personas y el final dice sin rodeos qué enseña la historia."
+    },
+    {
+      "id": "literature.es.0007",
+      "grade": 6,
+      "stem": "¿Qué te dice el nombre de un personaje cuando está bien elegido?",
+      "options": [
+        "Nada en absoluto",
+        "Dónde se imprimió el libro",
+        "Sugiere cómo es",
+        "La edad del autor"
+      ],
+      "answer": 3,
+      "explanation": "Un nombre bien puesto presenta a la persona antes de que hable y le ahorra al autor una página."
+    },
+    {
+      "id": "literature.es.0008",
+      "grade": 7,
+      "stem": "¿Por qué un autor describe el tiempo antes de una escena importante?",
+      "options": [
+        "Para rellenar",
+        "Lo exigen las normas",
+        "Para descansar al lector",
+        "Para crear ambiente"
+      ],
+      "answer": 4,
+      "explanation": "Una tormenta antes de una pelea prepara al lector antes de que sepa explicarlo. El paisaje lleva la emoción."
+    },
+    {
+      "id": "literature.es.0009",
+      "grade": 7,
+      "stem": "¿Cuál es la diferencia entre el autor y el narrador?",
+      "options": [
+        "El narrador vive en la historia",
+        "Ninguna diferencia",
+        "El autor es el editor",
+        "El narrador siempre miente un poco"
+      ],
+      "answer": 1,
+      "explanation": "El autor escribe el libro; el narrador vive dentro. Puede equivocarse, y muchas veces ese es el plan."
+    },
+    {
+      "id": "literature.es.0010",
+      "grade": 8,
+      "stem": "¿Qué es el conflicto en un relato?",
+      "options": [
+        "Una pelea entre personas",
+        "Fuerzas que tiran en contra",
+        "Un error del libro",
+        "Una discusión larga entre lectores"
+      ],
+      "answer": 2,
+      "explanation": "El conflicto puede estar dentro de una persona: deber contra deseo. Sin tensión no hay trama."
+    },
+    {
+      "id": "literature.es.0011",
+      "grade": 8,
+      "stem": "En Cien años de soledad se repiten nombres y destinos. ¿Para qué?",
+      "options": [
+        "El autor se confundió",
+        "Para alargar un poco más el libro",
+        "Para mostrar que todo vuelve",
+        "Era la moda"
+      ],
+      "answer": 3,
+      "explanation": "La repetición hace sentir que la familia no puede escapar de sí misma. La forma dice lo mismo que la trama."
+    },
+    {
+      "id": "literature.es.0012",
+      "grade": 9,
+      "stem": "¿Por qué seguimos leyendo obras de hace siglos?",
+      "options": [
+        "El idioma es fácil",
+        "La escuela lo exige",
+        "Sencillamente no hay nada más nuevo",
+        "Los problemas siguen siendo nuestros"
+      ],
+      "answer": 4,
+      "explanation": "Los celos, la ambición y el duelo no han cambiado. Las palabras envejecen; las personas no."
+    },
+    {
+      "id": "literature.es.0013",
+      "grade": 10,
+      "stem": "¿Qué le hace al lector un narrador poco fiable?",
+      "options": [
+        "Lo obliga a leer dos veces",
+        "Lo aburre",
+        "Se lo explica todo",
+        "Le termina la historia demasiado pronto"
+      ],
+      "answer": 1,
+      "explanation": "Si no puedes fiarte de la voz, empiezas a leer alrededor de ella. El lector hace el trabajo."
+    },
+    {
+      "id": "literature.es.0014",
+      "grade": 11,
+      "stem": "¿Por qué los escritores usan símbolos en vez de decirlo claro?",
+      "options": [
+        "Para parecer listos",
+        "Para decir más de una vez",
+        "Para esconder del todo el sentido",
+        "Para alargar el libro"
+      ],
+      "answer": 2,
+      "explanation": "Una imagen puede cargar emoción, argumento y memoria a la vez. Decirlo llano lo aplanaría todo."
+    }
+  ]
+}

@@ -1,0 +1,188 @@
+{
+  "subject": "literature",
+  "locale": "en",
+  "questions": [
+    {
+      "id": "literature.en.0001",
+      "grade": 2,
+      "stem": "In the tale of the tortoise and the hare, why does the tortoise win?",
+      "options": [
+        "He keeps going",
+        "He is faster",
+        "The hare cheats",
+        "The road was short"
+      ],
+      "answer": 1,
+      "explanation": "The hare is quicker but stops to nap. Steady effort beats talent that does not turn up."
+    },
+    {
+      "id": "literature.en.0002",
+      "grade": 3,
+      "stem": "What does the story of the boy who cried wolf teach?",
+      "options": [
+        "Wolves are dangerous",
+        "Lies cost you trust",
+        "Do not walk alone",
+        "Shepherds get bored"
+      ],
+      "answer": 2,
+      "explanation": "When the wolf really comes, nobody believes him. The loss is not the sheep but his word."
+    },
+    {
+      "id": "literature.en.0003",
+      "grade": 4,
+      "stem": "Why do fairy tales so often repeat things three times?",
+      "options": [
+        "The writer forgot",
+        "To fill more pages",
+        "To help you remember",
+        "It is quicker to write"
+      ],
+      "answer": 3,
+      "explanation": "These tales were told aloud for centuries. Repetition helped the teller keep the thread and the listener recall it."
+    },
+    {
+      "id": "literature.en.0004",
+      "grade": 5,
+      "stem": "Who wrote Alice's Adventures in Wonderland?",
+      "options": [
+        "Charles Dickens",
+        "Jane Austen",
+        "Rudyard Kipling",
+        "Lewis Carroll"
+      ],
+      "answer": 4,
+      "explanation": "Lewis Carroll, a maths lecturer, wrote it for a real girl called Alice on a boat trip."
+    },
+    {
+      "id": "literature.en.0005",
+      "grade": 5,
+      "stem": "Why is Wonderland full of rules that make no sense?",
+      "options": [
+        "To show adult logic is odd",
+        "Carroll wrote in haste",
+        "Children simply enjoy nonsense",
+        "It was a printing error"
+      ],
+      "answer": 1,
+      "explanation": "Alice keeps meeting confident grown-ups whose rules collapse under a question. The nonsense is the point."
+    },
+    {
+      "id": "literature.en.0006",
+      "grade": 6,
+      "stem": "What is a fable?",
+      "options": [
+        "A long novel",
+        "A short tale with a lesson",
+        "A poem about nature",
+        "A page from a private diary"
+      ],
+      "answer": 2,
+      "explanation": "In a fable animals behave like people, and the ending states plainly what the story teaches."
+    },
+    {
+      "id": "literature.en.0007",
+      "grade": 6,
+      "stem": "What does a character's name tell you when it is chosen well?",
+      "options": [
+        "Nothing at all",
+        "Where the book was printed",
+        "Hints at who they are",
+        "How old the author was"
+      ],
+      "answer": 3,
+      "explanation": "Names like Scrooge or Mr Gradgrind announce a person before they speak, saving the author a page."
+    },
+    {
+      "id": "literature.en.0008",
+      "grade": 7,
+      "stem": "Why does a writer describe the weather before an important scene?",
+      "options": [
+        "To fill the page",
+        "The rules require it",
+        "To rest the reader",
+        "To set the mood"
+      ],
+      "answer": 4,
+      "explanation": "A storm before a quarrel prepares the reader before they can say why. Setting carries feeling."
+    },
+    {
+      "id": "literature.en.0009",
+      "grade": 7,
+      "stem": "What is the difference between the author and the narrator?",
+      "options": [
+        "The narrator lives in the story",
+        "No difference",
+        "The author is the publisher",
+        "The narrator always lies a little"
+      ],
+      "answer": 1,
+      "explanation": "The author writes the book; the narrator lives inside it. A narrator can be wrong, and often that is the design."
+    },
+    {
+      "id": "literature.en.0010",
+      "grade": 8,
+      "stem": "Scrooge changes after three ghosts visit him. What kind of story is that?",
+      "options": [
+        "A mystery",
+        "A tale of transformation",
+        "A travel diary",
+        "A dry historical record"
+      ],
+      "answer": 2,
+      "explanation": "Dickens shows a man who can still change. The ghosts are not the point; the choice at the end is."
+    },
+    {
+      "id": "literature.en.0011",
+      "grade": 8,
+      "stem": "What is conflict in a story?",
+      "options": [
+        "A quarrel between people",
+        "A mistake in the book",
+        "Forces pulling against each other",
+        "A long argument among readers"
+      ],
+      "answer": 3,
+      "explanation": "Conflict can sit inside one person: duty against desire. Without something pulling, there is no plot."
+    },
+    {
+      "id": "literature.en.0012",
+      "grade": 9,
+      "stem": "Why do we still read plays written four hundred years ago?",
+      "options": [
+        "The language is easy",
+        "Schools insist on it",
+        "There is simply nothing newer",
+        "The problems are still ours"
+      ],
+      "answer": 4,
+      "explanation": "Jealousy, ambition and grief have not changed. Shakespeare's words are old; the people in them are not."
+    },
+    {
+      "id": "literature.en.0013",
+      "grade": 10,
+      "stem": "What does an unreliable narrator do to a reader?",
+      "options": [
+        "Makes them read twice",
+        "Bores them",
+        "Explains everything",
+        "Ends the whole story early"
+      ],
+      "answer": 1,
+      "explanation": "When you cannot trust the voice, you start reading around it for what really happened. The reader does the work."
+    },
+    {
+      "id": "literature.en.0014",
+      "grade": 11,
+      "stem": "Why do writers use symbols instead of saying things directly?",
+      "options": [
+        "To seem clever",
+        "To say more at once",
+        "To hide the meaning",
+        "To make books longer"
+      ],
+      "answer": 2,
+      "explanation": "A green light or a mockingbird carries feeling, argument and memory in one image. Stating it plainly would flatten it."
+    }
+  ]
+}

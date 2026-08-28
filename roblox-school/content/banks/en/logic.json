@@ -3,64 +3,264 @@
   "locale": "en",
   "questions": [
     {
-      "id": "logic.en.0001", "grade": 2,
-      "stem": "There were 5 apples on the table. You took 2. How many do you have?",
-      "options": ["2", "3", "5", "7"], "answer": 1,
-      "explanation": "The question asks how many you have, not how many are left on the table. You took 2."
+      "id": "logic.en.0001",
+      "grade": 1,
+      "stem": "All cats are animals. Whiskers is a cat. What is Whiskers?",
+      "options": [
+        "Not an animal",
+        "A dog",
+        "An animal",
+        "Unknown"
+      ],
+      "answer": 3,
+      "explanation": "If all cats are animals, Whiskers is one too. It follows straight from the first line."
     },
     {
-      "id": "logic.en.0002", "grade": 4,
-      "stem": "All cats are animals. Murka is a cat. What follows?",
-      "options": ["Murka isn't an animal", "Murka is an animal", "Can't say", "Murka is a dog"], "answer": 2,
-      "explanation": "If every cat is an animal, then so is Murka. That follows directly from the two facts."
+      "id": "logic.en.0002",
+      "grade": 2,
+      "stem": "There were 5 apples on the table. You took 2. How many apples do you have?",
+      "options": [
+        "5 apples",
+        "2 apples",
+        "3 apples",
+        "7 apples"
+      ],
+      "answer": 2,
+      "explanation": "The question is how many you have, not how many are left. You took 2, so you have 2."
     },
     {
-      "id": "logic.en.0003", "grade": 6,
-      "stem": "If it rains, the ground is wet. The ground is wet. Is it raining?",
-      "options": ["Definitely yes", "Definitely no", "Not necessarily", "Never"], "answer": 3,
-      "explanation": "A sprinkler wets the ground too. A cause doesn't follow from its effect."
+      "id": "logic.en.0003",
+      "grade": 3,
+      "stem": "Anna is taller than Boris, and Boris is taller than Victor. Who is the shortest?",
+      "options": [
+        "Anna",
+        "Boris",
+        "All the same",
+        "Victor"
+      ],
+      "answer": 4,
+      "explanation": "Line them up: Anna, Boris, Victor. Victor is below Boris, who is below Anna."
     },
     {
-      "id": "logic.en.0004", "grade": 3,
-      "stem": "Which is heavier: a kilo of cotton or a kilo of iron?",
-      "options": ["Iron", "Cotton", "Depends", "The same"], "answer": 4,
-      "explanation": "A kilo is a kilo. What differs is volume, not weight: the cotton takes up more room."
+      "id": "logic.en.0004",
+      "grade": 3,
+      "stem": "A bag holds 3 red balls and 2 blue. How many must you draw blind to be sure of a red?",
+      "options": [
+        "Three",
+        "One",
+        "Two",
+        "Five"
+      ],
+      "answer": 1,
+      "explanation": "Worst case both blue ones come out first. The third ball is certainly red."
     },
     {
-      "id": "logic.en.0005", "grade": 4,
-      "stem": "Continue the sequence: 2, 4, 8, 16, ...",
-      "options": ["32", "18", "20", "24"], "answer": 1,
-      "explanation": "Each number is double the last, not two more. So next is 16 × 2 = 32."
+      "id": "logic.en.0005",
+      "grade": 4,
+      "stem": "When it rains, the ground is wet. The ground is wet. Is it definitely raining?",
+      "options": [
+        "Yes, definitely",
+        "Not necessarily",
+        "It is not raining",
+        "The question is wrong"
+      ],
+      "answer": 2,
+      "explanation": "Someone could have watered the garden. Wet ground does not prove rain."
     },
     {
-      "id": "logic.en.0006", "grade": 5,
-      "stem": "Two brothers each have one sister. How many children in the family?",
-      "options": ["4", "3", "6", "2"], "answer": 2,
-      "explanation": "The brothers share the same sister. Two brothers and one sister is three children."
+      "id": "logic.en.0006",
+      "grade": 4,
+      "stem": "All roses are flowers. Some flowers wilt fast. Does that mean all roses wilt fast?",
+      "options": [
+        "Yes, all of them",
+        "None of them wilt",
+        "No, it does not",
+        "Only the red ones"
+      ],
+      "answer": 3,
+      "explanation": "\"Some\" is not \"all\". The fast-wilting flowers could be entirely different ones."
     },
     {
-      "id": "logic.en.0007", "grade": 7,
-      "stem": "Some birds cannot fly. A penguin is a bird. Can it fly?",
-      "options": ["Definitely yes", "It certainly flies", "This doesn't tell us", "It isn't a bird"], "answer": 3,
-      "explanation": "The word 'some' says nothing about any particular bird. No conclusion follows."
+      "id": "logic.en.0007",
+      "grade": 5,
+      "stem": "Which is heavier: a kilo of cotton wool or a kilo of iron?",
+      "options": [
+        "The iron",
+        "The cotton",
+        "Depends on volume",
+        "The same"
+      ],
+      "answer": 4,
+      "explanation": "A kilo is a kilo. Iron only seems heavier because it takes up far less room."
     },
     {
-      "id": "logic.en.0008", "grade": 3,
-      "stem": "What happens if you swap the two numbers you are adding?",
-      "options": ["The sum grows", "The sum shrinks", "It becomes zero", "Nothing changes"], "answer": 4,
-      "explanation": "Order doesn't matter when adding: 3 + 5 and 5 + 3 give exactly the same answer."
+      "id": "logic.en.0008",
+      "grade": 5,
+      "stem": "Every gnome has a beard. Petya has no beard. Could Petya be a gnome?",
+      "options": [
+        "No, he cannot",
+        "Yes, he could",
+        "Only in winter",
+        "Not enough data"
+      ],
+      "answer": 1,
+      "explanation": "If Petya were a gnome he would have a beard. He has none, so he is not one."
     },
     {
-      "id": "logic.en.0009", "grade": 5,
-      "stem": "A box holds 3 red balls and 2 blue. Which colour are you likelier to draw?",
-      "options": ["Red", "Blue", "Equal", "Unknown"], "answer": 1,
-      "explanation": "There are more red ones, so red is likelier. Blue is still perfectly possible."
+      "id": "logic.en.0009",
+      "grade": 6,
+      "stem": "Continue the sequence: 2, 4, 8, 16, …",
+      "options": [
+        "18",
+        "20",
+        "32",
+        "24"
+      ],
+      "answer": 3,
+      "explanation": "Each number doubles the last one rather than adding two. After 16 comes 32."
     },
     {
-      "id": "logic.en.0010", "grade": 4,
-      "stem": "Sasha is taller than Pete, and Pete is taller than Kolya. Who is shortest?",
-      "options": ["Sasha", "Kolya", "Pete", "Unclear"], "answer": 2,
-      "explanation": "Line them up: Sasha, Pete, Kolya. Kolya is below Pete, who is below Sasha."
+      "id": "logic.en.0010",
+      "grade": 6,
+      "stem": "Continue the sequence: 1, 1, 2, 3, 5, …",
+      "options": [
+        "6",
+        "8",
+        "10",
+        "7"
+      ],
+      "answer": 2,
+      "explanation": "Each number is the sum of the two before it: 2 + 3 = 5, so next is 3 + 5 = 8."
+    },
+    {
+      "id": "logic.en.0011",
+      "grade": 7,
+      "stem": "In a race you overtake the runner in second place. What position are you in now?",
+      "options": [
+        "First",
+        "Third",
+        "Somewhere mid",
+        "Second"
+      ],
+      "answer": 4,
+      "explanation": "You took the place of the one you passed. The leader is still ahead of you."
+    },
+    {
+      "id": "logic.en.0012",
+      "grade": 7,
+      "stem": "It is false that all birds fly. What follows from that?",
+      "options": [
+        "Some do not fly",
+        "None of them fly",
+        "They all fly",
+        "Birds do not exist"
+      ],
+      "answer": 1,
+      "explanation": "Denying \"all\" gives \"at least one does not\", not \"none of them do\"."
+    },
+    {
+      "id": "logic.en.0013",
+      "grade": 8,
+      "stem": "What would disprove the claim \"all swans are white\"?",
+      "options": [
+        "A hundred white ones",
+        "One black one",
+        "Nothing could",
+        "Expert opinion"
+      ],
+      "answer": 2,
+      "explanation": "A universal claim falls to a single exception. More white swans never settle it."
+    },
+    {
+      "id": "logic.en.0014",
+      "grade": 8,
+      "stem": "How many times can you subtract 5 from the number 25?",
+      "options": [
+        "Five times",
+        "Zero times",
+        "Once",
+        "Twenty times"
+      ],
+      "answer": 3,
+      "explanation": "After the first subtraction it is no longer 25 but 20. From 25 you can only do it once."
+    },
+    {
+      "id": "logic.en.0015",
+      "grade": 9,
+      "stem": "If A implies B, and B turns out false, what can be said about A?",
+      "options": [
+        "A is true",
+        "Nothing at all",
+        "A is irrelevant",
+        "A is false"
+      ],
+      "answer": 4,
+      "explanation": "Were A true, B would be true as well. B is false, so A must be false too."
+    },
+    {
+      "id": "logic.en.0016",
+      "grade": 9,
+      "stem": "The claim: \"no pupil was late\". What would disprove it?",
+      "options": [
+        "One late pupil",
+        "Twenty on time",
+        "The teacher's word",
+        "Nothing would"
+      ],
+      "answer": 1,
+      "explanation": "A single case is enough to make \"no pupil\" stop being true."
+    },
+    {
+      "id": "logic.en.0017",
+      "grade": 10,
+      "stem": "In summer both ice cream sales and drownings rise. Is ice cream dangerous?",
+      "options": [
+        "Yes, dangerous",
+        "No, a shared cause",
+        "Slightly dangerous",
+        "No link at all"
+      ],
+      "answer": 2,
+      "explanation": "Both rise because of the heat. Moving together does not make one the cause of the other."
+    },
+    {
+      "id": "logic.en.0018",
+      "grade": 10,
+      "stem": "A survey on whether the internet is useful polled only internet users. What is wrong?",
+      "options": [
+        "Too few questions",
+        "Nothing is wrong",
+        "The sample is biased",
+        "It took too long"
+      ],
+      "answer": 3,
+      "explanation": "Nobody asked the people who do not use it. The answer was decided by who was asked."
+    },
+    {
+      "id": "logic.en.0019",
+      "grade": 11,
+      "stem": "A remedy helped 9 of 10 volunteers. What is missing before we believe it?",
+      "options": [
+        "A group without it",
+        "More advertising",
+        "The seller's opinion",
+        "A nicer name"
+      ],
+      "answer": 1,
+      "explanation": "Without a comparison we cannot tell whether the remedy helped or people simply recovered."
+    },
+    {
+      "id": "logic.en.0020",
+      "grade": 11,
+      "stem": "\"Whoever is not with us is against us.\" What is wrong with this reasoning?",
+      "options": [
+        "It is too long",
+        "Nothing is wrong",
+        "It is bad grammar",
+        "It forgets a third option"
+      ],
+      "answer": 4,
+      "explanation": "One can simply be indifferent or unaware. The choice of two was imposed, not proved."
     }
   ]
 }

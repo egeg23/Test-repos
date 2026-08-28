@@ -1,0 +1,204 @@
+{
+  "subject": "science",
+  "locale": "pt",
+  "tasks": [
+    {
+      "id": "asm.science.pt.0001",
+      "grade": 5,
+      "prompt": "Monte um circuito elétrico simples em ordem",
+      "slots": [
+        "Fonte de corrente",
+        "Fio",
+        "Interruptor",
+        "O que é alimentado"
+      ],
+      "answers": [
+        "battery",
+        "wire",
+        "switch",
+        "lamp"
+      ],
+      "palette": [
+        "battery",
+        "wire",
+        "switch",
+        "lamp",
+        "magnet",
+        "beaker",
+        "filter"
+      ],
+      "explanation": "A corrente anda em círculo: pilha, fio, interruptor, lâmpada e volta. Rompa o anel e a luz apaga."
+    },
+    {
+      "id": "asm.science.pt.0002",
+      "grade": 4,
+      "prompt": "Do que uma semente precisa para brotar",
+      "slots": [
+        "Onde plantar",
+        "O que dar a ela",
+        "O que fornece luz"
+      ],
+      "answers": [
+        "soil",
+        "water",
+        "sunlight"
+      ],
+      "palette": [
+        "soil",
+        "water",
+        "sunlight",
+        "battery",
+        "magnet",
+        "lamp"
+      ],
+      "explanation": "A terra segura a raiz, a água inicia o crescimento, a luz alimenta o broto. Tire um e nada nasce."
+    },
+    {
+      "id": "asm.science.pt.0003",
+      "grade": 6,
+      "prompt": "Monte um sistema para limpar água turva",
+      "slots": [
+        "Onde despejar",
+        "Por onde passar",
+        "O que retém a sujeira"
+      ],
+      "answers": [
+        "beaker",
+        "funnel",
+        "filter"
+      ],
+      "palette": [
+        "beaker",
+        "funnel",
+        "filter",
+        "magnet",
+        "battery",
+        "seed"
+      ],
+      "explanation": "O filtro prende partículas e deixa a água passar. O que está dissolvido segue adiante: para isso é preciso ferver."
+    },
+    {
+      "id": "asm.science.pt.0004",
+      "grade": 7,
+      "prompt": "O que acrescentar ao circuito para a lâmpada brilhar menos",
+      "slots": [
+        "A fonte",
+        "O que limita a corrente",
+        "A própria lâmpada"
+      ],
+      "answers": [
+        "battery",
+        "resistor",
+        "lamp"
+      ],
+      "palette": [
+        "battery",
+        "resistor",
+        "lamp",
+        "magnet",
+        "water",
+        "funnel"
+      ],
+      "explanation": "O resistor atrapalha a corrente e a lâmpada recebe menos energia. É assim que funcionam os dimmers."
+    },
+    {
+      "id": "asm.science.pt.0005",
+      "grade": 5,
+      "prompt": "Monte um jeito de medir a temperatura da água",
+      "slots": [
+        "Onde despejar",
+        "O que despejar",
+        "Com o que medir"
+      ],
+      "answers": [
+        "beaker",
+        "water",
+        "thermometer"
+      ],
+      "palette": [
+        "beaker",
+        "water",
+        "thermometer",
+        "magnet",
+        "battery",
+        "soil"
+      ],
+      "explanation": "O termômetro precisa ficar dentro da água, não ao lado, ou vai marcar a temperatura do ar."
+    },
+    {
+      "id": "asm.science.pt.0006",
+      "grade": 8,
+      "prompt": "Monte um experimento que mostre o que um ímã faz",
+      "slots": [
+        "O que atrai",
+        "Em que testar",
+        "O que não gruda"
+      ],
+      "answers": [
+        "magnet",
+        "wire",
+        "water"
+      ],
+      "palette": [
+        "magnet",
+        "wire",
+        "water",
+        "seed",
+        "sunlight",
+        "soil"
+      ],
+      "explanation": "O ímã puxa o ferro do fio, mas não a água. Assim se vê que o efeito é seletivo, não geral."
+    },
+    {
+      "id": "asm.science.pt.0007",
+      "grade": 6,
+      "prompt": "Siga o caminho da semente até a planta",
+      "slots": [
+        "O começo",
+        "O que inicia o crescimento",
+        "O que aparece"
+      ],
+      "answers": [
+        "seed",
+        "water",
+        "sprout"
+      ],
+      "palette": [
+        "seed",
+        "water",
+        "sprout",
+        "battery",
+        "magnet",
+        "beaker"
+      ],
+      "explanation": "Uma semente seca pode esperar anos. A água a acorda, e só então surge o broto."
+    },
+    {
+      "id": "asm.science.pt.0008",
+      "grade": 9,
+      "prompt": "Monte um circuito que possa ser ligado e desligado",
+      "slots": [
+        "Dá energia",
+        "Conecta",
+        "Controla",
+        "Mostra o resultado"
+      ],
+      "answers": [
+        "battery",
+        "wire",
+        "switch",
+        "lamp"
+      ],
+      "palette": [
+        "battery",
+        "wire",
+        "switch",
+        "lamp",
+        "resistor",
+        "filter",
+        "soil"
+      ],
+      "explanation": "O interruptor simplesmente rompe o anel. A energia não some — ela apenas não tem mais para onde ir."
+    }
+  ]
+}

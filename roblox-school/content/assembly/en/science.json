@@ -3,28 +3,202 @@
   "locale": "en",
   "tasks": [
     {
-      "id": "asm.science.en.0001", "grade": 5,
-      "prompt": "Build a simple electric circuit in order",
-      "slots": ["Power source", "Conductor", "Control", "The thing it powers"],
-      "answers": ["battery", "wire", "switch", "lamp"],
-      "palette": ["battery", "wire", "switch", "lamp", "magnet", "beaker", "filter"],
-      "explanation": "Current runs from the battery along the wire through the switch to the lamp. Break the loop anywhere and the lamp goes out."
+      "id": "asm.science.en.0001",
+      "grade": 5,
+      "prompt": "Build a simple electrical circuit in order",
+      "slots": [
+        "Power source",
+        "Wire",
+        "Switch",
+        "The thing it powers"
+      ],
+      "answers": [
+        "battery",
+        "wire",
+        "switch",
+        "lamp"
+      ],
+      "palette": [
+        "battery",
+        "wire",
+        "switch",
+        "lamp",
+        "magnet",
+        "beaker",
+        "filter"
+      ],
+      "explanation": "Current runs in a loop: battery, wire, switch, lamp and back. Break the ring and the light goes out."
     },
     {
-      "id": "asm.science.en.0002", "grade": 4,
+      "id": "asm.science.en.0002",
+      "grade": 4,
       "prompt": "What a seed needs in order to sprout",
-      "slots": ["Where to plant it", "What to pour on it", "What it needs above", "What you get"],
-      "answers": ["soil", "water", "sunlight", "sprout"],
-      "palette": ["soil", "water", "sunlight", "sprout", "magnet", "lamp", "wire"],
-      "explanation": "A seed needs soil, water and light. Miss any one of the three and nothing sprouts — these are conditions, not a wish list."
+      "slots": [
+        "Where to plant it",
+        "What to give it",
+        "What provides light"
+      ],
+      "answers": [
+        "soil",
+        "water",
+        "sunlight"
+      ],
+      "palette": [
+        "soil",
+        "water",
+        "sunlight",
+        "battery",
+        "magnet",
+        "lamp"
+      ],
+      "explanation": "Soil holds the root, water starts the growth, light feeds the shoot. Remove any one and nothing comes up."
     },
     {
-      "id": "asm.science.en.0003", "grade": 6,
-      "prompt": "Set up apparatus to separate sand from water",
-      "slots": ["What to pour the mix into", "What sits on top", "What goes inside it", "What ends up below"],
-      "answers": ["beaker", "funnel", "filter", "water"],
-      "palette": ["beaker", "funnel", "filter", "water", "soil", "battery", "thermometer"],
-      "explanation": "A filter in the funnel lets water through and holds the sand back. They separate by particle size, not by weight."
+      "id": "asm.science.en.0003",
+      "grade": 6,
+      "prompt": "Build a setup for cleaning cloudy water",
+      "slots": [
+        "What to pour into",
+        "What to pour through",
+        "What holds the dirt"
+      ],
+      "answers": [
+        "beaker",
+        "funnel",
+        "filter"
+      ],
+      "palette": [
+        "beaker",
+        "funnel",
+        "filter",
+        "magnet",
+        "battery",
+        "seed"
+      ],
+      "explanation": "A filter traps particles and lets water through. Dissolved substances pass straight on; those need boiling."
+    },
+    {
+      "id": "asm.science.en.0004",
+      "grade": 7,
+      "prompt": "What to add to a circuit to dim the lamp",
+      "slots": [
+        "The source",
+        "What limits current",
+        "The lamp itself"
+      ],
+      "answers": [
+        "battery",
+        "resistor",
+        "lamp"
+      ],
+      "palette": [
+        "battery",
+        "resistor",
+        "lamp",
+        "magnet",
+        "water",
+        "funnel"
+      ],
+      "explanation": "A resistor gets in the current's way, so the lamp receives less energy. That is how dimmer switches work."
+    },
+    {
+      "id": "asm.science.en.0005",
+      "grade": 5,
+      "prompt": "Build a way to measure the temperature of water",
+      "slots": [
+        "What to pour into",
+        "What to pour",
+        "What measures it"
+      ],
+      "answers": [
+        "beaker",
+        "water",
+        "thermometer"
+      ],
+      "palette": [
+        "beaker",
+        "water",
+        "thermometer",
+        "magnet",
+        "battery",
+        "soil"
+      ],
+      "explanation": "The thermometer has to sit in the water itself, not beside it, or it reports the air instead."
+    },
+    {
+      "id": "asm.science.en.0006",
+      "grade": 8,
+      "prompt": "Build an experiment showing what a magnet does",
+      "slots": [
+        "What attracts",
+        "What to test on",
+        "What will not stick"
+      ],
+      "answers": [
+        "magnet",
+        "wire",
+        "water"
+      ],
+      "palette": [
+        "magnet",
+        "wire",
+        "water",
+        "seed",
+        "sunlight",
+        "soil"
+      ],
+      "explanation": "The magnet pulls the iron in the wire but not the water. That shows the effect is selective, not general."
+    },
+    {
+      "id": "asm.science.en.0007",
+      "grade": 6,
+      "prompt": "Trace the path from seed to plant",
+      "slots": [
+        "The beginning",
+        "What starts growth",
+        "What appears"
+      ],
+      "answers": [
+        "seed",
+        "water",
+        "sprout"
+      ],
+      "palette": [
+        "seed",
+        "water",
+        "sprout",
+        "battery",
+        "magnet",
+        "beaker"
+      ],
+      "explanation": "A dry seed can wait for years. Water wakes it, and only then does a shoot appear."
+    },
+    {
+      "id": "asm.science.en.0008",
+      "grade": 9,
+      "prompt": "Build a circuit that can be switched on and off",
+      "slots": [
+        "Gives energy",
+        "Connects",
+        "Controls",
+        "Shows the result"
+      ],
+      "answers": [
+        "battery",
+        "wire",
+        "switch",
+        "lamp"
+      ],
+      "palette": [
+        "battery",
+        "wire",
+        "switch",
+        "lamp",
+        "resistor",
+        "filter",
+        "soil"
+      ],
+      "explanation": "The switch simply breaks the ring. The energy does not vanish — it has nowhere left to go."
     }
   ]
 }

@@ -1,0 +1,201 @@
+{
+  "subject": "art",
+  "locale": "pt",
+  "tasks": [
+    {
+      "id": "asm.art.pt.0001",
+      "grade": 3,
+      "prompt": "Que cores surgem ao misturar as primárias",
+      "slots": [
+        "Vermelho e amarelo",
+        "Azul e amarelo",
+        "Vermelho e azul"
+      ],
+      "answers": [
+        "orange",
+        "green",
+        "purple"
+      ],
+      "palette": [
+        "orange",
+        "green",
+        "purple",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "explanation": "Vermelho, azul e amarelo não se obtêm por mistura: por isso são primárias. Todas as outras vêm delas."
+    },
+    {
+      "id": "asm.art.pt.0002",
+      "grade": 4,
+      "prompt": "Monte o lado quente da paleta, do mais ardente",
+      "slots": [
+        "O mais ardente",
+        "O seguinte",
+        "Fecha o trio"
+      ],
+      "answers": [
+        "red",
+        "orange",
+        "yellow"
+      ],
+      "palette": [
+        "red",
+        "orange",
+        "yellow",
+        "blue",
+        "purple",
+        "green"
+      ],
+      "explanation": "As cores quentes lembram fogo e sol. Servem para o que deve parecer mais perto e mais vivo."
+    },
+    {
+      "id": "asm.art.pt.0003",
+      "grade": 5,
+      "prompt": "Organize a paisagem do longe para o perto",
+      "slots": [
+        "O plano mais distante",
+        "A linha ao longe",
+        "O primeiro plano",
+        "Onde escurece"
+      ],
+      "answers": [
+        "sky",
+        "horizon",
+        "foreground",
+        "shadow"
+      ],
+      "palette": [
+        "sky",
+        "horizon",
+        "foreground",
+        "shadow",
+        "highlight",
+        "red",
+        "green"
+      ],
+      "explanation": "O distante é pintado mais claro e acima; o próximo, maior e mais escuro. Assim o papel plano ganha profundidade."
+    },
+    {
+      "id": "asm.art.pt.0004",
+      "grade": 6,
+      "prompt": "Monte o lado frio da paleta",
+      "slots": [
+        "O mais frio",
+        "Entre os dois",
+        "Mais perto do quente"
+      ],
+      "answers": [
+        "blue",
+        "purple",
+        "green"
+      ],
+      "palette": [
+        "blue",
+        "purple",
+        "green",
+        "red",
+        "orange",
+        "yellow"
+      ],
+      "explanation": "As cores frias levam o olhar para o fundo. Por isso montanhas distantes são pintadas azuladas, não marrons."
+    },
+    {
+      "id": "asm.art.pt.0005",
+      "grade": 7,
+      "prompt": "Onde um objeto é mais claro e onde é mais escuro",
+      "slots": [
+        "Onde a luz bate",
+        "O lado oposto",
+        "O fundo distante"
+      ],
+      "answers": [
+        "highlight",
+        "shadow",
+        "horizon"
+      ],
+      "palette": [
+        "highlight",
+        "shadow",
+        "horizon",
+        "sky",
+        "foreground",
+        "red"
+      ],
+      "explanation": "Um brilho e uma sombra no mesmo objeto o tornam sólido. Sem eles, uma bola é só um círculo chapado."
+    },
+    {
+      "id": "asm.art.pt.0006",
+      "grade": 8,
+      "prompt": "Monte um par de cores complementares e a mistura delas",
+      "slots": [
+        "Primeira do par",
+        "A oposta",
+        "Mistura das duas"
+      ],
+      "answers": [
+        "blue",
+        "orange",
+        "green"
+      ],
+      "palette": [
+        "blue",
+        "orange",
+        "green",
+        "red",
+        "purple",
+        "yellow"
+      ],
+      "explanation": "Complementares ficam frente a frente no círculo. Juntas gritam; misturadas se anulam."
+    },
+    {
+      "id": "asm.art.pt.0007",
+      "grade": 9,
+      "prompt": "Componha uma cena com um protagonista claro",
+      "slots": [
+        "O que se olha primeiro",
+        "O que leva ao fundo",
+        "O que separa a figura"
+      ],
+      "answers": [
+        "foreground",
+        "horizon",
+        "shadow"
+      ],
+      "palette": [
+        "foreground",
+        "horizon",
+        "shadow",
+        "sky",
+        "highlight",
+        "purple"
+      ],
+      "explanation": "O protagonista vai grande e perto; a profundidade vem da linha ao longe. A sombra o descola do fundo."
+    },
+    {
+      "id": "asm.art.pt.0008",
+      "grade": 10,
+      "prompt": "Monte um pôr do sol em camadas, de baixo para cima",
+      "slots": [
+        "O chão",
+        "A faixa na borda",
+        "O mais alto"
+      ],
+      "answers": [
+        "foreground",
+        "orange",
+        "sky"
+      ],
+      "palette": [
+        "foreground",
+        "orange",
+        "sky",
+        "shadow",
+        "green",
+        "blue"
+      ],
+      "explanation": "No pôr do sol o céu esquenta junto ao horizonte e esfria acima. Uma borda dura entrega quem pintou de memória."
+    }
+  ]
+}

@@ -1,0 +1,188 @@
+{
+  "subject": "language",
+  "locale": "es",
+  "questions": [
+    {
+      "id": "language.es.0001",
+      "grade": 2,
+      "stem": "¿Cuántas sílabas tiene la palabra \"árbol\"?",
+      "options": [
+        "Dos sílabas en total",
+        "Una sola sílaba",
+        "Tres sílabas en total",
+        "Cuatro sílabas en total"
+      ],
+      "answer": 1,
+      "explanation": "Se divide ár-bol. La tilde marca dónde va la fuerza, no cuántas sílabas hay."
+    },
+    {
+      "id": "language.es.0002",
+      "grade": 3,
+      "stem": "¿Cuál está bien escrito?",
+      "options": [
+        "Boy a la escuela",
+        "Voy a la escuela",
+        "Voi a la escuela",
+        "Boi a la escuela"
+      ],
+      "answer": 2,
+      "explanation": "El verbo ir se escribe con v: voy, vas, va. \"Boy\" no existe en español."
+    },
+    {
+      "id": "language.es.0003",
+      "grade": 4,
+      "stem": "¿Cuándo se usa \"ser\" y cuándo \"estar\"?",
+      "options": [
+        "Da igual cuál uses",
+        "Estar solo en pasado",
+        "Ser para lo permanente",
+        "Ser solo para personas"
+      ],
+      "answer": 3,
+      "explanation": "\"Es alto\" describe cómo es; \"está cansado\" describe cómo se encuentra ahora. Uno define, el otro sitúa."
+    },
+    {
+      "id": "language.es.0004",
+      "grade": 4,
+      "stem": "¿Qué palabra lleva tilde?",
+      "options": [
+        "camion sin tilde",
+        "cámion con tilde",
+        "camíon con tilde",
+        "camión con tilde"
+      ],
+      "answer": 4,
+      "explanation": "Es aguda y termina en n, así que lleva tilde en la última sílaba: ca-mión."
+    },
+    {
+      "id": "language.es.0005",
+      "grade": 5,
+      "stem": "¿Qué significa \"estar en las nubes\"?",
+      "options": [
+        "Estar distraído",
+        "Volar en avión",
+        "Estar muy contento",
+        "Subir a una montaña"
+      ],
+      "answer": 1,
+      "explanation": "Nada tiene que ver con el cielo: describe a quien no atiende a lo que pasa delante."
+    },
+    {
+      "id": "language.es.0006",
+      "grade": 6,
+      "stem": "¿Para qué sirve una coma en la frase?",
+      "options": [
+        "Para que quede bonita",
+        "Separa el sentido",
+        "Lo exige la tradición",
+        "Para descansar leyendo"
+      ],
+      "answer": 2,
+      "explanation": "\"Vamos a comer, niños\" y \"vamos a comer niños\" no dicen lo mismo. La coma marca límites de sentido."
+    },
+    {
+      "id": "language.es.0007",
+      "grade": 6,
+      "stem": "¿En qué se diferencian sinónimo y antónimo?",
+      "options": [
+        "El sinónimo es más largo",
+        "El sinónimo suena igual",
+        "El sinónimo es cercano",
+        "El sinónimo es extranjero"
+      ],
+      "answer": 3,
+      "explanation": "Sinónimos: valiente y audaz. Antónimos: valiente y cobarde. Uno acerca el sentido, el otro lo invierte."
+    },
+    {
+      "id": "language.es.0008",
+      "grade": 7,
+      "stem": "¿Cuál es la diferencia entre \"por\" y \"para\"?",
+      "options": [
+        "Son intercambiables",
+        "Para es solo formal",
+        "Por es solo de tiempo",
+        "Por indica la causa"
+      ],
+      "answer": 4,
+      "explanation": "\"Lo hice por ti\" da el motivo; \"lo hice para ti\" da el destino. Causa frente a finalidad."
+    },
+    {
+      "id": "language.es.0009",
+      "grade": 8,
+      "stem": "¿Qué es una palabra polisémica?",
+      "options": [
+        "Tiene varios sentidos",
+        "Tiene muchas letras",
+        "Viene de otro idioma",
+        "Cuesta pronunciarla"
+      ],
+      "answer": 1,
+      "explanation": "\"Banco\" es asiento, entidad y montón de peces. El contexto decide cuál de los sentidos vale."
+    },
+    {
+      "id": "language.es.0010",
+      "grade": 8,
+      "stem": "¿Por qué el español toma palabras de otros idiomas?",
+      "options": [
+        "Para sonar moderno",
+        "Nombran cosas nuevas",
+        "Alguien las impone",
+        "Para complicar el habla"
+      ],
+      "answer": 2,
+      "explanation": "Con la cosa llega su nombre: chocolate, álgebra, software. La lengua toma justo lo que no sabe nombrar."
+    },
+    {
+      "id": "language.es.0011",
+      "grade": 9,
+      "stem": "¿Por qué no se escribe igual que se habla?",
+      "options": [
+        "Hablar está mal",
+        "Escribir usa más palabras",
+        "Cada registro sirve a algo",
+        "Hablar es solo oral"
+      ],
+      "answer": 3,
+      "explanation": "\"Qué tal, una cosita\" vale en un mensaje y falla en una instancia. El registro se elige por el lector."
+    },
+    {
+      "id": "language.es.0012",
+      "grade": 10,
+      "stem": "¿Qué hace una metáfora?",
+      "options": [
+        "Adorna la oración",
+        "Cambia una palabra",
+        "Alarga la frase",
+        "Traslada el sentido"
+      ],
+      "answer": 4,
+      "explanation": "\"Corazón de piedra\" no habla de minerales. La metáfora lleva una cualidad de una cosa a otra."
+    },
+    {
+      "id": "language.es.0013",
+      "grade": 10,
+      "stem": "¿Por qué la voz pasiva puede ser sospechosa?",
+      "options": [
+        "Esconde quién actuó",
+        "Es incorrecta siempre",
+        "Es demasiado larga",
+        "Confunde el tiempo verbal"
+      ],
+      "answer": 1,
+      "explanation": "\"Se cometieron errores\" no dice quién. La gramática está bien; lo que falta es el responsable."
+    },
+    {
+      "id": "language.es.0014",
+      "grade": 11,
+      "stem": "¿Por qué cambia la norma de una lengua?",
+      "options": [
+        "La gente se vuelve floja",
+        "Cambian los hablantes",
+        "Lo decide la Academia",
+        "Influyen los vecinos"
+      ],
+      "answer": 2,
+      "explanation": "La norma describe cómo habla la mayoría culta. Cambia el habla y, más tarde, cambia el diccionario."
+    }
+  ]
+}

@@ -1,0 +1,188 @@
+{
+  "subject": "history",
+  "locale": "en",
+  "questions": [
+    {
+      "id": "history.en.0001",
+      "grade": 3,
+      "stem": "Why were ancient towns almost always built beside rivers?",
+      "options": [
+        "Water, food and a road",
+        "Rivers look beautiful",
+        "The weather was warmer",
+        "There were fewer insects"
+      ],
+      "answer": 1,
+      "explanation": "A river gave drink, fish and a way to move goods. With no roads, water was the easiest road there was."
+    },
+    {
+      "id": "history.en.0002",
+      "grade": 4,
+      "stem": "Why did people invent writing in the first place?",
+      "options": [
+        "To decorate their walls",
+        "To keep count of stores",
+        "To teach children reading",
+        "To write poems for kings"
+      ],
+      "answer": 2,
+      "explanation": "The first tablets are lists of grain and cattle. Literature came a long time after bookkeeping."
+    },
+    {
+      "id": "history.en.0003",
+      "grade": 5,
+      "stem": "Why did the printing press change so much?",
+      "options": [
+        "Books became prettier",
+        "Monks gained free time",
+        "Knowledge became cheap",
+        "Paper became stronger"
+      ],
+      "answer": 3,
+      "explanation": "A manuscript took months to copy; a press made hundreds. Ideas travelled faster than rumour for the first time."
+    },
+    {
+      "id": "history.en.0004",
+      "grade": 5,
+      "stem": "What did Magna Carta actually establish?",
+      "options": [
+        "Rights for every subject",
+        "The end of all taxes",
+        "A parliament with real power",
+        "Even the king obeys law"
+      ],
+      "answer": 4,
+      "explanation": "It bound the king to rules, mostly for barons. The idea that power has limits outlived every clause in it."
+    },
+    {
+      "id": "history.en.0005",
+      "grade": 6,
+      "stem": "Why did the Industrial Revolution begin with cloth?",
+      "options": [
+        "Demand was enormous",
+        "Cloth is prettier than iron",
+        "The government ordered it",
+        "There was too much wool"
+      ],
+      "answer": 1,
+      "explanation": "Everyone needs clothes, so the market was already waiting. A machine paid for itself fastest there."
+    },
+    {
+      "id": "history.en.0006",
+      "grade": 7,
+      "stem": "What happened to towns during the Industrial Revolution?",
+      "options": [
+        "They emptied out",
+        "They grew very fast",
+        "They barely changed at all",
+        "They became much cleaner"
+      ],
+      "answer": 2,
+      "explanation": "Factories called for workers and the countryside moved in. Housing and clean water did not keep up."
+    },
+    {
+      "id": "history.en.0007",
+      "grade": 7,
+      "stem": "Why did empires want colonies?",
+      "options": [
+        "To spread their language",
+        "To explore the unknown lands",
+        "For resources and markets",
+        "To move surplus people"
+      ],
+      "answer": 3,
+      "explanation": "Colonies supplied cheap raw materials and bought finished goods. The flag usually followed the ledger."
+    },
+    {
+      "id": "history.en.0008",
+      "grade": 8,
+      "stem": "Why did a Second World War follow the First?",
+      "options": [
+        "People forgot the horror",
+        "There were simply not enough weapons",
+        "The timing simply worked out",
+        "The peace was built as punishment"
+      ],
+      "answer": 4,
+      "explanation": "Harsh terms and a broken economy grew resentment, and new regimes rose on it."
+    },
+    {
+      "id": "history.en.0009",
+      "grade": 8,
+      "stem": "Why do historians compare several accounts of one event?",
+      "options": [
+        "One source may be wrong or lying",
+        "It makes the work last",
+        "Tradition demands it",
+        "To find the oldest one of them"
+      ],
+      "answer": 1,
+      "explanation": "Every witness has an interest and a faulty memory. Independent accounts agreeing is the only real proof."
+    },
+    {
+      "id": "history.en.0010",
+      "grade": 9,
+      "stem": "What does the word revolution mean in history?",
+      "options": [
+        "A slow improvement",
+        "A sharp break in the order",
+        "A lawful change of ruler",
+        "A war against another state"
+      ],
+      "answer": 2,
+      "explanation": "A revolution changes how power and property work, not merely who holds them — and usually fast."
+    },
+    {
+      "id": "history.en.0011",
+      "grade": 9,
+      "stem": "Why did the abolition of slavery not end inequality?",
+      "options": [
+        "Nobody wanted to work",
+        "The whole economy collapsed",
+        "Law changed, land did not",
+        "Records were all lost"
+      ],
+      "answer": 3,
+      "explanation": "Freedom arrived without land, capital or schooling. The law moved in a day; the arrangement of wealth did not."
+    },
+    {
+      "id": "history.en.0012",
+      "grade": 10,
+      "stem": "Why do winners and losers write different histories?",
+      "options": [
+        "One of the sides studied badly",
+        "Documents get lost",
+        "The languages differ",
+        "Each writes its own truth"
+      ],
+      "answer": 4,
+      "explanation": "Choosing which facts to tell is already interpretation. One event can honestly be a triumph and a tragedy."
+    },
+    {
+      "id": "history.en.0013",
+      "grade": 10,
+      "stem": "Why is the printing of newspapers important to democracy?",
+      "options": [
+        "Shared facts allow argument",
+        "They entertain the public",
+        "They employ a great many writers",
+        "They record daily events"
+      ],
+      "answer": 1,
+      "explanation": "People can only decide together if they argue from the same information. That is why press freedom is fought over."
+    },
+    {
+      "id": "history.en.0014",
+      "grade": 11,
+      "stem": "Why is it risky to judge the past by today's standards?",
+      "options": [
+        "There were no written laws then",
+        "The choices on offer differed",
+        "People were less clever",
+        "Records survive badly"
+      ],
+      "answer": 2,
+      "explanation": "People decide inside their own time and knowledge. Understanding a decision is not excusing it, but without that history becomes a courtroom."
+    }
+  ]
+}

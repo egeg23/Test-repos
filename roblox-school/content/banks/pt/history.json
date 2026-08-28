@@ -1,0 +1,188 @@
+{
+  "subject": "history",
+  "locale": "pt",
+  "questions": [
+    {
+      "id": "history.pt.0001",
+      "grade": 3,
+      "stem": "Por que as cidades antigas ficavam junto aos rios?",
+      "options": [
+        "Água, comida e caminho",
+        "Os rios são muito bonitos",
+        "Ali era mais quente",
+        "Havia menos insetos"
+      ],
+      "answer": 1,
+      "explanation": "O rio dava bebida, peixe e um jeito de mover mercadorias. Sem estradas, a água era a melhor estrada."
+    },
+    {
+      "id": "history.pt.0002",
+      "grade": 4,
+      "stem": "Para que inventaram a escrita?",
+      "options": [
+        "Para enfeitar paredes",
+        "Para controlar estoques",
+        "Para ensinar a ler",
+        "Para fazer poemas ao rei"
+      ],
+      "answer": 2,
+      "explanation": "As primeiras tabuinhas são listas de grãos e gado. A literatura veio muito depois da contabilidade."
+    },
+    {
+      "id": "history.pt.0003",
+      "grade": 5,
+      "stem": "Por que a imprensa mudou tanta coisa?",
+      "options": [
+        "Os livros ficaram bonitos",
+        "Os monges descansaram",
+        "O saber ficou barato",
+        "O papel ficou mais forte"
+      ],
+      "answer": 3,
+      "explanation": "Copiar à mão levava meses; a prensa fazia centenas. Pela primeira vez as ideias correram mais que o boato."
+    },
+    {
+      "id": "history.pt.0004",
+      "grade": 5,
+      "stem": "O que Portugal buscava nas grandes navegações?",
+      "options": [
+        "Conhecer terras novas",
+        "Espalhar a própria língua",
+        "Dar trabalho a muitos marinheiros",
+        "Uma rota para as especiarias"
+      ],
+      "answer": 4,
+      "explanation": "O comércio de especiarias passava por intermediários caros. Contornar a África era contornar o pedágio."
+    },
+    {
+      "id": "history.pt.0005",
+      "grade": 6,
+      "stem": "Por que a Revolução Industrial começou pelo tecido?",
+      "options": [
+        "A procura era enorme",
+        "Pano é mais bonito",
+        "O governo mandou",
+        "Sobrava lã demais no reino"
+      ],
+      "answer": 1,
+      "explanation": "Todo mundo precisa de roupa, então o mercado já existia. A máquina se pagava mais rápido ali do que em qualquer outra coisa."
+    },
+    {
+      "id": "history.pt.0006",
+      "grade": 7,
+      "stem": "O que aconteceu com as cidades na industrialização?",
+      "options": [
+        "Ficaram vazias",
+        "Cresceram muito rápido",
+        "Quase não mudaram nada",
+        "Ficaram bem mais limpas"
+      ],
+      "answer": 2,
+      "explanation": "As fábricas chamavam operários e o campo se mudou para a cidade. Moradia e água limpa não acompanharam."
+    },
+    {
+      "id": "history.pt.0007",
+      "grade": 7,
+      "stem": "Por que a independência do Brasil foi diferente da vizinhança?",
+      "options": [
+        "Houve mais batalhas",
+        "Portugal desistiu bem antes",
+        "Foi feita pelo próprio herdeiro",
+        "O povo votou nela"
+      ],
+      "answer": 3,
+      "explanation": "Quem proclamou foi o filho do rei português, e o Brasil virou império. A ruptura preservou boa parte da ordem antiga."
+    },
+    {
+      "id": "history.pt.0008",
+      "grade": 8,
+      "stem": "Por que a Primeira Guerra levou à Segunda?",
+      "options": [
+        "O horror foi esquecido",
+        "Faltaram armas realmente novas",
+        "Foi só coincidência",
+        "A paz foi feita como castigo"
+      ],
+      "answer": 4,
+      "explanation": "Condições duras e economia quebrada alimentaram o ressentimento, e sobre ele subiram novos regimes."
+    },
+    {
+      "id": "history.pt.0009",
+      "grade": 8,
+      "stem": "Por que historiadores comparam várias fontes?",
+      "options": [
+        "Uma pode errar ou mentir",
+        "Para demorar mais",
+        "A tradição exige",
+        "Para achar a mais antiga"
+      ],
+      "answer": 1,
+      "explanation": "Cada testemunha tem interesse e memória falha. Fontes independentes concordando é a única prova de verdade."
+    },
+    {
+      "id": "history.pt.0010",
+      "grade": 9,
+      "stem": "O que significa revolução em história?",
+      "options": [
+        "Uma melhora lenta",
+        "Uma ruptura da ordem",
+        "Uma troca legal de chefe",
+        "Uma guerra com outro país"
+      ],
+      "answer": 2,
+      "explanation": "Uma revolução muda como funcionam o poder e a propriedade, não só quem manda — e costuma ser rápido."
+    },
+    {
+      "id": "history.pt.0011",
+      "grade": 9,
+      "stem": "Por que o fim da escravidão não trouxe igualdade?",
+      "options": [
+        "Ninguém quis trabalhar",
+        "Os antigos senhores foram embora",
+        "Veio sem terra nem escola",
+        "As colheitas caíram"
+      ],
+      "answer": 3,
+      "explanation": "A liberdade chegou sem terra, sem crédito e sem escola. A lei mudou num dia; a divisão da riqueza, não."
+    },
+    {
+      "id": "history.pt.0012",
+      "grade": 10,
+      "stem": "Por que vencedores e vencidos escrevem histórias diferentes?",
+      "options": [
+        "Um lado estudou pior",
+        "Documentos se perdem",
+        "As línguas são diferentes",
+        "Cada um conta sua verdade"
+      ],
+      "answer": 4,
+      "explanation": "Escolher quais fatos contar já é interpretar. Um mesmo evento pode ser honestamente façanha e tragédia."
+    },
+    {
+      "id": "history.pt.0013",
+      "grade": 10,
+      "stem": "Por que a imprensa livre importa para a democracia?",
+      "options": [
+        "Dá fatos comuns para discutir",
+        "Entretém as pessoas",
+        "Emprega muitíssimos autores",
+        "Registra o dia a dia"
+      ],
+      "answer": 1,
+      "explanation": "Só se decide em conjunto discutindo a partir da mesma informação. Por isso a liberdade de imprensa é tão disputada."
+    },
+    {
+      "id": "history.pt.0014",
+      "grade": 11,
+      "stem": "Por que é arriscado julgar o passado com os olhos de hoje?",
+      "options": [
+        "Antes não havia leis",
+        "As opções eram outras",
+        "As pessoas eram mais tolas",
+        "Sobrou pouco documento"
+      ],
+      "answer": 2,
+      "explanation": "Cada um decide dentro do seu tempo e do seu saber. Entender uma decisão não é desculpá-la, mas sem isso a história vira tribunal."
+    }
+  ]
+}

@@ -1,0 +1,318 @@
+{
+  "subject": "math",
+  "locale": "pt",
+  "questions": [
+    {
+      "id": "math.pt.0001",
+      "grade": 1,
+      "stem": "Cinco pássaros num galho. Dois foram embora e depois chegaram três. Quantos há agora?",
+      "options": [
+        "5",
+        "6",
+        "4",
+        "10"
+      ],
+      "answer": 2,
+      "explanation": "Em ordem: 5 − 2 = 3, depois 3 + 3 = 6. Chegaram mais do que saíram."
+    },
+    {
+      "id": "math.pt.0002",
+      "grade": 2,
+      "stem": "Kátia tem 4 balas. Ivan tem 3 a mais que ela. Quantas balas tem Ivan?",
+      "options": [
+        "3",
+        "4",
+        "12",
+        "7"
+      ],
+      "answer": 4,
+      "explanation": "\"Três a mais\" significa somar: 4 + 3 = 7. O 3 é a diferença, não a resposta."
+    },
+    {
+      "id": "math.pt.0003",
+      "grade": 3,
+      "stem": "Masha tem 3 caixas de 4 lápis. Ela deu 5 lápis. Quantos sobraram?",
+      "options": [
+        "7",
+        "12",
+        "17",
+        "2"
+      ],
+      "answer": 1,
+      "explanation": "Primeiro tudo: 3 × 4 = 12. Depois subtraia o que ela deu: 12 − 5 = 7."
+    },
+    {
+      "id": "math.pt.0004",
+      "grade": 3,
+      "stem": "Metade de um número é 8. Qual é o número?",
+      "options": [
+        "4",
+        "8",
+        "16",
+        "12"
+      ],
+      "answer": 3,
+      "explanation": "Se a metade é 8, o inteiro é o dobro: 8 × 2 = 16. Não é preciso dividir."
+    },
+    {
+      "id": "math.pt.0005",
+      "grade": 3,
+      "stem": "Quantos minutos há num quarto de hora?",
+      "options": [
+        "25",
+        "4",
+        "40",
+        "15"
+      ],
+      "answer": 4,
+      "explanation": "Uma hora tem 60 minutos. Um quarto é dividir por 4: 60 ÷ 4 = 15."
+    },
+    {
+      "id": "math.pt.0006",
+      "grade": 4,
+      "stem": "Um quadrado tem 20 cm de perímetro. Quanto mede um lado?",
+      "options": [
+        "10 cm",
+        "80 cm",
+        "4 cm",
+        "5 cm"
+      ],
+      "answer": 4,
+      "explanation": "O quadrado tem quatro lados iguais: 20 ÷ 4 = 5 cm."
+    },
+    {
+      "id": "math.pt.0007",
+      "grade": 4,
+      "stem": "Numa turma há 12 meninos e metade disso de meninas. Quantas crianças ao todo?",
+      "options": [
+        "18",
+        "24",
+        "6",
+        "36"
+      ],
+      "answer": 1,
+      "explanation": "Meninas: 12 ÷ 2 = 6. Perguntam o total: 12 + 6 = 18, não só as meninas."
+    },
+    {
+      "id": "math.pt.0008",
+      "grade": 4,
+      "stem": "Um ônibus percorre 60 km em uma hora. Quanto percorre em meia hora?",
+      "options": [
+        "120 km",
+        "60 km",
+        "15 km",
+        "30 km"
+      ],
+      "answer": 4,
+      "explanation": "Metade do tempo, metade do caminho: 60 ÷ 2 = 30 km."
+    },
+    {
+      "id": "math.pt.0009",
+      "grade": 5,
+      "stem": "O que é maior: 0,5 ou 0,45?",
+      "options": [
+        "0,45",
+        "0,5",
+        "Iguais",
+        "Incerto"
+      ],
+      "answer": 2,
+      "explanation": "0,5 é o mesmo que 0,50. Compare centésimos: 50 é mais que 45."
+    },
+    {
+      "id": "math.pt.0010",
+      "grade": 5,
+      "stem": "Pétia tinha 20 moedas. Gastou um quarto delas. Quantas sobraram?",
+      "options": [
+        "15",
+        "5",
+        "16",
+        "4"
+      ],
+      "answer": 1,
+      "explanation": "Um quarto de 20 é 5. Perguntam o que sobrou: 20 − 5 = 15, não o gasto."
+    },
+    {
+      "id": "math.pt.0011",
+      "grade": 5,
+      "stem": "O que é maior: um terço de 30 ou um quarto de 40?",
+      "options": [
+        "Um terço de 30",
+        "Um quarto de 40",
+        "São iguais",
+        "Não dá para comparar"
+      ],
+      "answer": 3,
+      "explanation": "Um terço de 30 é 10; um quarto de 40 também é 10. Contas diferentes, mesmo resultado."
+    },
+    {
+      "id": "math.pt.0012",
+      "grade": 6,
+      "stem": "O que acontece com a área de um quadrado se você dobrar o lado?",
+      "options": [
+        "Dobra",
+        "Cresce 4 vezes",
+        "Triplica",
+        "Não muda"
+      ],
+      "answer": 2,
+      "explanation": "Área é lado vezes lado. Os dois dobraram: 2 × 2 = quatro vezes."
+    },
+    {
+      "id": "math.pt.0013",
+      "grade": 6,
+      "stem": "Um número é reduzido em 20% e depois aumentado em 20%. O que aconteceu?",
+      "options": [
+        "Ficou maior",
+        "Não mudou",
+        "Ficou menor",
+        "Caiu pela metade"
+      ],
+      "answer": 3,
+      "explanation": "As porcentagens vêm de números diferentes: tirada do maior, somada ao menor."
+    },
+    {
+      "id": "math.pt.0014",
+      "grade": 6,
+      "stem": "Que número somar a 7 para obter 3?",
+      "options": [
+        "mais 4",
+        "menos 4",
+        "o número 10",
+        "não existe"
+      ],
+      "answer": 2,
+      "explanation": "Para ir de 7 a 3 você tira 4. Somar menos 4 é exatamente isso."
+    },
+    {
+      "id": "math.pt.0015",
+      "grade": 7,
+      "stem": "Um preço subiu 100%. Quantas vezes maior ele ficou?",
+      "options": [
+        "O dobro",
+        "Cem vezes",
+        "Dez vezes",
+        "Não mudou"
+      ],
+      "answer": 1,
+      "explanation": "Subir 100% é somar de novo o que havia. Fica o dobro."
+    },
+    {
+      "id": "math.pt.0016",
+      "grade": 7,
+      "stem": "O que é maior: 2/3 ou 3/5?",
+      "options": [
+        "3/5",
+        "2/3",
+        "Iguais",
+        "Incerto"
+      ],
+      "answer": 2,
+      "explanation": "Mesmo denominador: 2/3 = 10/15 e 3/5 = 9/15. Dez quinze avos vence nove."
+    },
+    {
+      "id": "math.pt.0017",
+      "grade": 7,
+      "stem": "Um produto sobe 10% e depois cai 10%. O preço voltou ao inicial?",
+      "options": [
+        "Sim, voltou",
+        "Ficou mais alto",
+        "Caiu pela metade",
+        "Não, ficou mais baixo"
+      ],
+      "answer": 4,
+      "explanation": "O desconto incide sobre o preço novo, mais alto, então tirou-se mais do que se somou."
+    },
+    {
+      "id": "math.pt.0018",
+      "grade": 8,
+      "stem": "O número a é maior que b. O que é verdade sobre −a e −b?",
+      "options": [
+        "−a é maior",
+        "São iguais",
+        "−a é menor",
+        "Depende do sinal"
+      ],
+      "answer": 3,
+      "explanation": "O menos inverte a ordem: quanto maior era o número, menor ele fica negativo."
+    },
+    {
+      "id": "math.pt.0019",
+      "grade": 8,
+      "stem": "Os ângulos de um triângulo somam 180°. Quanto somam os de um quadrilátero?",
+      "options": [
+        "360°",
+        "180°",
+        "270°",
+        "540°"
+      ],
+      "answer": 1,
+      "explanation": "Um quadrilátero se divide em dois triângulos: 180 × 2 = 360°."
+    },
+    {
+      "id": "math.pt.0020",
+      "grade": 9,
+      "stem": "Uma moeda deu cara cinco vezes seguidas. Qual a chance de cara na sexta?",
+      "options": [
+        "Menos da metade",
+        "Mais da metade",
+        "Quase zero",
+        "Exatamente metade"
+      ],
+      "answer": 4,
+      "explanation": "A moeda não lembra os lançamentos anteriores. Cada um recomeça do zero."
+    },
+    {
+      "id": "math.pt.0021",
+      "grade": 9,
+      "stem": "Cinco pessoas têm média de 160 cm. Chega uma sexta com 172 cm. E a média?",
+      "options": [
+        "Não muda",
+        "Sobe",
+        "Desce",
+        "Vira 172 cm"
+      ],
+      "answer": 2,
+      "explanation": "O novo está acima da média, então ela sobe — mas não até a altura dele: os outros puxam para baixo."
+    },
+    {
+      "id": "math.pt.0022",
+      "grade": 10,
+      "stem": "Um número ficou quatro vezes maior. O que aconteceu com sua raiz quadrada?",
+      "options": [
+        "Quatro vezes maior",
+        "Não mudou",
+        "O dobro",
+        "Dezesseis vezes maior"
+      ],
+      "answer": 3,
+      "explanation": "A raiz de 4 é 2, e o fator passa pela raiz: ela dobra."
+    },
+    {
+      "id": "math.pt.0023",
+      "grade": 10,
+      "stem": "O que acontece com 2 elevado a x quando x cresce em um?",
+      "options": [
+        "O resultado dobra",
+        "Cresce em 2",
+        "Cresce em x",
+        "Não muda"
+      ],
+      "answer": 1,
+      "explanation": "Cada passo multiplica por 2 em vez de somar 2, por isso o crescimento acelera."
+    },
+    {
+      "id": "math.pt.0024",
+      "grade": 11,
+      "stem": "Um baralho tem 40 cartas e 8 são vermelhas. Que parte do baralho é vermelha?",
+      "options": [
+        "8%",
+        "32%",
+        "40%",
+        "20%"
+      ],
+      "answer": 4,
+      "explanation": "A parte é porção sobre total: 8 ÷ 40 = 0,2, ou seja 20%. O 8 sozinho não é porcentagem."
+    }
+  ]
+}

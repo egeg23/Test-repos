@@ -1,0 +1,188 @@
+{
+  "subject": "language",
+  "locale": "pt",
+  "questions": [
+    {
+      "id": "language.pt.0001",
+      "grade": 2,
+      "stem": "Quantas sílabas tem a palavra \"pássaro\"?",
+      "options": [
+        "Três sílabas ao todo",
+        "Duas sílabas ao todo",
+        "Quatro sílabas ao todo",
+        "Uma sílaba apenas"
+      ],
+      "answer": 1,
+      "explanation": "Divide-se pás-sa-ro. O acento marca onde está a força, não quantas sílabas existem."
+    },
+    {
+      "id": "language.pt.0002",
+      "grade": 3,
+      "stem": "Qual frase está correta?",
+      "options": [
+        "Ele vai fazerem isso",
+        "Ele vai fazer isso",
+        "Eles vai fazer isso",
+        "Ele vão fazer isso"
+      ],
+      "answer": 2,
+      "explanation": "O verbo concorda com quem pratica a ação. Um só \"ele\" pede \"vai\", e um só verbo depois da locução."
+    },
+    {
+      "id": "language.pt.0003",
+      "grade": 4,
+      "stem": "Quando se usa \"mas\" e quando \"mais\"?",
+      "options": [
+        "Tanto faz qual usar",
+        "Mais é só formal",
+        "Mas indica oposição",
+        "Mas é só no passado"
+      ],
+      "answer": 3,
+      "explanation": "\"Quis, mas não pude\" opõe; \"quero mais tempo\" soma. Uma vira o sentido, a outra aumenta a quantidade."
+    },
+    {
+      "id": "language.pt.0004",
+      "grade": 4,
+      "stem": "Qual palavra está escrita corretamente?",
+      "options": [
+        "concerteza junto",
+        "conserteza junto",
+        "com serteza separado",
+        "com certeza separado"
+      ],
+      "answer": 4,
+      "explanation": "São duas palavras: \"com certeza\". Não existe a forma junta, por mais comum que ela pareça."
+    },
+    {
+      "id": "language.pt.0005",
+      "grade": 5,
+      "stem": "O que significa \"chutar o balde\"?",
+      "options": [
+        "Perder a paciência",
+        "Jogar futebol mal",
+        "Limpar a casa toda",
+        "Ganhar uma partida"
+      ],
+      "answer": 1,
+      "explanation": "Nada tem a ver com baldes: descreve quem desiste de se conter depois de aguentar demais."
+    },
+    {
+      "id": "language.pt.0006",
+      "grade": 6,
+      "stem": "Para que serve a vírgula numa frase?",
+      "options": [
+        "Para ficar bonita",
+        "Separa o sentido",
+        "A tradição exige",
+        "Para descansar lendo"
+      ],
+      "answer": 2,
+      "explanation": "\"Vamos comer, crianças\" e \"vamos comer crianças\" não dizem a mesma coisa. A vírgula marca limites de sentido."
+    },
+    {
+      "id": "language.pt.0007",
+      "grade": 6,
+      "stem": "Qual a diferença entre sinônimo e antônimo?",
+      "options": [
+        "O sinônimo é mais longo",
+        "O sinônimo soa igual",
+        "O sinônimo é próximo",
+        "O sinônimo é estrangeiro"
+      ],
+      "answer": 3,
+      "explanation": "Sinônimos: corajoso e valente. Antônimos: corajoso e covarde. Um aproxima o sentido, o outro inverte."
+    },
+    {
+      "id": "language.pt.0008",
+      "grade": 7,
+      "stem": "Quando se usa a crase em \"vou a escola\"?",
+      "options": [
+        "Nunca se usa crase",
+        "Vou á escola, com acento",
+        "Depende da escola",
+        "Vou à escola, com crase"
+      ],
+      "answer": 4,
+      "explanation": "Junta-se a preposição \"a\" com o artigo \"a\" da palavra feminina. Por isso: vou à escola, mas vou ao mercado."
+    },
+    {
+      "id": "language.pt.0009",
+      "grade": 8,
+      "stem": "O que é uma palavra polissêmica?",
+      "options": [
+        "Tem vários sentidos",
+        "Tem muitas letras",
+        "Vem de outra língua",
+        "É difícil de falar"
+      ],
+      "answer": 1,
+      "explanation": "\"Manga\" é fruta e parte da camisa. É o contexto, não a palavra, que decide qual sentido vale."
+    },
+    {
+      "id": "language.pt.0010",
+      "grade": 8,
+      "stem": "Por que o português toma palavras de outras línguas?",
+      "options": [
+        "Para soar moderno",
+        "Nomeiam coisas novas",
+        "Alguém as impõe",
+        "Para complicar a fala"
+      ],
+      "answer": 2,
+      "explanation": "Junto com a coisa chega o nome: chocolate, álgebra, software. A língua toma exatamente o que não sabe nomear."
+    },
+    {
+      "id": "language.pt.0011",
+      "grade": 9,
+      "stem": "Por que não se escreve igual ao que se fala?",
+      "options": [
+        "Falar é sempre errado",
+        "Escrever usa mais palavras",
+        "Cada registro serve a algo",
+        "Falar é só oral"
+      ],
+      "answer": 3,
+      "explanation": "\"E aí, rapidinho\" serve numa mensagem e falha num requerimento. O registro se escolhe pelo leitor."
+    },
+    {
+      "id": "language.pt.0012",
+      "grade": 10,
+      "stem": "O que faz uma metáfora?",
+      "options": [
+        "Enfeita a oração",
+        "Troca uma palavra",
+        "Alonga a frase",
+        "Transfere o sentido"
+      ],
+      "answer": 4,
+      "explanation": "\"Coração de pedra\" não fala de minerais. A metáfora leva uma qualidade de uma coisa para outra."
+    },
+    {
+      "id": "language.pt.0013",
+      "grade": 10,
+      "stem": "Por que a voz passiva às vezes é suspeita?",
+      "options": [
+        "Esconde quem agiu",
+        "É sempre incorreta",
+        "É comprida demais",
+        "Confunde o tempo verbal"
+      ],
+      "answer": 1,
+      "explanation": "\"Erros foram cometidos\" não diz por quem. A gramática está certa; falta o responsável."
+    },
+    {
+      "id": "language.pt.0014",
+      "grade": 11,
+      "stem": "Por que a norma de uma língua muda?",
+      "options": [
+        "As pessoas ficam preguiçosas",
+        "Mudam os falantes",
+        "Decide a academia",
+        "Influem os vizinhos"
+      ],
+      "answer": 2,
+      "explanation": "A norma descreve como fala a maioria instruída. Muda a fala e, mais tarde, muda o dicionário."
+    }
+  ]
+}

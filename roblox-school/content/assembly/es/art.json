@@ -1,0 +1,201 @@
+{
+  "subject": "art",
+  "locale": "es",
+  "tasks": [
+    {
+      "id": "asm.art.es.0001",
+      "grade": 3,
+      "prompt": "Qué colores salen al mezclar los primarios",
+      "slots": [
+        "Rojo y amarillo",
+        "Azul y amarillo",
+        "Rojo y azul"
+      ],
+      "answers": [
+        "orange",
+        "green",
+        "purple"
+      ],
+      "palette": [
+        "orange",
+        "green",
+        "purple",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "explanation": "Rojo, azul y amarillo no se obtienen mezclando: por eso son primarios. Todos los demás salen de ellos."
+    },
+    {
+      "id": "asm.art.es.0002",
+      "grade": 4,
+      "prompt": "Arma la parte cálida de la paleta, del más ardiente",
+      "slots": [
+        "El más ardiente",
+        "El siguiente",
+        "Cierra el trío"
+      ],
+      "answers": [
+        "red",
+        "orange",
+        "yellow"
+      ],
+      "palette": [
+        "red",
+        "orange",
+        "yellow",
+        "blue",
+        "purple",
+        "green"
+      ],
+      "explanation": "Los cálidos recuerdan al fuego y al sol. Se usan para lo que debe sentirse cercano y vivo."
+    },
+    {
+      "id": "asm.art.es.0003",
+      "grade": 5,
+      "prompt": "Ordena el paisaje de lo lejano a lo cercano",
+      "slots": [
+        "El plano más lejano",
+        "La línea a lo lejos",
+        "El primer plano",
+        "Donde oscurece"
+      ],
+      "answers": [
+        "sky",
+        "horizon",
+        "foreground",
+        "shadow"
+      ],
+      "palette": [
+        "sky",
+        "horizon",
+        "foreground",
+        "shadow",
+        "highlight",
+        "red",
+        "green"
+      ],
+      "explanation": "Lo lejano se pinta más pálido y arriba; lo cercano, más grande y oscuro. Así el papel plano gana profundidad."
+    },
+    {
+      "id": "asm.art.es.0004",
+      "grade": 6,
+      "prompt": "Arma la parte fría de la paleta",
+      "slots": [
+        "El más frío",
+        "Entre los dos",
+        "Más cerca del cálido"
+      ],
+      "answers": [
+        "blue",
+        "purple",
+        "green"
+      ],
+      "palette": [
+        "blue",
+        "purple",
+        "green",
+        "red",
+        "orange",
+        "yellow"
+      ],
+      "explanation": "Los fríos llevan la mirada hacia el fondo. Por eso las montañas lejanas se pintan azuladas y no marrones."
+    },
+    {
+      "id": "asm.art.es.0005",
+      "grade": 7,
+      "prompt": "Dónde es más claro un objeto y dónde más oscuro",
+      "slots": [
+        "Donde cae la luz",
+        "El lado contrario",
+        "El fondo lejano"
+      ],
+      "answers": [
+        "highlight",
+        "shadow",
+        "horizon"
+      ],
+      "palette": [
+        "highlight",
+        "shadow",
+        "horizon",
+        "sky",
+        "foreground",
+        "red"
+      ],
+      "explanation": "Un brillo y una sombra en el mismo objeto lo vuelven sólido. Sin ellos una pelota es un círculo plano."
+    },
+    {
+      "id": "asm.art.es.0006",
+      "grade": 8,
+      "prompt": "Arma un par de colores complementarios y su mezcla",
+      "slots": [
+        "Primero del par",
+        "Su opuesto",
+        "Mezcla de ambos"
+      ],
+      "answers": [
+        "blue",
+        "orange",
+        "green"
+      ],
+      "palette": [
+        "blue",
+        "orange",
+        "green",
+        "red",
+        "purple",
+        "yellow"
+      ],
+      "explanation": "Los complementarios se enfrentan en el círculo. Juntos gritan; mezclados se apagan el uno al otro."
+    },
+    {
+      "id": "asm.art.es.0007",
+      "grade": 9,
+      "prompt": "Compón una escena con un protagonista claro",
+      "slots": [
+        "Lo que se mira primero",
+        "Lo que lleva al fondo",
+        "Lo que separa la figura"
+      ],
+      "answers": [
+        "foreground",
+        "horizon",
+        "shadow"
+      ],
+      "palette": [
+        "foreground",
+        "horizon",
+        "shadow",
+        "sky",
+        "highlight",
+        "purple"
+      ],
+      "explanation": "El protagonista va grande y cerca; la profundidad la da la línea lejana. La sombra lo despega del fondo."
+    },
+    {
+      "id": "asm.art.es.0008",
+      "grade": 10,
+      "prompt": "Arma un atardecer por capas, de abajo arriba",
+      "slots": [
+        "El suelo",
+        "La franja del borde",
+        "Lo más alto"
+      ],
+      "answers": [
+        "foreground",
+        "orange",
+        "sky"
+      ],
+      "palette": [
+        "foreground",
+        "orange",
+        "sky",
+        "shadow",
+        "green",
+        "blue"
+      ],
+      "explanation": "Al atardecer el cielo se entibia junto al horizonte y se enfría arriba. Un borde duro delata pintar de memoria."
+    }
+  ]
+}

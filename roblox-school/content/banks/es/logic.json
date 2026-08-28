@@ -1,0 +1,266 @@
+{
+  "subject": "logic",
+  "locale": "es",
+  "questions": [
+    {
+      "id": "logic.es.0001",
+      "grade": 1,
+      "stem": "Todos los gatos son animales. Michi es un gato. ¿Qué es Michi?",
+      "options": [
+        "No es animal",
+        "Un perro",
+        "Un animal",
+        "No se sabe"
+      ],
+      "answer": 3,
+      "explanation": "Si todos los gatos son animales, Michi también lo es. Se deduce de la primera frase."
+    },
+    {
+      "id": "logic.es.0002",
+      "grade": 2,
+      "stem": "Había 5 manzanas en la mesa. Tomaste 2. ¿Cuántas manzanas tienes tú?",
+      "options": [
+        "5 manzanas",
+        "2 manzanas",
+        "3 manzanas",
+        "7 manzanas"
+      ],
+      "answer": 2,
+      "explanation": "Preguntan cuántas tienes tú, no cuántas quedan. Tomaste 2, tienes 2."
+    },
+    {
+      "id": "logic.es.0003",
+      "grade": 3,
+      "stem": "Ana es más alta que Boris, y Boris más alto que Víctor. ¿Quién es el más bajo?",
+      "options": [
+        "Ana",
+        "Boris",
+        "Iguales",
+        "Víctor"
+      ],
+      "answer": 4,
+      "explanation": "Ordénalos: Ana, Boris, Víctor. Víctor está debajo de Boris, que está debajo de Ana."
+    },
+    {
+      "id": "logic.es.0004",
+      "grade": 3,
+      "stem": "En una bolsa hay 3 bolas rojas y 2 azules. ¿Cuántas sacar a ciegas para asegurar una roja?",
+      "options": [
+        "Tres",
+        "Una",
+        "Dos",
+        "Cinco"
+      ],
+      "answer": 1,
+      "explanation": "En el peor caso salen primero las dos azules. La tercera ya es roja seguro."
+    },
+    {
+      "id": "logic.es.0005",
+      "grade": 4,
+      "stem": "Cuando llueve, el suelo se moja. El suelo está mojado. ¿Seguro que llueve?",
+      "options": [
+        "Sí, seguro",
+        "No necesariamente",
+        "No llueve",
+        "La pregunta falla"
+      ],
+      "answer": 2,
+      "explanation": "Alguien pudo regar el jardín. El suelo mojado no prueba la lluvia."
+    },
+    {
+      "id": "logic.es.0006",
+      "grade": 4,
+      "stem": "Todas las rosas son flores. Algunas flores se marchitan pronto. ¿Todas las rosas también?",
+      "options": [
+        "Sí, todas",
+        "Ninguna se marchita",
+        "No, no se deduce",
+        "Solo las rojas"
+      ],
+      "answer": 3,
+      "explanation": "\"Algunas\" no es \"todas\". Las que se marchitan pueden ser otras flores."
+    },
+    {
+      "id": "logic.es.0007",
+      "grade": 5,
+      "stem": "¿Qué pesa más: un kilo de algodón o un kilo de hierro?",
+      "options": [
+        "El hierro",
+        "El algodón",
+        "Depende del volumen",
+        "Lo mismo"
+      ],
+      "answer": 4,
+      "explanation": "Un kilo es un kilo. El hierro parece más pesado solo porque ocupa menos espacio."
+    },
+    {
+      "id": "logic.es.0008",
+      "grade": 5,
+      "stem": "Todos los gnomos tienen barba. Pedro no tiene barba. ¿Puede Pedro ser un gnomo?",
+      "options": [
+        "No, no puede",
+        "Sí, puede",
+        "Solo en invierno",
+        "Faltan datos"
+      ],
+      "answer": 1,
+      "explanation": "Si Pedro fuera gnomo tendría barba. No la tiene, luego no lo es."
+    },
+    {
+      "id": "logic.es.0009",
+      "grade": 6,
+      "stem": "Continúa la serie: 2, 4, 8, 16, …",
+      "options": [
+        "18",
+        "20",
+        "32",
+        "24"
+      ],
+      "answer": 3,
+      "explanation": "Cada número duplica al anterior, no le suma dos. Después de 16 viene 32."
+    },
+    {
+      "id": "logic.es.0010",
+      "grade": 6,
+      "stem": "Continúa la serie: 1, 1, 2, 3, 5, …",
+      "options": [
+        "6",
+        "8",
+        "10",
+        "7"
+      ],
+      "answer": 2,
+      "explanation": "Cada número es la suma de los dos anteriores: 2 + 3 = 5, luego 3 + 5 = 8."
+    },
+    {
+      "id": "logic.es.0011",
+      "grade": 7,
+      "stem": "En una carrera adelantas al corredor que iba segundo. ¿En qué puesto vas ahora?",
+      "options": [
+        "Primero",
+        "Tercero",
+        "A media tabla",
+        "Segundo"
+      ],
+      "answer": 4,
+      "explanation": "Ocupas el puesto del que adelantaste. El primero sigue por delante de ti."
+    },
+    {
+      "id": "logic.es.0012",
+      "grade": 7,
+      "stem": "Es falso que todas las aves vuelan. ¿Qué se deduce?",
+      "options": [
+        "Algunas no vuelan",
+        "Ninguna vuela",
+        "Todas vuelan",
+        "No existen aves"
+      ],
+      "answer": 1,
+      "explanation": "Negar \"todas\" da \"al menos una no\", y no \"ninguna\"."
+    },
+    {
+      "id": "logic.es.0013",
+      "grade": 8,
+      "stem": "¿Qué refutaría la afirmación \"todos los cisnes son blancos\"?",
+      "options": [
+        "Cien cisnes blancos",
+        "Uno negro",
+        "Nada podría",
+        "La opinión experta"
+      ],
+      "answer": 2,
+      "explanation": "Una afirmación universal cae con una sola excepción. Más cisnes blancos no la prueban."
+    },
+    {
+      "id": "logic.es.0014",
+      "grade": 8,
+      "stem": "¿Cuántas veces se puede restar 5 al número 25?",
+      "options": [
+        "Cinco veces",
+        "Cero veces",
+        "Una vez",
+        "Veinte veces"
+      ],
+      "answer": 3,
+      "explanation": "Tras la primera resta ya no es 25 sino 20. Del 25 solo se puede una vez."
+    },
+    {
+      "id": "logic.es.0015",
+      "grade": 9,
+      "stem": "Si A implica B, y B resulta falso, ¿qué se dice de A?",
+      "options": [
+        "A es verdadero",
+        "Nada en absoluto",
+        "A da igual",
+        "A es falso"
+      ],
+      "answer": 4,
+      "explanation": "Si A fuera verdadero, B también lo sería. B es falso, luego A es falso."
+    },
+    {
+      "id": "logic.es.0016",
+      "grade": 9,
+      "stem": "La afirmación: \"ningún alumno llegó tarde\". ¿Qué la refutaría?",
+      "options": [
+        "Un alumno tarde",
+        "Veinte puntuales",
+        "La palabra del profe",
+        "Nada"
+      ],
+      "answer": 1,
+      "explanation": "Basta un solo caso para que \"ninguno\" deje de ser cierto."
+    },
+    {
+      "id": "logic.es.0017",
+      "grade": 10,
+      "stem": "En verano suben las ventas de helado y los ahogamientos. ¿El helado es peligroso?",
+      "options": [
+        "Sí, peligroso",
+        "No, causa común",
+        "Un poco peligroso",
+        "No hay relación"
+      ],
+      "answer": 2,
+      "explanation": "Ambos suben por el calor. Coincidir en el tiempo no convierte a uno en causa del otro."
+    },
+    {
+      "id": "logic.es.0018",
+      "grade": 10,
+      "stem": "Una encuesta sobre la utilidad de internet preguntó solo a usuarios de internet. ¿Qué falla?",
+      "options": [
+        "Pocas preguntas",
+        "No falla nada",
+        "La muestra está sesgada",
+        "Duró demasiado"
+      ],
+      "answer": 3,
+      "explanation": "No se preguntó a quienes no lo usan. La respuesta la decidió a quién se preguntó."
+    },
+    {
+      "id": "logic.es.0019",
+      "grade": 11,
+      "stem": "Un remedio ayudó a 9 de 10 voluntarios. ¿Qué falta para creerlo?",
+      "options": [
+        "Un grupo sin él",
+        "Más publicidad",
+        "La opinión del vendedor",
+        "Un nombre bonito"
+      ],
+      "answer": 1,
+      "explanation": "Sin comparación no sabemos si ayudó el remedio o la gente se curó sola."
+    },
+    {
+      "id": "logic.es.0020",
+      "grade": 11,
+      "stem": "\"Quien no está con nosotros está contra nosotros.\" ¿Qué falla aquí?",
+      "options": [
+        "Es muy largo",
+        "No falla nada",
+        "Está mal escrito",
+        "Olvida una tercera opción"
+      ],
+      "answer": 4,
+      "explanation": "Se puede ser indiferente o no saber del asunto. La disyuntiva se impuso, no se demostró."
+    }
+  ]
+}
