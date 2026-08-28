@@ -1,0 +1,17 @@
+# Toolchain for this project.
+#
+# Rokit reads this file and installs exactly these versions, so a new machine
+# gets the same tools as every other one. Install Rokit once, then run
+# `rokit install` in this folder and everything below appears.
+#
+#   https://github.com/rojo-rbx/rokit
+#
+# Versions are pinned rather than floating. A build that quietly changed tool
+# versions between two machines is a build that fails on one of them for reasons
+# nobody can see.
+
+[tools]
+# Syncs this folder into Roblox Studio, and builds a .rbxl place file.
+rojo = "rojo-rbx/rojo@7.7.0"
+# Fetches the ProfileStore dependency listed in wally.toml.
+wally = "UpliftGames/wally@0.3.2"
