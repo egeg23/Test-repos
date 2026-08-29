@@ -11,6 +11,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Achievements = require(ReplicatedStorage.Shared.Config.Achievements)
 local Limits = require(ReplicatedStorage.Shared.Config.Limits)
+local Economy = require(ReplicatedStorage.Shared.Config.Economy)
 local Progression = require(ReplicatedStorage.Shared.Config.Progression)
 local Types = require(ReplicatedStorage.Shared.Types)
 
@@ -72,19 +73,38 @@ function ProgressionService.applyLesson(
 
 	if passed then
 		progress.lessonsPassed += 1
-		data.lessonsThisGrade += 1
 
-		local required = Progression.lessonsForGrade(data.grade)
-		if data.lessonsThisGrade >= required then
-			data.lessonsThisGrade = 0
-			if data.grade >= Progression.MaxGrade then
-				-- Held at the last grade until the player chooses a path, rather
-				-- than silently rolling over and losing the moment.
-				data.awaitingGraduation = true
-				graduated = true
-			else
-				data.grade += 1
-				advanced = true
+		if data.tier > 0 then
+			-- University counts its own years. Kept apart from lessonsThisGrade so
+			-- a part-finished year cannot be carried back into school by a player
+			-- who graduates out and starts again.
+			data.lessonsThisTier += 1
+			if data.lessonsThisTier >= Progression.lessonsForTier(data.tier) then
+				data.lessonsThisTier = 0
+				if data.tier >= Progression.MaxUniversityTier then
+					-- The last year ends in a graduation like any other, which is
+					-- what lets a university leaver still take the teaching branch.
+					data.awaitingGraduation = true
+					graduated = true
+				else
+					data.tier += 1
+					advanced = true
+				end
+			end
+		else
+			data.lessonsThisGrade += 1
+			local required = Progression.lessonsForGrade(data.grade)
+			if data.lessonsThisGrade >= required then
+				data.lessonsThisGrade = 0
+				if data.grade >= Progression.MaxGrade then
+					-- Held at the last grade until the player chooses a path, rather
+					-- than silently rolling over and losing the moment.
+					data.awaitingGraduation = true
+					graduated = true
+				else
+					data.grade += 1
+					advanced = true
+				end
 			end
 		end
 	end
@@ -127,12 +147,23 @@ function ProgressionService.graduate(data: Types.ProfileData, path: string): boo
 		data.teacher.licensed = true
 		data.role = "teacher"
 		data.grade = Progression.MaxGrade
+		-- Teaching ends university: the two are different games, and a licensed
+		-- teacher sitting at a raised pass mark would be paying for the privilege.
+		data.tier = 0
+		data.lessonsThisTier = 0
 	elseif path == "newGamePlus" then
 		data.grade = 1
+		data.tier = 0
+		data.lessonsThisTier = 0
 		data.subjects = {}
 	else
-		-- University: the next tier keeps the final grade and carries progress in.
+		-- University. The grade stays at the top because there is no harder
+		-- question in the bank; what changes is the bar, the length of a year and
+		-- the pay. A graduate already in university starts the next year rather
+		-- than repeating the first.
 		data.grade = Progression.MaxGrade
+		data.tier = math.min(data.tier + 1, Progression.MaxUniversityTier)
+		data.lessonsThisTier = 0
 	end
 
 	return true
@@ -142,6 +173,15 @@ end
 --- figure stays checkable.
 --- Full-rate lessons this profile has beyond the base allowance: the pass, plus
 --- whatever the polymath and perfectionist branches have added.
+--- The share of a test this profile has to get right.
+---
+--- School uses the flat economy default; each university year raises it. Read
+--- here rather than in LessonService so the obstacle and assembly paths cannot
+--- quietly use a different bar from the quiz one.
+function ProgressionService.passFraction(data: Types.ProfileData): number
+	return Progression.passFractionForTier(data.tier, Economy.DefaultPassFraction)
+end
+
 function ProgressionService.extraLessonSlots(data: Types.ProfileData): number
 	local slots = Achievements.perkTotal(data.achievements, "lessonSlots")
 	if data.ownedPasses.lessonSlots then
@@ -173,6 +213,15 @@ function ProgressionService.rewardMultiplier(
 	-- perk ceiling is held under the pass multiplier in Config/Achievements,
 	-- which is what stops the free lane from turning the pass into a refund.
 	multiplier *= Achievements.perkTotal(data.achievements, "studentPoints")
+	-- University pays more because it asks more. Without this the branch would be
+	-- a harder game for the same money, which is the trap it already was.
+	multiplier *= Progression.tierMultiplier(data.tier)
+	-- Being monitor of the class you are studying in. Checked against the class
+	-- the player is actually enrolled in, so an appointment they walked away from
+	-- stops paying the moment they leave.
+	if data.monitorClassId ~= nil and data.monitorClassId == data.enrolledClassId then
+		multiplier *= Economy.MonitorBonus
+	end
 
 	-- And the day's diminishing return, last, so it scales everything else. This
 	-- is the only downward factor in the function, and it is a curve rather than

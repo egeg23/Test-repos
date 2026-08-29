@@ -29,6 +29,7 @@ local DataService = require(script.Parent.DataService)
 local QuestionService = require(script.Parent.QuestionService)
 local RateLimiter = require(script.Parent.RateLimiter)
 local RewardService = require(script.Parent.RewardService)
+local ProgressionService = require(script.Parent.ProgressionService)
 
 local LiveLessonService = {}
 
@@ -60,6 +61,15 @@ type Session = {
 
 local sessions: { [string]: Session } = {}
 local sessionOf: { [Player]: string } = {}
+
+
+--- The pass bar for one participant, which a university year raises. Per player
+--- rather than per lesson, because a live class can hold students at different
+--- tiers and grading them all on the hardest one would punish the youngest.
+local function passFractionFor(player: Player): number
+	local data = DataService.getData(player)
+	return if data ~= nil then ProgressionService.passFraction(data) else Economy.DefaultPassFraction
+end
 
 local function tell(player: Player, payload: { [string]: any })
 	Remotes.event(Remotes.Names.LiveState):FireClient(player, payload)
@@ -151,7 +161,7 @@ local function settle(session: Session)
 		local player = participant.player
 		sessionOf[player] = nil
 		local passed = total > 0
-			and (participant.correctCount / total) >= Economy.DefaultPassFraction
+			and (participant.correctCount / total) >= passFractionFor(participant.player)
 
 		local summary = RewardService.settle(player, {
 			subject = session.subject,

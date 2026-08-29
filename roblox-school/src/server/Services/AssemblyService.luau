@@ -20,6 +20,8 @@ local Components = require(ReplicatedStorage.Shared.Config.Components)
 local Economy = require(ReplicatedStorage.Shared.Config.Economy)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local BankService = require(script.Parent.BankService)
+local DataService = require(script.Parent.DataService)
+local ProgressionService = require(script.Parent.ProgressionService)
 local RateLimiter = require(script.Parent.RateLimiter)
 local RewardService = require(script.Parent.RewardService)
 
@@ -267,7 +269,13 @@ local function onSubmit(player: Player, payload: unknown)
 	end
 
 	local total = #task.answers
-	local passed = total > 0 and (correct / total) >= Economy.DefaultPassFraction
+	-- The same bar the quiz path uses, so a university year raises all three
+	-- lesson kinds together rather than only the one that remembered to ask.
+	local data = DataService.getData(player)
+	local passFraction = if data ~= nil
+		then ProgressionService.passFraction(data)
+		else Economy.DefaultPassFraction
+	local passed = total > 0 and (correct / total) >= passFraction
 
 	local summary = RewardService.settle(player, {
 		subject = attempt.subject,

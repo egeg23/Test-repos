@@ -54,6 +54,14 @@ Economy.MaxRating = 5
 --- one locale.
 Economy.TranslatedReachShare = 0.5
 
+--- What a class monitor earns on top of an ordinary student.
+---
+--- Modest on purpose. The role is a distinction a teacher hands out, not a pay
+--- grade, and anything large enough to be worth campaigning for would turn the
+--- appointment into a trade. Nothing flows to the teacher from appointing one,
+--- so there is no ring to farm with it.
+Economy.MonitorBonus = 1.15
+
 --- A student only counts toward teacher income once the account is old enough
 --- and has played enough to not be a freshly minted alt.
 Economy.MinAccountAgeDaysToCount = 3

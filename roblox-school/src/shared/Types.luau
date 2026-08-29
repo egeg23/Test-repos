@@ -84,7 +84,6 @@ export type Lesson = {
 	test: TestSpec?,
 	obstacle: ObstacleSpec?,
 	assembly: AssemblySpec?,
-	createdAt: number,
 	publishedAt: number?,
 }
 
@@ -108,6 +107,10 @@ export type Class = {
 	--- which is what the teacher is paid on. Timestamps let a class forget people
 	--- who left without saying so.
 	members: { [string]: number },
+	--- The student appointed monitor of this class, or 0 for none. One per class:
+	--- the point of the role is that it is a distinction, and a class of twenty
+	--- monitors is a class of none.
+	monitorUserId: number,
 	--- Lessons are embedded rather than stored separately: a class holds a
 	--- handful of them, they are always read together with it, and one read per
 	--- lesson start beats two.
@@ -123,7 +126,6 @@ export type Class = {
 	--- time because the directory is read cross-server, where the owner is
 	--- usually not present to have their passes read.
 	listingPriority: boolean,
-	createdAt: number,
 	updatedAt: number,
 }
 
@@ -134,7 +136,13 @@ export type ClassRating = {
 	stars: number,
 }
 
-export type Role = "student" | "monitor" | "teacher" | "dean" | "director"
+--- What this profile is, as stored.
+---
+--- Dean and director are deliberately absent: those are held by CampusService
+--- per locale and per subject, and a copy on the profile would be a second truth
+--- that goes stale the moment a term ends. This field carries only what belongs
+--- to the player themselves.
+export type Role = "student" | "monitor" | "teacher"
 
 export type TeacherRank = "assistant" | "docent" | "professor"
 
@@ -170,7 +178,6 @@ export type TeacherHistoryEntry = {
 export type ProfileData = {
 	schemaVersion: number,
 	locale: LocaleId,
-	createdAt: number,
 	playSeconds: number,
 	points: number,
 	grade: number,
@@ -178,6 +185,18 @@ export type ProfileData = {
 	--- grade requirement can grow without rewriting history.
 	lessonsThisGrade: number,
 	graduatedCount: number,
+	--- University year, 0 for a school student. Set by choosing the university
+	--- path at graduation; raises the pass mark, the lesson requirement and the
+	--- reward together.
+	tier: number,
+	--- Lessons passed inside the current university year, counted apart from
+	--- lessonsThisGrade so leaving university does not carry a part-finished year
+	--- back into school.
+	lessonsThisTier: number,
+	--- The class this player is currently a monitor of, if any. Held here as well
+	--- as on the class so a monitor's bonus can be read without loading a class
+	--- the player may not even be enrolled in any more.
+	monitorClassId: string?,
 	--- Set when the last grade is finished and cleared once the player picks what
 	--- to do next. Graduation is a branch the player chooses, not an event that
 	--- happens to them.

@@ -12,13 +12,20 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Limits = require(ReplicatedStorage.Shared.Config.Limits)
 local Economy = require(ReplicatedStorage.Shared.Config.Economy)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local Progression = require(ReplicatedStorage.Shared.Config.Progression)
 local Subjects = require(ReplicatedStorage.Shared.Config.Subjects)
+local Types = require(ReplicatedStorage.Shared.Types)
+local Analytics = require(script.Parent.AnalyticsService)
+local AssemblyService = require(script.Parent.AssemblyService)
 local BankService = require(script.Parent.BankService)
 local DataService = require(script.Parent.DataService)
 local ClassService = require(script.Parent.ClassService)
 local LessonStatsService = require(script.Parent.LessonStatsService)
+local ObstacleService = require(script.Parent.ObstacleService)
+local ProgressionService = require(script.Parent.ProgressionService)
 local PurchaseService = require(script.Parent.PurchaseService)
 local RateLimiter = require(script.Parent.RateLimiter)
+local RewardService = require(script.Parent.RewardService)
 
 local LessonService = {}
 
@@ -150,13 +157,19 @@ local function finish(attempt: Attempt)
 	attempts[attempt.player] = nil
 
 	local total = #attempt.questions
-	local passed = total > 0 and (attempt.correctCount / total) >= Economy.DefaultPassFraction
+	local data = DataService.getData(attempt.player)
+	-- The bar comes from the profile, not the economy default, because a
+	-- university year raises it. Read once here so every path -- quiz, obstacle,
+	-- assembly -- can be given the same number rather than three copies of it.
+	local passFraction = if data ~= nil
+		then ProgressionService.passFraction(data)
+		else Economy.DefaultPassFraction
+	local passed = total > 0 and (attempt.correctCount / total) >= passFraction
 
 	-- Failing closes this lesson to this student for a few minutes. Per lesson,
 	-- not per player, so failing maths does not stop them doing history -- and
 	-- retrying one lesson twenty times in a row is both how a question pool gets
 	-- brute-forced and the cheapest way to farm the teacher who wrote it.
-	local data = DataService.getData(attempt.player)
 	if data ~= nil and not passed then
 		local now = os.time()
 		-- Expired entries are dropped on the way in. Without this the table only
@@ -198,6 +211,133 @@ local function finish(attempt: Attempt)
 		advanced = summary.advanced,
 		graduated = summary.graduated,
 	})
+end
+
+--- Shuffles a drawn question's options and records where the answer landed.
+---
+--- The client is sent options in this order and never the index of the correct
+--- one, so a shuffle is the difference between a test and a lookup.
+local function buildQuestions(drawn: { Types.Question }, random: Random): { AttemptQuestion }
+	local questions: { AttemptQuestion } = {}
+	for _, question in drawn do
+		local order: { number } = {}
+		for index = 1, #question.options do
+			table.insert(order, index)
+		end
+		order = BankService.shuffled(order, random)
+
+		local correctPosition = 0
+		for position, original in order do
+			if original == question.answer then
+				correctPosition = position
+				break
+			end
+		end
+
+		table.insert(questions, {
+			questionId = question.id,
+			order = order,
+			correctPosition = correctPosition,
+			sentAt = 0,
+			chosen = nil,
+		})
+	end
+	return questions
+end
+
+--- Everything a lesson needs, whoever it came from. Both sources below return
+--- one of these, so the attempt that follows does not know or care whether a
+--- teacher wrote the lesson or the bank supplied it.
+type Source = {
+	questions: { AttemptQuestion },
+	subject: string,
+	statKey: string,
+	teacherUserId: number,
+	classMembers: number,
+	teacherRating: number,
+	translated: boolean,
+}
+
+--- A lesson a teacher assembled, taken inside their class.
+local function classSource(
+	data: Types.ProfileData,
+	classId: string,
+	lessonId: string,
+	random: Random
+): (Source?, string?)
+	local class = ClassService.get(classId)
+	if class == nil then
+		return nil, "noClass"
+	end
+	-- Enrolment is what makes the fill rate mean anything, so it is required
+	-- rather than implied by knowing the id.
+	if data.enrolledClassId ~= classId then
+		return nil, "notEnrolled"
+	end
+
+	local lesson = class.lessons[lessonId]
+	if lesson == nil then
+		return nil, "noLesson"
+	end
+	local test = lesson.test
+	if test == nil then
+		return nil, "noLesson"
+	end
+
+	local candidates: { Types.Question } = {}
+	for _, questionId in test.poolIds do
+		local question = BankService.get(questionId)
+		if question ~= nil then
+			table.insert(candidates, question)
+		end
+	end
+	if #candidates == 0 then
+		return nil, "noQuestions"
+	end
+
+	local picked = BankService.shuffled(candidates, random)
+	while #picked > math.max(test.draw, 1) do
+		table.remove(picked)
+	end
+
+	return {
+		questions = buildQuestions(picked, random),
+		subject = class.subject,
+		-- Quality is measured per lesson here, not per subject: it is this
+		-- teacher's test being judged.
+		statKey = lessonId,
+		teacherUserId = class.teacherUserId,
+		classMembers = ClassService.liveMembers(class),
+		teacherRating = class.rating,
+		translated = class.locale ~= data.locale,
+	}, nil
+end
+
+--- A lesson drawn straight from the curated bank, run by nobody. This is what
+--- keeps the school playable at three in the morning with no teachers online,
+--- and what a brand new player meets first.
+local function bankSource(
+	data: Types.ProfileData,
+	subject: string,
+	random: Random
+): (Source?, string?)
+	-- University draws at the top school grade throughout: there is no harder
+	-- question in the bank, and the tier raises the pass mark instead.
+	local grade = if data.tier > 0 then Progression.MaxGrade else data.grade
+	local drawn =
+		BankService.draw(subject, data.locale, grade, Economy.QuestionsPerLesson, random)
+	if #drawn == 0 then
+		return nil, "noQuestions"
+	end
+	return {
+		questions = buildQuestions(drawn, random),
+		subject = subject,
+		statKey = subject,
+		teacherUserId = 0,
+		classMembers = 0,
+		teacherRating = 0,
+		translated = false,
+	}, nil
 end
 
 local function onStartLesson(player: Player, payload: unknown)
@@ -271,7 +411,7 @@ local function onStartLesson(player: Player, payload: unknown)
 			return
 		end
 
-		source, failure = classSource(player, data, request.classId, request.lessonId, random)
+		source, failure = classSource(data, request.classId, request.lessonId, random)
 	elseif typeof(request.subject) == "string" and Subjects.get(request.subject) ~= nil then
 		-- Science and art can be asked for as an assembly instead of a quiz.
 		if request.kind == "assembly" and Subjects.allows(request.subject, "assembly") then

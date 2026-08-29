@@ -23,12 +23,14 @@ local PLAYTIME_TICK_SECONDS = 15
 local TEMPLATE: Types.ProfileData = {
 	schemaVersion = SCHEMA_VERSION,
 	locale = Locales.Default,
-	createdAt = 0,
 	playSeconds = 0,
 	points = 0,
 	grade = 1,
 	lessonsThisGrade = 0,
 	graduatedCount = 0,
+	tier = 0,
+	lessonsThisTier = 0,
+	monitorClassId = nil,
 	awaitingGraduation = false,
 	subjects = {},
 	stats = {},
@@ -106,6 +108,26 @@ function DataService.waitForData(player: Player, timeoutSeconds: number?): Types
 	return nil
 end
 
+--- Brings an older profile up to the current schema.
+---
+--- ProfileStore's Reconcile fills in fields that are simply missing, which
+--- covers almost every change made here so far. What it cannot do is *reshape* a
+--- field whose meaning changed, and that is what this is for.
+---
+--- There are no migrations yet. The function exists anyway, because
+--- schemaVersion was being stamped and never read -- a version marker nobody
+--- checks records nothing -- and because the first migration needing a home
+--- should find one rather than inventing a place under pressure.
+local function migrate(data: Types.ProfileData)
+	if data.schemaVersion == SCHEMA_VERSION then
+		return
+	end
+	-- Each future step goes here, guarded by the version it upgrades from, in
+	-- order, with no early return between them: a profile two versions behind has
+	-- to walk through both.
+	data.schemaVersion = SCHEMA_VERSION
+end
+
 local function onPlayerAdded(player: Player)
 	local profile = store:StartSessionAsync(`{player.UserId}`, {
 		Cancel = function()
@@ -135,9 +157,7 @@ local function onPlayerAdded(player: Player)
 	end
 
 	local data: Types.ProfileData = profile.Data
-	if data.createdAt == 0 then
-		data.createdAt = os.time()
-	end
+	migrate(data)
 	data.locale = Locales.fromPlayerLocaleId(player.LocaleId)
 
 	profiles[player] = profile

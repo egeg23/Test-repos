@@ -17,6 +17,17 @@
 #   them, but confirm anything they claim before acting on it. Real typechecking
 #   needs luau-lsp with a Rojo sourcemap, in Studio or an editor.
 #
+# Unknown globals ARE gated, despite arriving as TypeError. A call to a function
+# that does not exist is not a cross-module typing artefact -- it is a name that
+# resolves to nil at run time -- and the whole reason the rest of TypeError is
+# advisory does not apply to it. This gate was added after finding that
+# LessonService had lost five requires and three definitions, including the one
+# that supplies a lesson when a player walks up to a teacher and presses E. The
+# game's main entry point had been broken for eighteen commits, and every other
+# check in this repository passed the whole time.
+#
+# Roblox's own globals are not declared in any file, so they are allowed by name.
+#
 # tests/ is scanned alongside src/. It was not, once, and a syntax error sat in a
 # spec file unreported -- Luau's require returns the compile error as a *string*
 # rather than raising, so the runner failed with "attempt to call a string value"
@@ -36,6 +47,10 @@ if [ ! -x "$LUAU" ]; then
 	chmod +x "$LUAU_DIR"/luau* || exit 1
 fi
 
+# Names Roblox provides at run time and no file declares. Anything outside this
+# list that the checker cannot see is a real missing definition.
+ROBLOX_GLOBALS='game|script|workspace|shared|plugin|settings|Enum|Instance|Vector2|Vector3|CFrame|Color3|UDim|UDim2|NumberRange|NumberSequence|NumberSequenceKeypoint|ColorSequence|ColorSequenceKeypoint|Random|TweenInfo|BrickColor|Ray|Region3|DateTime|task|typeof|tick|time|delay|spawn|wait|elapsedTime|warn|require|utf8|bit32|buffer|vector|os|debug'
+
 status=0
 count=0
 advisory=0
@@ -46,6 +61,12 @@ while IFS= read -r file; do
 	[ -z "$out" ] && continue
 
 	hard="$(echo "$out" | grep -E ': (SyntaxError|LocalUnused|ImportUnused|SameLineStatement|DuplicateFunction|UnreachableCode|DuplicateLocal|LocalShadow):' || true)"
+	unknown="$(echo "$out" | grep "TypeError: Unknown global" \
+		| grep -vE "Unknown global '($ROBLOX_GLOBALS)'" || true)"
+	if [ -n "$unknown" ]; then
+		echo "$unknown"
+		status=1
+	fi
 	if [ -n "$hard" ]; then
 		echo "$hard"
 		status=1

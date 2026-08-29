@@ -14,6 +14,7 @@
 local DataStoreService = game:GetService("DataStoreService")
 local HttpService = game:GetService("HttpService")
 local MemoryStoreService = game:GetService("MemoryStoreService")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Economy = require(ReplicatedStorage.Shared.Config.Economy)
@@ -295,6 +296,7 @@ function ClassService.create(
 		rating = 0,
 		ratingCount = 0,
 		promoUntil = 0,
+		monitorUserId = 0,
 		listingPriority = PurchaseService.ownsPass(player, "listingPriority"),
 		createdAt = os.time(),
 		updatedAt = os.time(),
@@ -443,6 +445,80 @@ function ClassService.rate(player: Player, classId: unknown, stars: unknown): (b
 	if score >= Economy.MaxRating and previous ~= score then
 		PayoutService.creditStat(updated.teacherUserId, "fiveStarRatings", 1)
 	end
+	return true, nil
+end
+
+--- Appoints a student as monitor of a class, or clears the appointment.
+---
+--- Only the teacher who owns the class may do it, and only to someone currently
+--- enrolled. One per class: the point of the role is that it is a distinction,
+--- and a class of twenty monitors is a class of none.
+---
+--- Deliberately nothing flows to the teacher from having a monitor. An economic
+--- benefit would be farmable in one move -- appoint an alt, collect -- so the
+--- reward is entirely the student's, and the teacher's reason to appoint is
+--- social: it is something good they can give a student who turned up.
+function ClassService.appointMonitor(
+	player: Player,
+	classId: unknown,
+	targetUserId: unknown
+): (boolean, string?)
+	if typeof(classId) ~= "string" or typeof(targetUserId) ~= "number" then
+		return false, "badRequest"
+	end
+	local id = classId :: string
+	local target = math.floor(targetUserId :: number)
+
+	local class = ClassService.get(id)
+	if class == nil then
+		return false, "noClass"
+	end
+	if class.teacherUserId ~= player.UserId then
+		return false, "notOwner"
+	end
+	-- Zero clears the post, which is how a teacher takes it back from someone who
+	-- stopped coming.
+	if target ~= 0 then
+		if target == player.UserId then
+			return false, "ownClass"
+		end
+		if class.members[tostring(target)] == nil then
+			return false, "notEnrolled"
+		end
+	end
+
+	local previous = class.monitorUserId
+	local updated = mutate(id, function(current)
+		current.monitorUserId = target
+		return current
+	end)
+	if updated == nil then
+		return false, "failed"
+	end
+
+	-- The profile carries it too, so the bonus can be read without loading a
+	-- class the player may since have left. Applied to whoever is present; the
+	-- one who is offline is reconciled on their next join.
+	local function stamp(userId: number, value: string?)
+		if userId <= 0 then
+			return
+		end
+		local other = Players:GetPlayerByUserId(userId)
+		if other == nil then
+			return
+		end
+		local data = DataService.getData(other)
+		if data == nil then
+			return
+		end
+		data.monitorClassId = value
+		data.role = if value ~= nil then "monitor" else "student"
+	end
+
+	if previous ~= target then
+		stamp(previous, nil)
+	end
+	stamp(target, id)
 	return true, nil
 end
 
@@ -865,10 +941,11 @@ local function ownerView(class: Types.Class): any
 		title = class.title,
 		grade = class.grade,
 		capacity = class.capacity,
-		members = #class.memberUserIds,
+		members = ClassService.liveMembers(class),
 		rating = class.rating,
 		ratingCount = class.ratingCount,
 		promoUntil = class.promoUntil,
+		monitorUserId = class.monitorUserId,
 		lessons = lessons,
 	}
 end
@@ -954,6 +1031,9 @@ local function onClassAction(player: Player, request: unknown)
 		respond(player, action, ok, reason, if class ~= nil then studentView(class) else nil)
 	elseif action == "leave" then
 		respond(player, action, ClassService.leave(player), nil)
+	elseif action == "appointMonitor" then
+		local ok, reason = ClassService.appointMonitor(player, message.classId, message.userId)
+		respond(player, action, ok, reason)
 	elseif action == "rate" then
 		local ok, reason = ClassService.rate(player, message.classId, message.stars)
 		respond(player, action, ok, reason)
@@ -1133,6 +1213,10 @@ local function onClassAction(player: Player, request: unknown)
 			grade = data.grade,
 			lessonsThisGrade = data.lessonsThisGrade,
 			lessonsForGrade = needed,
+			tier = data.tier,
+			lessonsThisTier = data.lessonsThisTier,
+			lessonsForTier = if data.tier > 0 then Progression.lessonsForTier(data.tier) else 0,
+			monitorOf = data.monitorClassId,
 			graduatedCount = data.graduatedCount,
 			awaitingGraduation = data.awaitingGraduation,
 			licensed = data.teacher.licensed,

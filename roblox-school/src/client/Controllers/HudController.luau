@@ -168,14 +168,32 @@ local function render(payload: any)
 
 	pointsLabel.Text = L.text("shop.balance", payload.points or 0)
 
-	local grade = payload.grade or 1
-	local done = payload.lessonsThisGrade or 0
-	local needed = payload.lessonsForGrade or 1
-	gradeLabel.Text = L.text("common.grade", grade) .. ` · {done}/{needed}`
+	-- University counts years rather than grades, and the bar has to follow it or
+	-- a university student watches a progress bar that never moves.
+	local tier = payload.tier or 0
+	local done, needed
+	if tier > 0 then
+		done = payload.lessonsThisTier or 0
+		needed = payload.lessonsForTier or 1
+		gradeLabel.Text = L.text("hud.university", tier) .. ` · {done}/{needed}`
+	else
+		done = payload.lessonsThisGrade or 0
+		needed = payload.lessonsForGrade or 1
+		gradeLabel.Text = L.text("common.grade", payload.grade or 1) .. ` · {done}/{needed}`
+	end
 	barFill.Size = UDim2.fromScale(math.clamp(done / math.max(needed, 1), 0, 1), 1)
 
 	local streak = payload.streak or 0
-	streakLabel.Text = if streak > 0 then L.text("achv.streak", streak) else ""
+	local parts0: { string } = {}
+	if streak > 0 then
+		table.insert(parts0, L.text("achv.streak", streak))
+	end
+	-- Being monitor is a distinction, so it is shown rather than only felt in the
+	-- payout. A role nobody can see is a role nobody wants.
+	if payload.monitorOf ~= nil then
+		table.insert(parts0, L.text("role.monitor"))
+	end
+	streakLabel.Text = table.concat(parts0, " · ")
 
 	-- Pending teaching income is shown next to the boosts rather than added to
 	-- the balance: it is not spendable until collected, and a number that

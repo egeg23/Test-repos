@@ -64,6 +64,56 @@ function Progression.calendarMultiplier(unixSeconds: number): number
 	return if Progression.isTestWeek(unixSeconds) then Progression.TestWeekMultiplier else 1
 end
 
+-- === University ===============================================================
+
+--- The tier a graduate enters by choosing university, and how far it goes.
+---
+--- This exists because the choice was fake. All three graduation paths set the
+--- grade to the maximum; the teacher path also granted a licence, and New Game+
+--- reset to year one with a permanent multiplier. University did neither, which
+--- made it strictly worse than both -- a trap option dressed as a branch.
+---
+--- A tier is a year of university. Each one wants more lessons than the last,
+--- demands a higher pass mark, and pays more. Questions are drawn at the top
+--- school grade throughout, because there is no harder question in the bank: the
+--- difficulty comes from the bar, not from new material.
+Progression.MaxUniversityTier = 4
+
+--- Lessons to close one university year. Steeper than school, where the last
+--- year wants 22: a university year is meant to feel like a commitment.
+Progression.UniversityLessonsBase = 26
+Progression.UniversityLessonsPerTier = 4
+
+function Progression.lessonsForTier(tier: number): number
+	local clamped = math.clamp(tier, 1, Progression.MaxUniversityTier)
+	return Progression.UniversityLessonsBase + (clamped - 1) * Progression.UniversityLessonsPerTier
+end
+
+--- The pass mark rises with the tier. Capped well below 1: a bar you can miss by
+--- one question on a bad draw stops being a bar and becomes a lottery.
+Progression.UniversityPassStep = 0.05
+Progression.MaxUniversityPassFraction = 0.85
+
+function Progression.passFractionForTier(tier: number, schoolFraction: number): number
+	if tier <= 0 then
+		return schoolFraction
+	end
+	local raised = schoolFraction + math.clamp(tier, 1, Progression.MaxUniversityTier)
+		* Progression.UniversityPassStep
+	return math.min(raised, Progression.MaxUniversityPassFraction)
+end
+
+--- And so does the reward, because a harder lesson that paid the same would be
+--- a punishment for choosing the branch.
+Progression.UniversityRewardStep = 0.2
+
+function Progression.tierMultiplier(tier: number): number
+	if tier <= 0 then
+		return 1
+	end
+	return 1 + math.clamp(tier, 1, Progression.MaxUniversityTier) * Progression.UniversityRewardStep
+end
+
 --- What a graduate may do next. Graduation is a branch, not an ending: the
 --- middle option is what keeps the two-sided market fed, because it answers the
 --- question every player-taught game eventually dies on -- where do the teachers
@@ -72,6 +122,18 @@ end
 export type GraduationPath = "university" | "teacher" | "newGamePlus"
 
 Progression.GraduationPaths = { "university", "teacher", "newGamePlus" } :: { GraduationPath }
+
+--- A university year must pay better than repeating school at the same effort,
+--- or the branch is still a trap -- just a subtler one.
+assert(
+	Progression.tierMultiplier(1) > 1,
+	"the first university year has to pay more than school"
+)
+assert(
+	Progression.passFractionForTier(Progression.MaxUniversityTier, 0.6)
+		<= Progression.MaxUniversityPassFraction,
+	"the university pass mark must stay under its own ceiling"
+)
 
 --- Permanent multiplier granted per completed graduation, compounding.
 Progression.NewGamePlusMultiplier = 1.35

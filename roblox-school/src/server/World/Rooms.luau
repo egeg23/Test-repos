@@ -25,6 +25,26 @@ Rooms.CorridorWidth = 24
 
 local DOOR_WIDTH = 8
 
+--- One conversion per room, at the top of the function that builds it.
+---
+--- Config speaks packed 0xRRGGBB integers and material names so the unit tests
+--- can execute it outside Roblox; everything below this line speaks Color3 and
+--- Enum.Material, and the two never mix in the same expression.
+local function palette(theme: Decor.Theme): Palette
+	return {
+		wall = Build.colour(theme.wall),
+		trim = Build.colour(theme.trim),
+		board = Build.colour(theme.board),
+		floor = Build.colour(theme.floor),
+		floorMaterial = Build.material(theme.floorMaterial),
+		light = Build.colour(theme.light),
+		lightBrightness = theme.lightBrightness,
+		effect = theme.effect,
+		effectColour = Build.colour(theme.effectColour),
+		props = theme.props,
+	}
+end
+
 export type Room = {
 	model: Model,
 	skin: Palette,

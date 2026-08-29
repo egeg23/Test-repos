@@ -85,4 +85,65 @@ return function()
 	t.test("every path the client can offer is one the server accepts", function()
 		t.equal(#Progression.GraduationPaths, 3, "paths offered")
 	end)
+	t.suite("Progression: university is a real branch")
+
+	t.test("a university year pays more than school", function()
+		-- The branch was a trap before this: all three graduation paths set the
+		-- grade to the maximum, and university alone granted nothing for it.
+		t.equal(Progression.tierMultiplier(0), 1, "school is the baseline")
+		for tier = 1, Progression.MaxUniversityTier do
+			t.greaterThan(
+				Progression.tierMultiplier(tier),
+				Progression.tierMultiplier(tier - 1),
+				`year {tier} pays more than year {tier - 1}`
+			)
+		end
+	end)
+
+	t.test("and asks more", function()
+		local school = 0.6
+		t.equal(Progression.passFractionForTier(0, school), school, "school keeps its bar")
+		for tier = 1, Progression.MaxUniversityTier do
+			t.greaterThan(
+				Progression.passFractionForTier(tier, school),
+				school,
+				`year {tier} raises the bar`
+			)
+		end
+	end)
+
+	t.test("the bar never becomes a lottery", function()
+		-- A pass mark you can miss by one question on an unlucky draw stops being
+		-- a bar and becomes chance. Ten questions means each one is 10%.
+		local hardest = Progression.passFractionForTier(Progression.MaxUniversityTier, 0.6)
+		t.lessThan(hardest, 0.9, "there is room to get one wrong")
+		t.lessThan(hardest, Progression.MaxUniversityPassFraction + 0.001, "under its ceiling")
+	end)
+
+	t.test("out-of-range tiers clamp instead of running away", function()
+		-- Reached only through a corrupt profile, and an unbounded multiplier
+		-- there would be an unbounded payout.
+		t.equal(
+			Progression.tierMultiplier(99),
+			Progression.tierMultiplier(Progression.MaxUniversityTier),
+			"far above the last year"
+		)
+		t.equal(Progression.tierMultiplier(-5), 1, "below zero is school")
+		t.equal(
+			Progression.lessonsForTier(99),
+			Progression.lessonsForTier(Progression.MaxUniversityTier),
+			"lesson requirement clamps too"
+		)
+	end)
+
+	t.test("a university year is longer than any school year", function()
+		-- Otherwise the harder, better-paid tier would also be the quicker one,
+		-- and school would be strictly pointless.
+		local longestSchool = Progression.lessonsForGrade(Progression.MaxGrade)
+		t.greaterThan(
+			Progression.lessonsForTier(1),
+			longestSchool,
+			"the first year already asks more than the last school grade"
+		)
+	end)
 end

@@ -168,6 +168,15 @@ local function renderCurrentClass(view: any)
 	end
 end
 
+--- A display name for a user id, from the players in this server.
+---
+--- The monitor may be offline, in which case there is no name to show without a
+--- web call, and a number is honest where a spinner would not be.
+local function nameFor(userId: number): string
+	local other = Players:GetPlayerByUserId(userId)
+	return if other ~= nil then other.DisplayName else `#{userId}`
+end
+
 local function renderMine(payload: any)
 	clearList()
 
@@ -226,6 +235,42 @@ local function renderMine(payload: any)
 			course.Activated:Connect(function()
 				CourseBuilderController.open(class.id, class.grade)
 			end)
+		end
+
+		-- Who the monitor is, and a way to change it. Without a control here the
+		-- role would exist on the server and be unreachable from the game.
+		--
+		-- Candidates are the players currently in this server rather than the
+		-- full roster: it needs no extra data and no name lookups, and appointing
+		-- someone you are teaching right now is what a teacher would actually do.
+		-- The server still checks they are enrolled.
+		local monitorRow = makeRow(40)
+		local monitorId = class.monitorUserId or 0
+		makeLabel(
+			monitorRow,
+			if monitorId > 0
+				then L.text("class.monitorIs", nameFor(monitorId))
+				else L.text("class.noMonitor"),
+			14,
+			if monitorId > 0 then TEXT else MUTED,
+			10
+		)
+
+		local offset = 0
+		for _, other in Players:GetPlayers() do
+			if other == player or offset >= 3 then
+				continue
+			end
+			local pick = makeButton(other.DisplayName, ACCENT, 104)
+			pick.Position = UDim2.new(1, -116 - offset * 110, 0, 4)
+			pick.Parent = monitorRow
+			pick.Activated:Connect(function()
+				send("appointMonitor", { classId = class.id, userId = other.UserId })
+			end)
+			offset += 1
+		end
+		if offset == 0 then
+			makeLabel(monitorRow, L.text("class.noCandidates"), 13, MUTED, 240)
 		end
 	end
 
@@ -429,6 +474,11 @@ function ClassController.init()
 		elseif result.action == "addCourse" then
 			statusLabel.Text = L.text("course.saved")
 			CourseBuilderController.close()
+			send("mine")
+		elseif result.action == "appointMonitor" then
+			statusLabel.Text = if result.ok
+				then L.text("class.monitorSet")
+				else L.text(`error.{result.reason or "failed"}`)
 			send("mine")
 		elseif result.action == "collect" then
 			statusLabel.Text = L.text("class.collected", result.payload or 0)
