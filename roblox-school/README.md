@@ -176,6 +176,8 @@ that has only ever passed is a checker nobody has tested.
 | `check_decor.py` | An unthemed subject; an emitter over the particle budget |
 | `check_hardcoded.py` | A string key that does not exist, printed raw on a button |
 | `check_obstacles.py` | A module with no builder, which fails a course at run time silently |
+| `check_calls.py` | A call to a member another module does not define — the blind spot Luau's own checker cannot see past Roblox instance-path requires |
+| `check.sh` unknown-global gate | LessonService calling a function that had been deleted eighteen commits earlier: the game's main entry point, broken while every other check passed |
 
 ## Moving this into its own repository
 

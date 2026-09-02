@@ -14,6 +14,7 @@ run() {
 run "Luau syntax" ./tools/check.sh
 run "Unit tests" ./tools/test.sh
 run "Circular requires" python3 tools/check_requires.py
+run "Cross-module calls" python3 tools/check_calls.py
 run "Hardcoded strings" python3 tools/check_hardcoded.py
 run "Question bank rules" python3 tools/validate_bank.py
 run "Assembly tasks" python3 tools/validate_assembly.py
