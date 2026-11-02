@@ -4,5 +4,8 @@ version = "0.1.0"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 
-[dependencies]
-ProfileStore = "loleris/profilestore@1.0.0"
+# ProfileStore is published by its author as lm-loleris/profilestore with
+# realm "server", so it belongs under server-dependencies and installs into
+# ServerPackages, which the Rojo project maps into ServerScriptService.
+[server-dependencies]
+ProfileStore = "lm-loleris/profilestore@1.0.3"

@@ -8,7 +8,9 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local ProfileStore = require(ReplicatedStorage.Packages.ProfileStore)
+local ServerScriptService = game:GetService("ServerScriptService")
+
+local ProfileStore = require(ServerScriptService.ServerPackages.ProfileStore)
 local Types = require(ReplicatedStorage.Shared.Types)
 local Economy = require(ReplicatedStorage.Shared.Config.Economy)
 local Locales = require(ReplicatedStorage.Shared.Config.Locales)
