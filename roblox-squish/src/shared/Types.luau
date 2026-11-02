@@ -23,6 +23,10 @@ export type Squish = {
 	tier: number,
 	origin: Origin,
 	obtainedAt: number,
+	--- Bought with Robux, directly or by merging with something that was. It
+	--- follows the squish through merges and trades, because Roblox's paid item
+	--- trading rule is about the item, not about who holds it now.
+	paid: boolean?,
 }
 
 export type ProfileData = {

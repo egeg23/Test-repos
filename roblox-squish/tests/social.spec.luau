@@ -74,6 +74,13 @@ return function()
 		t.isTrue((Trade.validateOffer({ "u1" }, settled, now)), "settled theft")
 	end)
 
+	t.test("a squish bought with Robux stays out of trades where paid trading is not allowed", function()
+		local owned = collection({ { "boba", 1 } })
+		owned.u1.paid = true
+		t.equal(select(2, Trade.validateOffer({ "u1" }, owned, 1e6, false)), "paid", "restricted")
+		t.isTrue((Trade.validateOffer({ "u1" }, owned, 1e6, true)), "allowed")
+	end)
+
 	t.test("new accounts cannot trade", function()
 		t.equal(select(2, Trade.canTrade(Trade.MinPlaySeconds - 1, 0, 1e6)), "tooNew", "new")
 		t.isTrue((Trade.canTrade(Trade.MinPlaySeconds, 0, 1e6)), "old enough")

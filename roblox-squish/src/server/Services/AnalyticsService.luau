@@ -93,6 +93,18 @@ function Analytics.purchase(player: Player, kind: string, id: string, robux: num
 	end)
 end
 
+function Analytics.adOffered(player: Player, rewardId: string)
+	safely(function()
+		AnalyticsService:LogCustomEvent(player, "adOffered", 1, { reward = rewardId })
+	end)
+end
+
+function Analytics.adResult(player: Player, rewardId: string, succeeded: boolean)
+	safely(function()
+		AnalyticsService:LogCustomEvent(player, "adResult", if succeeded then 1 else 0, { reward = rewardId })
+	end)
+end
+
 function Analytics.adGranted(player: Player, rewardId: string)
 	safely(function()
 		AnalyticsService:LogCustomEvent(player, "adGranted", 1, { reward = rewardId })

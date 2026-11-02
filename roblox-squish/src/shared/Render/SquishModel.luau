@@ -204,7 +204,8 @@ local bodyScale: { [string]: Vector3 } = {
 	melon = Vector3.new(1, 0.55, 1),
 }
 
---- A model whose PrimaryPart ("Body") sits with its bottom at the pivot.
+--- A model whose pivot is the bottom of its body, so PivotTo onto the top of
+--- a shelf stands it on the shelf rather than half inside it.
 function SquishModel.build(speciesId: string, tier: number): Model
 	local species = Squishes.get(speciesId)
 	assert(species ~= nil, `unknown squish species {speciesId}`)
@@ -224,6 +225,8 @@ function SquishModel.build(speciesId: string, tier: number): Model
 		body.Size = body.Size * (unit / largest)
 		body.Anchored = true
 		body.CanCollide = true
+		body.CFrame = CFrame.new(0, body.Size.Y / 2, 0)
+		body.PivotOffset = CFrame.new(0, -body.Size.Y / 2, 0)
 		body.Parent = model
 		model.PrimaryPart = body
 		return model
@@ -251,6 +254,7 @@ function SquishModel.build(speciesId: string, tier: number): Model
 		sphere.Parent = body
 	end
 	body.CFrame = CFrame.new(0, body.Size.Y / 2, 0)
+	body.PivotOffset = CFrame.new(0, -body.Size.Y / 2, 0)
 	body.Parent = model
 	model.PrimaryPart = body
 

@@ -24,10 +24,15 @@ Trade.FreshLockSeconds = 10 * 60
 Trade.RequestTimeout = 30
 
 --- Validates one side's offer against the owner's collection.
+---
+--- `paidTradingAllowed` is PolicyService's IsPaidItemTradingAllowed for BOTH
+--- sides: where either may not trade paid items, a squish bought with Robux
+--- cannot be in the offer.
 function Trade.validateOffer(
 	offer: { string },
 	owned: { [string]: Types.Squish },
-	now: number
+	now: number,
+	paidTradingAllowed: boolean?
 ): (boolean, string?)
 	if #offer > Trade.MaxItemsPerSide then
 		return false, "tooMany"
@@ -41,6 +46,9 @@ function Trade.validateOffer(
 		local squish = owned[uid]
 		if squish == nil then
 			return false, "notOwned"
+		end
+		if squish.paid and paidTradingAllowed == false then
+			return false, "paid"
 		end
 		if (squish.origin == "stolen" or squish.origin == "trade") and now - squish.obtainedAt < Trade.FreshLockSeconds then
 			return false, "fresh"

@@ -49,7 +49,7 @@ fi
 
 # Names Roblox provides at run time and no file declares. Anything outside this
 # list that the checker cannot see is a real missing definition.
-ROBLOX_GLOBALS='game|script|workspace|shared|plugin|settings|Enum|Instance|Vector2|Vector3|CFrame|Color3|UDim|UDim2|NumberRange|NumberSequence|NumberSequenceKeypoint|ColorSequence|ColorSequenceKeypoint|Random|TweenInfo|BrickColor|Ray|Region3|DateTime|task|typeof|tick|time|delay|spawn|wait|elapsedTime|warn|require|utf8|bit32|buffer|vector|os|debug'
+ROBLOX_GLOBALS='game|PhysicalProperties|Rect|Font|script|workspace|shared|plugin|settings|Enum|Instance|Vector2|Vector3|CFrame|Color3|UDim|UDim2|NumberRange|NumberSequence|NumberSequenceKeypoint|ColorSequence|ColorSequenceKeypoint|Random|TweenInfo|BrickColor|Ray|Region3|DateTime|task|typeof|tick|time|delay|spawn|wait|elapsedTime|warn|require|utf8|bit32|buffer|vector|os|debug'
 
 status=0
 count=0

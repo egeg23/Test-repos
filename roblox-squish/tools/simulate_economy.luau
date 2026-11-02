@@ -539,6 +539,10 @@ print(string.format("  squishes lost in the evening: at most %d (daily cap %d)",
 print(string.format("  income kept vs an untouched player: median %d%%, worst tenth %d%%", math.floor(keptMedian * 100 + 0.5), math.floor(keptWorst * 100 + 0.5)))
 report.newbie = { keptMedian = keptMedian, keptWorst = keptWorst, maxLosses = maxLosses }
 check(maxLosses <= Steal.DailyLossCap, "losses never pass the daily cap")
+-- An absolute promise, not read from config: whatever the cap is set to, a
+-- new player's first evening costs them a handful of squishes at most. The
+-- check above alone would pass with a cap of forty.
+check(maxLosses <= 5, "a new player loses at most five squishes in their first evening")
 check(keptMedian >= 0.5, "a typical new player keeps at least half their income")
 check(keptWorst >= 0.3, "even the unluckiest tenth keep at least 30%")
 

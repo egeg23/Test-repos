@@ -935,6 +935,12 @@ Strings.Entries = {
 		es = "Ese squishy ya está ofrecido",
 		pt = "Esse squishy já foi oferecido",
 	},
+	["trade.reason.paid"] = {
+		ru = "Сквиша, купленного за Robux, в твоей стране обменивать нельзя",
+		en = "Squishes bought with Robux can't be traded where you live",
+		es = "Los squishies comprados con Robux no se pueden intercambiar en tu país",
+		pt = "Squishies comprados com Robux não podem ser trocados no seu país",
+	},
 	["trade.reason.lastSquish"] = {
 		ru = "Хотя бы один сквиш должен остаться на полке",
 		en = "Keep at least one squish on a shelf",

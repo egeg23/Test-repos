@@ -9,14 +9,19 @@
 ---   * AreAdsAllowed is false for players under 13 and in some regions. Such a
 ---     player never sees an ad button -- not a disabled one, none at all.
 ---   * ArePaidRandomItemsRestricted is true where paid random items are not
----     allowed. Such a player never sees the Robux box, its odds or its button.
+---     allowed. Such a player never sees the Robux box, its odds or its button,
+---     nor anything sold for Robux that multiplies coins, so for them coins are
+---     never bought and the coin boxes stay free random items.
+---   * IsPaidItemTradingAllowed is false where items bought with Robux may not
+---     change hands. Such a player cannot give or receive a squish from the
+---     Robux box in a trade.
 
 local Players = game:GetService("Players")
 local PolicyService = game:GetService("PolicyService")
 
 local PolicyCache = {}
 
-type Answer = { adsAllowed: boolean, paidRandomAllowed: boolean }
+type Answer = { adsAllowed: boolean, paidRandomAllowed: boolean, paidTradingAllowed: boolean }
 
 local cache: { [Player]: Answer } = {}
 
@@ -25,7 +30,7 @@ local function fetch(player: Player): Answer
 	if cached ~= nil then
 		return cached
 	end
-	local answer: Answer = { adsAllowed = false, paidRandomAllowed = false }
+	local answer: Answer = { adsAllowed = false, paidRandomAllowed = false, paidTradingAllowed = false }
 	local ok, info = pcall(function()
 		return PolicyService:GetPolicyInfoForPlayerAsync(player)
 	end)
@@ -33,6 +38,7 @@ local function fetch(player: Player): Answer
 		local policy = info :: any
 		answer.adsAllowed = policy.AreAdsAllowed == true
 		answer.paidRandomAllowed = policy.ArePaidRandomItemsRestricted == false
+		answer.paidTradingAllowed = policy.IsPaidItemTradingAllowed == true
 		-- Only a successful answer is cached; a failure is asked again next time.
 		cache[player] = answer
 	end
@@ -45,6 +51,11 @@ end
 
 function PolicyCache.paidRandomAllowed(player: Player): boolean
 	return fetch(player).paidRandomAllowed
+end
+
+--- Whether this player may trade items bought with Robux.
+function PolicyCache.paidTradingAllowed(player: Player): boolean
+	return fetch(player).paidTradingAllowed
 end
 
 function PolicyCache.start()

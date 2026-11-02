@@ -24,6 +24,10 @@ export type Pass = {
 	id: string,
 	gamePassId: number,
 	robux: number,
+	--- Multiplies coins. Hidden from players restricted from paid random
+	--- items: for them coins must never be bought with Robux, or the coin
+	--- boxes would count as paid random items too.
+	boostsCoins: boolean?,
 }
 
 export type Product = {
@@ -36,6 +40,7 @@ export type Product = {
 	paidBox: string?,
 	boostSeconds: number?,
 	shieldSeconds: number?,
+	boostsCoins: boolean?,
 }
 
 export type AdReward = {
@@ -52,14 +57,14 @@ export type AdReward = {
 }
 
 Monetization.Passes = {
-	{ id = "doubleCoins", gamePassId = 0, robux = 299 },
+	{ id = "doubleCoins", gamePassId = 0, robux = 299, boostsCoins = true },
 	{ id = "bigShelf", gamePassId = 0, robux = 149 },
-	{ id = "comfyGloves", gamePassId = 0, robux = 99 },
+	{ id = "comfyGloves", gamePassId = 0, robux = 99, boostsCoins = true },
 } :: { Pass }
 
 Monetization.Products = {
 	{ id = "rainbowBox", devProductId = 0, robux = 49, paidBox = "rainbow" },
-	{ id = "sugarRush", devProductId = 0, robux = 39, boostSeconds = 15 * 60 },
+	{ id = "sugarRush", devProductId = 0, robux = 39, boostSeconds = 15 * 60, boostsCoins = true },
 	{ id = "pillowFort", devProductId = 0, robux = 29, shieldSeconds = 60 * 60 },
 } :: { Product }
 
