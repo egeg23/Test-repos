@@ -1,0 +1,58 @@
+{
+  "catchUp": {
+    "adWatcher": 1.6500,
+    "adsPerHour": 6.0000,
+    "free": 1.0000,
+    "passRobux": 299.0000,
+    "payer": 2.0000,
+    "share": 0.6500
+  },
+  "firsts": {
+    "common": {
+      "median": 30.0000,
+      "p90": 30.0000
+    },
+    "epic": {
+      "median": 1696.0000,
+      "p90": 3356.0000
+    },
+    "legendary": {
+      "median": 3953.0000,
+      "p90": 8568.0000
+    },
+    "mythic": {
+      "median": 31199.0000,
+      "p90": 43727.0000
+    },
+    "rare": {
+      "median": 122.0000,
+      "p90": 1292.0000
+    }
+  },
+  "incomePerSecond": {
+    "1": 148.7500,
+    "10": 5304.6875,
+    "3": 760.3125
+  },
+  "newbie": {
+    "keptMedian": 0.9772,
+    "keptWorst": 0.9769,
+    "maxLosses": 5.0000
+  },
+  "rainbow": {
+    "playMinutesAt3h": 7.9704,
+    "starBoxes": 1.2120
+  },
+  "ring": {
+    "incomeShare": 0.9812,
+    "movesPerHour": 9.2495
+  },
+  "steal": {
+    "attemptMaxTraps": 0.2133,
+    "attemptNoTraps": 0.3907,
+    "honestGain": 245.3875,
+    "ratio": 1.9157,
+    "successesPerHour": 7.4200,
+    "thiefGain": 470.0813
+  }
+}
